@@ -12,74 +12,59 @@ import javax.servlet.http.HttpServletResponse;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.ParseException;
 
+public class Requestpassword
+  extends BaseRequestHandler<Boolean>
+{
+  public boolean isProtected()
+  {
+    return false;
+  }
+  
 
-/**
- * @(#)Requestpassword.java   27-Mar-2015 10:15:13
- *
- * Copyright 2011 NUROX Ltd, Inc. All rights reserved.
- * NUROX Ltd PROPRIETARY/CONFIDENTIAL. Use is subject to license 
- * terms found at http://www.looseboxes.com/legal/licenses/software.html
- */
 
-/**
- * @author   chinomso bassey ikwuagwu
- * @version  2.0
- * @since    2.0
- */
-public class Requestpassword extends BaseRequestHandler<Boolean> {
-    
-    @Override
-    public boolean isProtected() {
-        // A user doesn't have to be logged in call this servlet
-        return false;
+
+  public Boolean execute(HttpServletRequest request, HttpServletResponse response)
+    throws ServletException, IOException
+  {
+    if (isLoggedIn(request)) {
+      throw new ServletException("You are already logged in");
     }
     
-    @Override
-    public Boolean execute(
-            HttpServletRequest request, 
-            HttpServletResponse response) 
-            throws ServletException, IOException {
-
-        if(this.isLoggedIn(request)) {
-            throw new ServletException("You are already logged in");
-        }
-            
-        Map app = WebApp.getInstance().getAuthSvcSession().getAppDetails();
-        
-        if(app == null) {
-            throw new ServletException("Authentication Service Unavailable");
-        }
-        
-        Map<String, String> params = new RequestParameters(request){
-            @Override
-            public boolean isCaseSensitive() {
-                //@todo remove eventually
-                // We had to do this because of a bug in the earlier versions
-                // of the newsminute android app... version deployed before
-                // 4 Apr 2015
-                //
-                return false;
-            }
-        };
-        
-        AuthSvcSession authSession = WebApp.getInstance().getAuthSvcSession();
-        
-        Boolean output;
-        try{
-
-XLogger.getInstance().log(Level.FINE, "Parameters: {0}", this.getClass(), params);
-        
-            // Sends a mail to the requesting user and returns {"SuccessMessage", "Success"} if successful
+    Map app = WebApp.getInstance().getAuthSvcSession().getAppDetails();
+    
+    if (app == null) {
+      throw new ServletException("Authentication Service Unavailable");
+    }
+    
+    Map<String, String> params = new RequestParameters(request){
+        @Override
+        public boolean isCaseSensitive() {
+            //@todo remove eventually
+            // We had to do this because of a bug in the earlier versions
+            // of the newsminute android app... version deployed before
+            // 4 Apr 2015
             //
-            JSONObject json = authSession.requestUserPassword(app, params);
-            
-            output = json == null ? Boolean.FALSE : !authSession.isError(json);
-            
-        }catch(ParseException e) {
-            throw new ServletException("Invalid response from server", e);
+            return false;
         }
-        
-        return output;
-    }
-}
+    };
 
+    AuthSvcSession authSession = WebApp.getInstance().getAuthSvcSession();
+    
+    Boolean output;
+    try
+    {
+      XLogger.getInstance().log(Level.FINE, "Parameters: {0}", getClass(), params);
+      
+
+
+      JSONObject json = authSession.requestUserPassword(app, params);
+      
+      output = Boolean.valueOf(!authSession.isError(json) ? true : json == null ? Boolean.FALSE.booleanValue() : false);
+    }
+    catch (ParseException e) {
+      throw new ServletException("Invalid response from server", e);
+    }
+    
+    return output;
+  }
+}

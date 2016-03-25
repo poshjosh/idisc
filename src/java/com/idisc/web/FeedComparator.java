@@ -1,42 +1,57 @@
 package com.idisc.web;
 
+import com.bc.util.XLogger;
 import com.idisc.core.AbstractFeedComparator;
+import com.idisc.web.servlets.handlers.Appproperties;
+import java.io.IOException;
+import java.util.Collections;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.regex.Pattern;
 import org.apache.commons.configuration.Configuration;
 
 
-/**
- * @(#)FeedComparator.java   03-Mar-2015 21:16:22
- *
- * Copyright 2011 NUROX Ltd, Inc. All rights reserved.
- * NUROX Ltd PROPRIETARY/CONFIDENTIAL. Use is subject to license 
- * terms found at http://www.looseboxes.com/legal/licenses/software.html
- */
 
-/**
- * @author   chinomso bassey ikwuagwu
- * @version  2.0
- * @since    2.0
- */
-public class FeedComparator extends AbstractFeedComparator {
 
-    private final long addValuePerHit;
-    
-    private final long addedValueMax;
-    
-    public FeedComparator() { 
-        Configuration config = WebApp.getInstance().getConfiguration();
-        addValuePerHit = TimeUnit.MINUTES.toMillis(config.getInt(AppProperties.FEED_CYCLE_INTERVAL));
-        addedValueMax = TimeUnit.MINUTES.toMillis(config.getInt(AppProperties.ADDED_VALUE_LIMIT));
-    }    
 
-    @Override
-    public long getAddValuePerHit() {
-        return addValuePerHit;
+
+
+
+
+
+
+
+
+public class FeedComparator
+  extends AbstractFeedComparator
+{
+  private final long addValuePerHit;
+  private final long addedValueMax;
+  
+  public FeedComparator()
+  {
+    Configuration config = WebApp.getInstance().getConfiguration();
+    this.addValuePerHit = TimeUnit.MINUTES.toMillis(config.getInt("feedCycleInterval"));
+    this.addedValueMax = TimeUnit.MINUTES.toMillis(config.getInt("addedValueLimit"));
+    try {
+      String sval = (String)new Appproperties().load().get(Appproperties.HEADLINE_PATTERN);
+      if (sval != null) {
+        Pattern headlinePattern = Pattern.compile(sval);
+        setElite(Collections.singletonMap(headlinePattern, Integer.valueOf(2)));
+      }
+    } catch (IOException e) {
+      XLogger.getInstance().log(Level.WARNING, null, getClass(), e);
     }
-
-    @Override
-    public long getAddedValueMax() {
-        return addedValueMax;
-    }
+  }
+  
+  public long getAddValuePerHit()
+  {
+    return this.addValuePerHit;
+  }
+  
+  public long getAddedValueMax()
+  {
+    return this.addedValueMax;
+  }
 }

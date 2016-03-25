@@ -1,25 +1,13 @@
 package com.idisc.web;
 
-/**
- * @(#)RequestParameters.java   01-Nov-2014 16:46:10
- *
- * Copyright 2011 NUROX Ltd, Inc. All rights reserved.
- * NUROX Ltd PROPRIETARY/CONFIDENTIAL. Use is subject to license 
- * terms found at http://www.looseboxes.com/legal/licenses/software.html
- */
-/**
- * @author   chinomso bassey ikwuagwu
- * @version  2.0
- * @since    2.0
- */
-public interface RequestParameters {
-    String ID = "id";
-    String REQ = "req";
-    String QUERY = "query";
-    String AFTER = "after";
-    String RESPONSETYPE = "responsetype";
-    String OFFSET = "offset";
-    String LIMIT = "limit";
-    String MAX_LEN = "maxlen";
-    String FORMAT = "format";
+public abstract interface RequestParameters
+{
+  public static final String ID = "id";
+  public static final String REQ = "req";
+  public static final String QUERY = "query";
+  public static final String AFTER = "after";
+  public static final String OFFSET = "offset";
+  public static final String LIMIT = "limit";
+  public static final String MAX_LEN = "maxlen";
+  public static final String FORMAT = "format";
 }

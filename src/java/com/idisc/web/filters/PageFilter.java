@@ -5,49 +5,45 @@ import com.bc.webapputil.Redirect;
 import com.bc.webapputil.filters.PageRedirectionFilter;
 import javax.servlet.http.HttpServletRequest;
 
-/**
- * @author Josh
- */
-public class PageFilter extends PageRedirectionFilter {
+public class PageFilter
+  extends PageRedirectionFilter
+{
+  private Redirect r0_accessViaGetter;
+  
+  @Override
+  public String getDigitsKey()
+  {
+    return "feedid";
+  }
+  
+  @Override
+  public Redirect getRedirect(HttpServletRequest request)
+  {
+    return getFeedRedirect(request);
+  }
 
-    public PageFilter() { }    
+  public Redirect getFeedRedirect(HttpServletRequest request)
+  {
+    if (this.r0_accessViaGetter == null)
+    {
 
-    @Override
-    public String getDigitsKey() {
-        return "feedid";
-    }
-
-    @Override
-    public Redirect getRedirect(HttpServletRequest request) {
-        return this.getFeedRedirect(request);
+      String requestUri = request.getRequestURI();
+      if (requestUri.contains("/feed/")) {
+        this.r0_accessViaGetter = new PageFilter.FeedRedirect();
+      }
     }
     
-    private Redirect r0_accessViaGetter;
-    public Redirect getFeedRedirect(HttpServletRequest request) {
-        
-        if(r0_accessViaGetter == null) {
-            
-            // Redirect only urls containing /feed/ e.g /feed/2167.jsp
-            // This ensures we do not mistakenly redirect urls of format /404.jsp
-            // to feed?feedid=404
-            //
-            final String requestUri = request.getRequestURI();
-            if(requestUri.contains("/feed/")) {
-                r0_accessViaGetter = new FeedRedirect();
-            }
-        }
-        
-        return r0_accessViaGetter;
+    return this.r0_accessViaGetter;
+  }
+
+  private static final class FeedRedirect extends AbstractRedirect {
+    @Override
+    protected void appendDigits(long lval, StringBuilder appendTo) {
+      appendTo.append("/feed?").append(this.getDigitsKey()).append('=').append(lval);
     }
-    
-    private static final class FeedRedirect extends AbstractRedirect {
-        @Override
-        protected void appendDigits(long lval, StringBuilder appendTo) {
-            appendTo.append("/feed?").append(this.getDigitsKey()).append('=').append(lval);
-        }
-        @Override
-        protected String getDigitsKey() {
-            return "feedid";
-        }
+    @Override
+    protected String getDigitsKey() {
+      return "feedid";
     }
+  }
 }

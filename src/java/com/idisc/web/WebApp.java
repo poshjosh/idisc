@@ -3,9 +3,10 @@ package com.idisc.web;
 import com.authsvc.client.AuthSvcSession;
 import com.authsvc.client.SessionLoader;
 import com.bc.util.XLogger;
+import com.idisc.core.IdiscApp;
 import com.idisc.core.IdiscAuthSvcSession;
 import java.io.IOException;
-import java.net.MalformedURLException;
+import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
@@ -17,195 +18,239 @@ import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
 
-/**
- * @(#)WebApp.java   16-Oct-2014 10:08:15
- *
- * Copyright 2011 NUROX Ltd, Inc. All rights reserved.
- * NUROX Ltd PROPRIETARY/CONFIDENTIAL. Use is subject to license 
- * terms found at http://www.looseboxes.com/legal/licenses/software.html
- */
-/**
- * @author   chinomso bassey ikwuagwu
- * @version  2.0
- * @since    2.0
- */
-public class WebApp {
-    
-    private transient static final Logger logger =
-            Logger.getLogger(WebApp.class.getName());
-    
-    private Configuration config;
-    
-    private AuthSvcSession authSvcSession;
-    
-    private ServletContext servletContext;
-    
-    private static WebApp instance;
-    
-    protected WebApp() { }
-    
-    public static WebApp getInstance() {
-        if(instance == null) {
-            instance = new WebApp();
-        }
-        return instance;
-    }
-    
-    public void init(ServletContext context) 
-            throws ServletException, IOException, ConfigurationException {
-        
-        try{
-            
-            URL defaultFileLoc = context.getResource("META-INF/properties/idiscwebdefaults.properties");
-        
-            URL fileLoc = context.getResource("META-INF/properties/idiscweb.properties");
-        
-            this.init(context, defaultFileLoc, fileLoc);
-            
-        }catch(MalformedURLException e) {
-            
-            throw new ConfigurationException(e);
-        }
-    }
-    
-    public void init(ServletContext context, 
-            URL defaultFileLocation, URL fileLocation) 
-            throws ServletException, IOException, ConfigurationException {
-    
-XLogger.getInstance().log(Level.INFO, "Initializing: {0}", this.getClass(), this.getClass().getName());
-        this.servletContext = context;
-            
-        // Enable list delimiter handling using a comma as delimiter character
-        config = this.loadConfig(defaultFileLocation, fileLocation, ',');
-        
-        String authsvc_url = config.getString(com.idisc.web.AppProperties.AUTHSVC_URL);
-        if(WebApp.getInstance().isNetbeansDevelopmentMode()) {
-            authsvc_url = "http://localhost:8080/authsvc";
-        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+public class WebApp
+{
+  private static final transient Logger logger = Logger.getLogger(WebApp.class.getName());
   
-// Setting this might conflict with all the values in the database        
-//        String timeZoneString = config.getString(com.idisc.web.AppProperties.TIME_ZONE);
-//        if(timeZoneString != null) {
-//            try{
-//                TimeZone.setDefault(TimeZone.getTimeZone(timeZoneString));
-//            }catch(Exception e) {
-//                XLogger.getInstance().log(Level.WARNING, "Error setting timeZone to: "+timeZoneString, this.getClass(), e);
-//            }
-//        }
-        
-        String app_name = WebApp.getInstance().getAppName();
-        String app_email = config.getString(com.idisc.web.AppProperties.AUTHSVC_EMAIL);
-        String app_pass = config.getString(com.idisc.web.AppProperties.AUTHSVC_PASSWORD);
-        
-        SessionLoader sessLoader = new SessionLoader(){
-            @Override
-            public void onLoad(AuthSvcSession session) {
-                WebApp.this.authSvcSession = session;
-            }
-            @Override
-            protected AuthSvcSession getNewSession(String target, int maxRetrials, long retrialIntervals) {
-                return new IdiscAuthSvcSession(target, maxRetrials, retrialIntervals);
-            }
-        };
-        
-        sessLoader.setMaxRetrials(1);
-        sessLoader.setRetrialInterval(30000);
-        
-        // We use 120 seconds so that in the event the authentication service is on
-        // the same server and we are just starting, then the authentication service
-        // should be already up and running before we call this.
-        sessLoader.loadAfter(120, TimeUnit.SECONDS, authsvc_url, app_name, app_email, app_pass);
+  private String propertiesFileName;
+  
+  private String defaultPropertiesFileName;
+  
+  private Configuration config;
+  
+  private AuthSvcSession authSvcSession;
+  
+  private ServletContext servletContext;
+  
+  private static WebApp instance;
+  
+  protected WebApp()
+  {
+    this.defaultPropertiesFileName = "META-INF/properties/idiscwebdefaults.properties";
+    this.propertiesFileName = "META-INF/properties/idiscweb.properties";
+  }
+  
+  public static WebApp getInstance() {
+    if (instance == null) {
+      instance = new WebApp();
+    }
+    return instance;
+  }
+  
+  private IdiscApp initIdiscApp()
+    throws ConfigurationException, IOException, IllegalAccessException, InterruptedException, InvocationTargetException
+  {
+    IdiscApp idiscApp = IdiscApp.getInstance();
+    
+    String scrapperPropsFile = this.config.getString("scrapperPropertiesFile");
+    XLogger.getInstance().log(Level.FINE, "Scrapper properties file: {0}", getClass(), scrapperPropsFile);
+    if (scrapperPropsFile != null) {
+      idiscApp.setScrapperPropertiesFilename(scrapperPropsFile);
+    }
+    
+    String persistenceFile = this.config.getString("persistenceFile");
+    XLogger.getInstance().log(Level.FINE, "Persistence file: {0}", getClass(), persistenceFile);
+    if (persistenceFile != null) {
+      idiscApp.setPersistenceFilename(persistenceFile);
+    }
+    
+    String corePropertiesFile = this.config.getString("idisccorePropertiesFile");
+    if (corePropertiesFile != null) {
+      URL fileLoc = this.servletContext.getResource(corePropertiesFile);
+      idiscApp.init(fileLoc);
+    } else {
+      idiscApp.init();
+    }
+    
+    IdiscApp.setInstance(idiscApp);
+    
+    return idiscApp;
+  }
+  
+
+  public void init(ServletContext context)
+    throws ServletException, IOException, ConfigurationException, IllegalAccessException, InterruptedException, InvocationTargetException
+  {
+    URL defaultFileLoc = context.getResource(this.defaultPropertiesFileName);
+    
+    URL fileLoc = context.getResource(this.propertiesFileName);
+    
+    init(context, defaultFileLoc, fileLoc);
+    
+    initIdiscApp();
+  }
+  
+
+  public void init(ServletContext context, URL defaultFileLocation, URL fileLocation)
+    throws ServletException, IOException, ConfigurationException
+  {
+    XLogger.getInstance().log(Level.INFO, "Initializing: {0}", getClass(), getClass().getName());
+    this.servletContext = context;
+    
+
+    this.config = loadConfig(defaultFileLocation, fileLocation, ',');
+    
+    String logLevel = this.config.getString("logLevel");
+    try {
+      Level level = Level.parse(logLevel);
+      XLogger.getInstance().setLogLevel(level);
+    } catch (Exception e) {
+      XLogger.getInstance().log(Level.WARNING, "Error setting log level to: " + logLevel, getClass(), e);
+    }
+    
+    String authsvc_url = this.config.getString("authsvc.url");
+    if (getInstance().isNetbeansDevelopmentMode()) {
+      authsvc_url = "http://localhost:8080/authsvc";
     }
 
-    public boolean isNetbeansDevelopmentMode() {
-        if(this.getServletContext() == null) {
-            return true;
-        }else{
-            String s = this.getServletContext().getRealPath("META-INF");
-            return s.contains("/build/") || s.contains("\\build\\");
-        }
-    }
+    String app_name = getInstance().getAppName();
+    String app_email = this.config.getString("authsvc.emailaddress");
+    String app_pass = this.config.getString("authsvc.password");
     
-    public boolean saveConfiguration() throws ConfigurationException {
-        return this.saveConfiguration(config);
-    }
-    
-    public boolean saveConfiguration(Configuration cfg) throws ConfigurationException {
-        if(cfg instanceof CompositeConfiguration) {
-            CompositeConfiguration cc = (CompositeConfiguration)cfg;
-            Configuration imc = cc.getInMemoryConfiguration();
-            if(imc instanceof PropertiesConfiguration) {
-                ((PropertiesConfiguration)imc).save();
-                return true;
-            }
-        }else if (cfg instanceof PropertiesConfiguration){
-            ((PropertiesConfiguration)cfg).save();
-            return true;
-        }else{
-            throw new UnsupportedOperationException("Unexpected configuration type: "+cfg.getClass().getName());
-        }
-        return false;
-    }
-    
-    public Configuration loadConfig(
-            URL defaultFileLocation, URL fileLocation, char listDelimiter) 
-            throws ConfigurationException {
-        
-logger.log(Level.INFO, 
-"Loading properties configuration. List delimiter: {0}\nDefault file: {1}\nFile: {2}", 
-new Object[]{listDelimiter, defaultFileLocation, fileLocation});
+    SessionLoader sessLoader = new SessionLoader(){
+      @Override
+      public void onLoad(AuthSvcSession session) {
+        WebApp.this.authSvcSession = session;
+      }
+      @Override
+      protected AuthSvcSession getNewSession(String target, int maxRetrials, long retrialIntervals) {
+        return new IdiscAuthSvcSession(target, maxRetrials, retrialIntervals);
+      }
+    };
 
-        if(fileLocation == null) {
-            throw new NullPointerException();
-        }
-        
-        Configuration output; 
-        
-        if(defaultFileLocation != null) {
-            
-            CompositeConfiguration composite = new CompositeConfiguration();
+    sessLoader.setMaxRetrials(1);
+    sessLoader.setRetrialInterval(30000);
 
-            PropertiesConfiguration cfg = this.loadConfig(
-                    fileLocation, listDelimiter);
-            composite.addConfiguration(cfg, true);
-            
-            PropertiesConfiguration defaults = this.loadConfig(
-                    defaultFileLocation, listDelimiter);
-            composite.addConfiguration(defaults);
-            
-            output = composite;
-            
-        }else{
-            
-            output = this.loadConfig(fileLocation, listDelimiter);
-        }
-        
-        return output;
+    sessLoader.loadAfter(30L, TimeUnit.SECONDS, authsvc_url, app_name, app_email, app_pass);
+  }
+  
+  public boolean isNetbeansDevelopmentMode() {
+    if (getServletContext() == null) {
+      return true;
     }
-    
-    private PropertiesConfiguration loadConfig(
-            URL fileLocation, char listDelimiter) 
-            throws ConfigurationException {
-        PropertiesConfiguration cfg = new PropertiesConfiguration();
-        cfg.setListDelimiter(listDelimiter);
-        cfg.setURL(fileLocation);
-        cfg.load();
-        return cfg;
+    String s = getServletContext().getRealPath("META-INF");
+    return (s.contains("/build/")) || (s.contains("\\build\\"));
+  }
+  
+  public boolean saveConfiguration() throws ConfigurationException
+  {
+    return saveConfiguration(this.config);
+  }
+  
+  public boolean saveConfiguration(Configuration cfg) throws ConfigurationException {
+    if ((cfg instanceof CompositeConfiguration)) {
+      CompositeConfiguration cc = (CompositeConfiguration)cfg;
+      Configuration imc = cc.getInMemoryConfiguration();
+      if ((imc instanceof PropertiesConfiguration)) {
+        ((PropertiesConfiguration)imc).save();
+        return true;
+      }
+    } else { if ((cfg instanceof PropertiesConfiguration)) {
+        ((PropertiesConfiguration)cfg).save();
+        return true;
+      }
+      throw new UnsupportedOperationException("Unexpected configuration type: " + cfg.getClass().getName());
     }
-    
-    public AuthSvcSession getAuthSvcSession() {
-        return authSvcSession;
-    }
-    
-    public String getAppName() {
-        return this.getConfiguration().getString(AppProperties.APP_NAME);
-    }
+    return false;
+  }
+  
 
-    public ServletContext getServletContext() {
-        return servletContext;
+  public Configuration loadConfig(URL defaultFileLocation, URL fileLocation, char listDelimiter)
+    throws ConfigurationException
+  {
+    logger.log(Level.INFO, "Loading properties configuration. List delimiter: {0}\nDefault file: {1}\nFile: {2}", new Object[] { Character.valueOf(listDelimiter), defaultFileLocation, fileLocation });
+    
+
+
+    if (fileLocation == null) {
+      throw new NullPointerException();
     }
     
-    public Configuration getConfiguration() {
-        return config;
+    Configuration output;
+    if (defaultFileLocation != null)
+    {
+      CompositeConfiguration composite = new CompositeConfiguration();
+      
+      PropertiesConfiguration cfg = loadConfig(fileLocation, listDelimiter);
+      
+      composite.addConfiguration(cfg, true);
+      
+      PropertiesConfiguration defaults = loadConfig(defaultFileLocation, listDelimiter);
+      
+      composite.addConfiguration(defaults);
+      
+      output = composite;
     }
+    else
+    {
+      output = loadConfig(fileLocation, listDelimiter);
+    }
+    
+    return output;
+  }
+  
+  private PropertiesConfiguration loadConfig(URL fileLocation, char listDelimiter)
+    throws ConfigurationException
+  {
+    PropertiesConfiguration cfg = new PropertiesConfiguration();
+    cfg.setListDelimiter(listDelimiter);
+    cfg.setURL(fileLocation);
+    cfg.load();
+    return cfg;
+  }
+  
+  public AuthSvcSession getAuthSvcSession() {
+    return this.authSvcSession;
+  }
+  
+  public String getAppName() {
+    return getConfiguration().getString("appName");
+  }
+  
+  public ServletContext getServletContext() {
+    return this.servletContext;
+  }
+  
+  public Configuration getConfiguration() {
+    return this.config;
+  }
+  
+  public String getPropertiesFileName() {
+    return this.propertiesFileName;
+  }
+  
+  public void setPropertiesFileName(String propertiesFileName) {
+    this.propertiesFileName = propertiesFileName;
+  }
+  
+  public String getDefaultPropertiesFileName() {
+    return this.defaultPropertiesFileName;
+  }
+  
+  public void setDefaultPropertiesFileName(String defaultPropertiesFileName) {
+    this.defaultPropertiesFileName = defaultPropertiesFileName;
+  }
 }

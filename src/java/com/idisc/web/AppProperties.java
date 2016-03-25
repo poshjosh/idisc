@@ -1,48 +1,31 @@
 package com.idisc.web;
 
-/**
- * @(#)AppProperties.java   16-Oct-2014 10:27:18
- *
- * Copyright 2011 NUROX Ltd, Inc. All rights reserved.
- * NUROX Ltd PROPRIETARY/CONFIDENTIAL. Use is subject to license 
- * terms found at http://www.looseboxes.com/legal/licenses/software.html
- */
-/**
- * @author   chinomso bassey ikwuagwu
- * @version  2.0
- * @since    2.0
- */
-public interface AppProperties {
-    
-    String MULTITASK_REQUEST_DEFAULT_POOL_SIZE = "multiTaskRequestDefaultPoolSize";
-
-    String MULTITASK_REQUEST_TIMEOUT_SECONDS = "multiTaskRequestTimeoutSeconds";
-
-    String APP_NAME = "appName";
-    String EMAILADDRESS = "emailaddress";
-    String PASSWORD = "password";
-    String MAIL_SEND_INTERVAL = "mailSendInterval";
-    String MAIL_BATCH_SIZE = "mailBatchSize";
-    String DOWNLOAD_URL = "downloadurl";
-    String REQUESTHANDLER_PROVIDER = "requesthandlerFactory";
-    
-    String MAX_LIMIT = "maxLimit";
-    String DEFAULT_LIMIT = "defaultLimit";
-    String CACHE_LIMIT = "cacheLimit";
-    
-    String DEFAULT_CONTENT_LENGTH = "defaultContentLength";
-    String FEED_CYCLE_DELAY = "feedCycleDelay";
-    String FEED_CYCLE_INTERVAL = "feedCycleInterval";
-    String SEND_MAIL_TIMES = "sendMailTimes";
-    String ADDED_VALUE_LIMIT = "addedValueLimit";
-    
-    String REARRANGE_OUTPUT = "rearrangeOutput";
-    
-    String AUTHSVC_EMAIL = "authsvc.emailaddress";
-    
-    String AUTHSVC_PASSWORD = "authsvc.password";
-
-    String AUTHSVC_URL = "authsvc.url";
-
-    String TIME_ZONE = "timeZone";
+public abstract interface AppProperties
+{
+  public static final String MULTITASK_REQUEST_DEFAULT_POOL_SIZE = "multiTaskRequestDefaultPoolSize";
+  public static final String MULTITASK_REQUEST_TIMEOUT_SECONDS = "multiTaskRequestTimeoutSeconds";
+  public static final String LOG_LEVEL = "logLevel";
+  public static final String SCRAPPER_PROPERTIES_FILE = "scrapperPropertiesFile";
+  public static final String IDISCCORE_PROPERTIES_FILE = "idisccorePropertiesFile";
+  public static final String PERSISTENCE_FILE = "persistenceFile";
+  public static final String APP_NAME = "appName";
+  public static final String EMAILADDRESS = "emailaddress";
+  public static final String PASSWORD = "password";
+  public static final String MAIL_SEND_INTERVAL = "mailSendInterval";
+  public static final String MAIL_BATCH_SIZE = "mailBatchSize";
+  public static final String DOWNLOAD_URL = "downloadurl";
+  public static final String REQUESTHANDLER_PROVIDER = "requesthandlerFactory";
+  public static final String MAX_LIMIT = "maxLimit";
+  public static final String DEFAULT_LIMIT = "defaultLimit";
+  public static final String CACHE_LIMIT = "cacheLimit";
+  public static final String DEFAULT_CONTENT_LENGTH = "defaultContentLength";
+  public static final String FEED_CYCLE_DELAY = "feedCycleDelay";
+  public static final String FEED_CYCLE_INTERVAL = "feedCycleInterval";
+  public static final String SEND_MAIL_TIMES = "sendMailTimes";
+  public static final String ADDED_VALUE_LIMIT = "addedValueLimit";
+  public static final String REARRANGE_OUTPUT = "rearrangeOutput";
+  public static final String AUTHSVC_EMAIL = "authsvc.emailaddress";
+  public static final String AUTHSVC_PASSWORD = "authsvc.password";
+  public static final String AUTHSVC_URL = "authsvc.url";
+  public static final String TIME_ZONE = "timeZone";
 }

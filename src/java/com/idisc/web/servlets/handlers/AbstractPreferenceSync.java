@@ -1,10 +1,10 @@
 package com.idisc.web.servlets.handlers;
 
+import com.bc.jpa.ControllerFactory;
 import com.bc.jpa.EntityController;
 import com.idisc.core.IdiscApp;
-import com.idisc.core.User;
+import com.idisc.pu.entities.Feed;
 import com.idisc.pu.entities.Installation;
-import com.idisc.web.AppInstallation;
 import com.idisc.web.exceptions.ValidationException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -22,376 +22,379 @@ import org.json.simple.JSONArray;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
-/**
- * @author Josh
- */
-public abstract class AbstractPreferenceSync<E> extends BaseRequestHandler<Map> {
+public abstract class AbstractPreferenceSync<E> extends BaseRequestHandler<Map<String, List>>
+{
+  public abstract String getKey();
+  
+  public abstract Class<E> getEntityClass();
+  
+  public abstract List<E> getFeedList(Installation paramInstallation);
+  
+  public abstract Feed getFeed(E paramE);
+  
+  public abstract E createFor(Installation paramInstallation, Feed paramFeed);
+  
+  public String[] getNames()
+  {
+    return new String[] { "com.looseboxes.idisc.common." + getKey() + ".feedids", "com.looseboxes.idisc.common." + getKey() + ".feedids_to_add", "com.looseboxes.idisc.common." + getKey() + ".feedids_to_remove" };
+  }
+  
 
-    public abstract String getKey();
-    
-    public abstract Class<E> getEntityClass();
-    
-    public abstract List<E> getFeedList(Installation installation);
-    
-    public abstract com.idisc.pu.entities.Feed getFeed(E e);
-    
-    public abstract E createFor(Installation installation, com.idisc.pu.entities.Feed feed);
-    
-    public String[] getNames() {
-        return new String[]{
-                "com.looseboxes.idisc.common."+this.getKey()+".feedids",
-                "com.looseboxes.idisc.common."+this.getKey()+".feedids_to_add",
-                "com.looseboxes.idisc.common."+this.getKey()+".feedids_to_remove"};
-    }
 
-    @Override
-    public boolean isProtected() {
-        return true;
+
+  public boolean isProtected()
+  {
+    return true;
+  }
+  
+  protected JSONArray getValues(String name, HttpServletRequest request) throws ValidationException {
+    String str = request.getParameter(name);
+    if ((str == null) || (str.isEmpty()))
+    {
+      return null;
     }
     
-    protected JSONArray getValues(String name, HttpServletRequest request) throws ValidationException {
-        String str = request.getParameter(name);
-        if(str == null || str.isEmpty()) {
-// In our case values not mandatory            
-            return null;
-//            throw new ValidationException("Required parameter "+name+" is missing");
+    JSONParser parser = new JSONParser();
+    try {
+      return (JSONArray)parser.parse(str);
+    }
+    catch (ParseException e) {
+      throw new ValidationException("Invalid format for required parameter: " + name, e);
+    }
+  }
+  
+
+
+
+  public Map<String, List> execute(HttpServletRequest request, HttpServletResponse response)
+    throws ServletException
+  {
+    boolean create = true;
+    Installation installation = getInstallation(request, response, create);
+    
+    String[] names = getNames();
+    
+    List<Feed> added = null;
+    List<Feed> removed = null;
+    
+    String key = getKey();
+    try
+    {
+      for (String name : names)
+      {
+        JSONArray values = getValues(name, request);
+        
+        if ((values != null) && (!values.isEmpty()))
+        {
+
+
+          if (name.equals("com.looseboxes.idisc.common." + key + ".feedids_to_add")) {
+            executeAdd(values, installation);
+          } else if (name.equals("com.looseboxes.idisc.common." + key + ".feedids_to_remove")) {
+            executeRemove(values, installation);
+          } else if (name.equals("com.looseboxes.idisc.common." + key + ".feedids")) {
+            added = syncAdd(values, installation);
+            removed = syncRemove(values, installation);
+          } else {
+            throw new IllegalArgumentException("Expected any of: " + Arrays.toString(getNames()) + ", found: " + name);
+          }
         }
-        JSONParser parser = new JSONParser();
-        try{
-            JSONArray json = (JSONArray)parser.parse(str); 
-            return json;
-        }catch(ParseException e) {
-            throw new ValidationException("Invalid format for required parameter: "+name, e);
-        }
+      }
+    } catch (ValidationException e) {
+      throw e;
+    }
+    catch (Exception e)
+    {
+      throw new ServletException("Error updating values", e);
+    }
+    
+    Map<String, List> output = new HashMap(3, 1.0F);
+    List list;
+    if ((added != null) && (!added.isEmpty()))
+    {
+      list = new ArrayList(added.size());
+      
+
+      output.put("com.looseboxes.idisc.common." + key + ".addedfeeds", list);
+      
+      for (Feed feed : added)
+      {
+        list.add(feed);
+      }
     }
 
-    @Override
-    public Map execute(
-            HttpServletRequest request, HttpServletResponse response) 
-            throws ServletException {
-        
-        User user = this.getUser(request);
-        
-        // Create the installation record if it doesn't exist
-        boolean create = true;
-        Installation installation = AppInstallation.getEntity(request, user, create);
+    if ((removed != null) && (!removed.isEmpty()))
+    {
+      list = new ArrayList(removed.size());
+      
 
-        String [] names = this.getNames();
-        
-        List<com.idisc.pu.entities.Feed> added = null;
-        List<com.idisc.pu.entities.Feed> removed = null;
-        
-        try{
-            for(String name:names) {
+      output.put("com.looseboxes.idisc.common." + key + ".removedfeeds", list);
+      
+      for (Feed feed : removed)
+      {
+        list.add(feed);
+      }
+    }
+    
+    List<E> preferences = getFeedList(installation);
+    
+    List<Integer> feedids = new ArrayList();
+    
+    for (E preference : preferences)
+    {
+      feedids.add(getFeed(preference).getFeedid());
+    }
+    
+    if (!feedids.isEmpty())
+    {
+      output.put("com.looseboxes.idisc.common." + key + ".feedids", feedids);
+    }
+    
+    return output;
+  }
+  
+  protected List<Feed> executeAdd(JSONArray feedidsToAdd, Installation installation) throws Exception
+  {
+    Object[] feedids = feedidsToAdd.toArray();
+    
+    List<E> prefs = getFeedList(installation);
+    
+    EntityController<Feed, Integer> ecFeed = getEntityController(Feed.class, Integer.class);
+    
 
-                JSONArray values = this.getValues(name, request);
-                
-                if(values == null || values.isEmpty()) {
-                    continue;
-                }
-                
-                if(name.equals("com.looseboxes.idisc.common."+this.getKey()+".feedids_to_add")) {
-                    this.executeAdd(values, installation); 
-                }else if(name.equals("com.looseboxes.idisc.common."+this.getKey()+".feedids_to_remove")) {
-                    this.executeRemove(values, installation); 
-                }else if(name.equals("com.looseboxes.idisc.common."+this.getKey()+".feedids")) {
-                    added = this.syncAdd(values, installation); 
-                    removed = this.syncRemove(values, installation);
-                }else{
-                    throw new IllegalArgumentException("Expected any of: "+Arrays.toString(this.getNames())+", found: "+name);
-                }
+    List<Feed> feeds = ecFeed.select("feedid", feedids);
+    
+
+
+    EntityManager em = getEntityManager(getEntityClass());
+    
+    List<Feed> added = null;
+    
+    try
+    {
+      EntityTransaction t = em.getTransaction();
+      
+      try
+      {
+        t.begin();
+        
+        for (Feed feed : feeds)
+        {
+          if (!isRepresentedIn(prefs, feed))
+          {
+            E pref = createFor(installation, feed);
+            
+            em.persist(pref);
+            
+            if (added == null) {
+              added = new ArrayList(feeds.size());
             }
-        }catch(ValidationException e) {
             
-            throw e;
-            
-        }catch(Exception e) {
-            
-            throw new ServletException("Error updating values", e);
+            added.add(feed);
+          }
+          
         }
-
-        Map output = new HashMap(3, 1.0f);
-        
-        EntityController<com.idisc.pu.entities.Feed, Integer> ecFeed = 
-                this.getEntityController(com.idisc.pu.entities.Feed.class, Integer.class);
-        
-        if(added != null && !added.isEmpty()) {
-            List list = new ArrayList(added.size());
-            // Add the list not the 'added'
-            output.put("com.looseboxes.idisc.common."+this.getKey()+".addedfeeds", list);
-            for(com.idisc.pu.entities.Feed feed:added) {
-                Map map = ecFeed.toMap(feed, false);
-                list.add(map);
-            }
-        }
-        if(removed != null && !removed.isEmpty()) {
-            List list = new ArrayList(removed.size());
-            // Add the list not the 'removed'
-            output.put("com.looseboxes.idisc.common."+this.getKey()+".removedfeeds", list);
-            for(com.idisc.pu.entities.Feed feed:removed) {
-                Map map = ecFeed.toMap(feed, false);
-                list.add(map);
-            }
-        }
-        
-        List<E> preferences = this.getFeedList(installation);
-        
-        List<Integer> feedids = new ArrayList<>();
-        for(E preference:preferences) {
-            feedids.add(this.getFeed(preference).getFeedid());
-        }
-        
-        if(!feedids.isEmpty()) {
-            output.put("com.looseboxes.idisc.common."+this.getKey()+".feedids", feedids);
-        }
-        
-        return output;
+      }
+      finally
+      {
+        if (!t.isActive()) {}
+      }
+    }
+    finally
+    {
+      em.close();
     }
     
-    protected List<com.idisc.pu.entities.Feed> executeAdd(JSONArray feedidsToAdd, Installation installation) throws Exception {
+    return added == null ? Collections.EMPTY_LIST : added;
+  }
+  
 
-        Object [] feedids = feedidsToAdd.toArray(); 
-        
-        List<E> prefs = this.getFeedList(installation);
-        
-        EntityController<com.idisc.pu.entities.Feed, Integer> ecFeed = 
-                this.getEntityController(com.idisc.pu.entities.Feed.class, Integer.class);
-        
-        List<com.idisc.pu.entities.Feed> feeds = ecFeed.select("feedid", feedids);
-        
-//        EntityController<Bookmarkfeed, Integer> ecBookmark = this.getEntityController(Bookmarkfeed.class, Integer.class);
-        
-        EntityManager em = this.getEntityManager(this.getEntityClass());
-        
-        List<com.idisc.pu.entities.Feed> added = null;
-        
-        try{
-            
-            EntityTransaction t = em.getTransaction();
-            
-            try{
 
-                t.begin();
-                
-                for(com.idisc.pu.entities.Feed feed:feeds) {
 
-                    if(!this.isRepresentedIn(prefs, feed)) {
-                        
-                        E pref = this.createFor(installation, feed);
-                    
-                        em.persist(pref);
-                        
-                        if(added == null) {
-                            added = new ArrayList<>(feeds.size());
-                        }
-                        
-                        added.add(feed);
-                    }
-                }
-                
-                t.commit();
-                
-            }finally{
-                if(t.isActive()) {
-                    t.rollback();
-                }
-            }
-        }finally{
-            em.close();
-        }
 
-        return added == null ? Collections.EMPTY_LIST : added;
-    }
 
-    protected List<com.idisc.pu.entities.Feed> executeRemove(JSONArray feedidsToRemove, Installation installation) throws Exception {
-        
-//        Object [] feedids = values.toArray();
-        
-//        EntityController<Feed, Integer> ecFeed = this.getEntityController(Feed.class, Integer.class);
-        
-//        List<Feed> feeds = ecFeed.select("feedid", feedids);
-        
-//        EntityController<Bookmarkfeed, Integer> ecBookmark = this.getEntityController(Bookmarkfeed.class, Integer.class);
-        
-        List<E> prefs = this.getFeedList(installation);
-        
-        EntityManager em = this.getEntityManager(this.getEntityClass());
-        
-        List<com.idisc.pu.entities.Feed> removed = null;
-        
-        try{
-            
-            EntityTransaction t = em.getTransaction();
-            
-            try{
 
-                t.begin();
-                
-                Iterator<E> iter = prefs.iterator();
 
-                while(iter.hasNext()) {
-                    
-                    E pref = iter.next();
-                    
-                    com.idisc.pu.entities.Feed feed = this.getFeed(pref);
-                    
-                    if(this.contains(feedidsToRemove, feed.getFeedid())) {
-                    
-                        iter.remove();
-                        
-                        if(removed == null) {
-                            removed = new ArrayList<>(feedidsToRemove.size());
-                        }
-                        
-                        removed.add(feed);
-                    }
-                }
-
-                em.merge(installation);
-                
-                t.commit();
-                
-            }finally{
-                if(t.isActive()) {
-                    t.rollback();
-                }
-            }
-        }finally{
-            em.close();
-        }
-
-        // Getting here means success
-        return removed == null ? Collections.EMPTY_LIST : removed;
-    }
-
-    protected List<com.idisc.pu.entities.Feed> syncAdd(JSONArray addedFeedIds, Installation installation) throws Exception {
-        
-        List<E> prefs = this.getFeedList(installation);
-        
-        Iterator valuesIter = addedFeedIds.iterator();
-
-        JSONArray feedIdsToAdd = new JSONArray();
-        
-        while(valuesIter.hasNext()) {
-
-            Object feedid = valuesIter.next();
-            
-            if(!this.isRepresentedIn(prefs, this.getInteger(feedid))) {
-                feedIdsToAdd.add(feedid);
-            }
-        }
-
-        List<com.idisc.pu.entities.Feed> added;
-        if(!feedIdsToAdd.isEmpty()) {
-            added = this.executeAdd(feedIdsToAdd, installation);
-        }else{
-            added = Collections.emptyList();
-        }
-
-        // Getting here means success
-        return added;
-    }
-
-    protected List<com.idisc.pu.entities.Feed> syncRemove(JSONArray removedFeedIds, Installation installation) throws Exception {
-        
-        List<E> prefs = this.getFeedList(installation);
+  protected List<Feed> executeRemove(JSONArray feedidsToRemove, Installation installation)
+    throws Exception
+  {
+    List<E> prefs = getFeedList(installation);
+    
+    EntityManager em = getEntityManager(getEntityClass());
+    
+    List<Feed> removed = null;
+    
+    try
+    {
+      EntityTransaction t = em.getTransaction();
+      
+      try
+      {
+        t.begin();
         
         Iterator<E> iter = prefs.iterator();
-
-        JSONArray feedidsToRemove = new JSONArray();
         
-        while(iter.hasNext()) {
-
-            E pref = iter.next();
-
-            Integer feedid = this.getFeed(pref).getFeedid();
-
-            if(this.contains(removedFeedIds, feedid)) {
-                feedidsToRemove.add(feedid);
-            }
-        }
-
-        List<com.idisc.pu.entities.Feed> removed;
-        
-        if(!feedidsToRemove.isEmpty()) {
-
-            removed = this.executeRemove(feedidsToRemove, installation);
+        while (iter.hasNext())
+        {
+          E pref = iter.next();
+          
+          Feed feed = getFeed(pref);
+          
+          if (contains(feedidsToRemove, feed.getFeedid()))
+          {
+            iter.remove();
             
-        }else{
+            if (removed == null) {
+              removed = new ArrayList(feedidsToRemove.size());
+            }
             
-            removed = Collections.emptyList();
-        }
-
-        // Getting here means success
-        return removed;
-    }
-
-    private boolean contains(List<E> prefs, E pref) {
-        
-        return this.isRepresentedIn(prefs, this.getFeed(pref));
-    }
-
-    private boolean isRepresentedIn(List<E> prefs, com.idisc.pu.entities.Feed feed) {
-        
-        for(E e:prefs) {
-            if(this.getFeed(e).equals(feed)) {
-                return true;
-            }
+            removed.add(feed);
+          }
         }
         
-        return false;
-    }
+        em.merge(installation);
 
-    private boolean isRepresentedIn(List<E> prefs, Integer feedid) {
-        
-        for(E e:prefs) {
-            if(this.getFeed(e).getFeedid().equals(feedid)) {
-                return true;
-            }
-        }
-        
-        return false;
+      }
+      finally
+      {
+        if (!t.isActive()) {}
+      }
+    }
+    finally
+    {
+      em.close();
     }
     
-    private boolean contains(JSONArray feedids, Integer feedid) {
 
-        for(Object o:feedids) {
-            boolean equals;
-            try{
-                equals = ((Integer)o).equals(feedid);
-            }catch(Exception e) {
-                equals = Integer.parseInt(o.toString()) == feedid; 
-            }
-            if(equals) {
-                return true;
-            }
-        }
-        
-        return false;
-    }
+    return removed == null ? Collections.EMPTY_LIST : removed;
+  }
+  
+  protected List<Feed> syncAdd(JSONArray addedFeedIds, Installation installation) throws Exception
+  {
+    List<E> prefs = getFeedList(installation);
     
-    private Integer getInteger(Object o) {
-        try{
-            return ((Integer)o);
-        }catch(Exception e) {
-            return Integer.valueOf(o.toString());
-        }
+    Iterator valuesIter = addedFeedIds.iterator();
+    
+    JSONArray feedIdsToAdd = new JSONArray();
+    
+    while (valuesIter.hasNext())
+    {
+      Object feedid = valuesIter.next();
+      
+      if (!isRepresentedIn(prefs, getInteger(feedid))) {
+        feedIdsToAdd.add(feedid);
+      }
     }
 
-    private int getInt(Object o) {
-        try{
-            return ((Integer)o);
-        }catch(Exception e) {
-            return Integer.parseInt(o.toString());
-        }
+    List<Feed> added;
+    if (!feedIdsToAdd.isEmpty()) {
+      added = executeAdd(feedIdsToAdd, installation);
+    } else {
+      added = Collections.emptyList();
     }
     
-    public EntityManager getEntityManager(Class entityClass) {
-        return IdiscApp.getInstance().getControllerFactory().getEntityManager(entityClass);
+
+    return added;
+  }
+  
+  protected List<Feed> syncRemove(JSONArray removedFeedIds, Installation installation) throws Exception
+  {
+    List<E> prefs = getFeedList(installation);
+    
+    Iterator<E> iter = prefs.iterator();
+    
+    JSONArray feedidsToRemove = new JSONArray();
+    
+    while (iter.hasNext())
+    {
+      E pref = iter.next();
+      
+      Integer feedid = getFeed(pref).getFeedid();
+      
+      if (contains(removedFeedIds, feedid)) {
+        feedidsToRemove.add(feedid);
+      }
     }
     
-    public <X, I> EntityController<X, I> getEntityController(Class<X> ec, Class<I> ic) {
-        return IdiscApp.getInstance().getControllerFactory().getEntityController(ec, ic);
+    List<Feed> removed;
+    if (!feedidsToRemove.isEmpty())
+    {
+      removed = executeRemove(feedidsToRemove, installation);
     }
+    else
+    {
+      removed = Collections.emptyList();
+    }
+    
+
+    return removed;
+  }
+  
+  private boolean contains(List<E> prefs, E pref)
+  {
+    return isRepresentedIn(prefs, getFeed(pref));
+  }
+  
+  private boolean isRepresentedIn(List<E> prefs, Feed feed)
+  {
+    for (E e : prefs) {
+      if (getFeed(e).equals(feed)) {
+        return true;
+      }
+    }
+    
+    return false;
+  }
+  
+  private boolean isRepresentedIn(List<E> prefs, Integer feedid)
+  {
+    for (E e : prefs) {
+      if (getFeed(e).getFeedid().equals(feedid)) {
+        return true;
+      }
+    }
+    
+    return false;
+  }
+  
+  private boolean contains(JSONArray feedids, Integer feedid)
+  {
+    for (Object o : feedids) {
+      boolean equals;
+      try {
+        equals = ((Integer)o).equals(feedid);
+      } catch (Exception e) {
+        equals = Integer.parseInt(o.toString()) == feedid.intValue();
+      }
+      if (equals) {
+        return true;
+      }
+    }
+    
+    return false;
+  }
+  
+  private Integer getInteger(Object o) {
+    try {
+      return (Integer)o;
+    } catch (Exception e) {}
+    return Integer.valueOf(o.toString());
+  }
+  
+  private int getInt(Object o)
+  {
+    try {
+      return ((Integer)o).intValue();
+    } catch (Exception e) {}
+    return Integer.parseInt(o.toString());
+  }
+  
+  public EntityManager getEntityManager(Class entityClass)
+  {
+    return IdiscApp.getInstance().getControllerFactory().getEntityManager(entityClass);
+  }
+  
+  public <X, I> EntityController<X, I> getEntityController(Class<X> ec, Class<I> ic) {
+    return IdiscApp.getInstance().getControllerFactory().getEntityController(ec, ic);
+  }
 }
-

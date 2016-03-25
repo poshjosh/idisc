@@ -5,80 +5,75 @@ import com.bc.jpa.EntityController;
 import com.bc.util.XLogger;
 import com.idisc.core.IdiscApp;
 import com.idisc.pu.entities.Favoritefeed;
+import com.idisc.pu.entities.Feed;
 import com.idisc.pu.entities.Installation;
-import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.logging.Level;
 import javax.persistence.EntityManager;
 import org.json.simple.JSONArray;
 
-/**
- * @author Josh
- */
-public class Addfavoritefeedids extends UpdateUserPreferenceFeedids {
+public class Addfavoritefeedids extends UpdateUserPreferenceFeedids
+{
+  public String getRequestParameterName()
+  {
+    return "com.looseboxes.idisc.addfavoritefeedids.feedids";
+  }
+  
+  protected List execute(String name, JSONArray feedids, Installation installation)
+    throws Exception
+  {
+    ControllerFactory factory = IdiscApp.getInstance().getControllerFactory();
     
-    @Override
-    public String getRequestParameterName() {
-        return "com.looseboxes.idisc.addfavoritefeedids.feedids";
-    }
+    EntityManager em = factory.getEntityManager(Favoritefeed.class);
+    
+    try
+    {
+      em.getTransaction().begin();
+      
+      XLogger.getInstance().log(Level.FINE, "Adding {0} favorites for user: {1}", getClass(), Integer.valueOf(feedids.size()), installation.getFeeduserid() == null ? null : installation.getFeeduserid().getEmailAddress());
+      
 
-    @Override
-    protected List execute(String name, JSONArray feedids, Installation installation) throws Exception {
-                
-        ControllerFactory factory = IdiscApp.getInstance().getControllerFactory();
+      List<Favoritefeed> valuesFromDatabase = installation.getFavoritefeedList();
+      
+      EntityController<Feed, Integer> feedCtrl = factory.getEntityController(Feed.class, Integer.class);
 
-        EntityManager em = factory.getEntityManager(Favoritefeed.class);
-        
-        try{
-            
-            em.getTransaction().begin();
+      outer:
+      for (Object feedid : feedids)
+      {
+        if (feedid != null)
+        {
 
-XLogger.getInstance().log(Level.FINE, "Adding {0} favorites for user: {1}", 
-this.getClass(), feedids.size(), installation.getFeeduserid()==null?null:installation.getFeeduserid().getEmailAddress());
-
-            List<Favoritefeed> valuesFromDatabase = installation.getFavoritefeedList();
-            
-            EntityController<com.idisc.pu.entities.Feed, Integer> feedCtrl = 
-                    factory.getEntityController(com.idisc.pu.entities.Feed.class, Integer.class);
-        
-            outer:
-            for(Object feedid:feedids) {
-
-                if(feedid == null) {
-                    continue;
-                }
-                
-                for(Favoritefeed favorite:valuesFromDatabase) {
-                    if(feedid.equals(favorite.getFeedid().getFeedid())) {
-                    // bookmark alread exists
-                        continue outer;
-                    }
-                }
-                
-                com.idisc.pu.entities.Feed feed = feedCtrl.find(Integer.valueOf(feedid.toString()));
-
-                Favoritefeed favorite = new Favoritefeed();
-                favorite.setDatecreated(new Date());
-                favorite.setFeedid(feed);
-                favorite.setInstallationid(installation);
-                
-                em.persist(favorite);
+          for(Favoritefeed favorite:valuesFromDatabase) {
+            if(feedid.equals(favorite.getFeedid().getFeedid())) {
+              // bookmark alread exists
+              continue outer;
             }
+          }
 
-            em.getTransaction().commit();
+          Feed feed = (Feed)feedCtrl.find(Integer.valueOf(feedid.toString()));
+          
+          Favoritefeed favorite = new Favoritefeed();
+          favorite.setDatecreated(new Date());
+          favorite.setFeedid(feed);
+          favorite.setInstallationid(installation);
+          
+          em.persist(favorite);
+        } }
+      label179:
+      em.getTransaction().commit();
+      
+      XLogger.getInstance().log(Level.FINE, "Added for user: {0}, favorite feedids: {1}", getClass(), installation.getFeeduserid() == null ? null : installation.getFeeduserid().getEmailAddress(), feedids);
 
-XLogger.getInstance().log(Level.FINE, "Added for user: {0}, favorite feedids: {1}", this.getClass(), 
-installation.getFeeduserid()==null?null:installation.getFeeduserid().getEmailAddress(), feedids);
-            
-        }finally{
-            
-            if(em != null) {
-                em.close();
-            }
-        }
-        
-        // Getting here means we are successful, We return an empty list as no failures occured
-        return Collections.emptyList();
     }
+    finally
+    {
+      if (em != null) {
+        em.close();
+      }
+    }
+    
+
+    return java.util.Collections.emptyList();
+  }
 }
