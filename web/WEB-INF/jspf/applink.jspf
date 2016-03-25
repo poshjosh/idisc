@@ -1,0 +1,7 @@
+<%@ page pageEncoding="UTF-8" %>
+<p>
+    <a href="https://play.google.com/store/apps/details?id=com.looseboxes.idisc.newsminutefree" 
+       class="button button_prompt">Get the App</a>
+    &emsp;<a href="${pageContext.servletContext.contextPath}/whynewsminute.jsp" 
+             class="button button_prompt">No Thanks</a>
+</p>

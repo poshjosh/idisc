@@ -1,0 +1,40 @@
+/* 
+    Created on : Jan 4, 2016, 11:48:33 AM
+    Author     : Josh
+*/
+/** 
+The mobile version of these styles are contained in mobile.css 
+Any modification here must be reflected there
+*/
+/** 1px=0.0625em 2px=0.125em 6px=0.375em 10px=0.625em 11px=0.6875em 12px=0.75em 13px=0.8125em 14px=0.875em 16px=1em 18px=1.125 */
+/** @related_12 */
+html{ font-size:100%; } /** IE 5/6 hack required for using em font size*/
+body{ font-size:16px; width:100%; height:100%; margin:0; padding:0; text-align:justify; color:#555555; font-family:Verdana,Helvetica,sans-serif,Arial; }
+a{ text-decoration:none; }
+.content{ width:100%; font-size:1.5em; color: #555555; margin:0 auto; border:0; padding:1em; }
+.smallerLighter{ font-size:smaller; color: #777777; }
+.borderless{ margin:0; border:0; padding:0; }
+ul li { margin-bottom: 1.5em; }
+/** http://stackoverflow.com/questions/2906582/how-to-create-an-html-button-that-acts-like-a-link */
+a.button {
+    -webkit-appearance: button;
+    -moz-appearance: button;
+    appearance: button;
+
+    text-decoration: none;
+}
+.button_prompt{
+    background-color:green; color: white; padding: 0.5em;
+}
+.button_prompt:hover{
+    background-color:lightgreen;
+}
+.button_prompt:active{
+    color:orange;
+}
+.topbanner img{
+    width: 64px; height: 64px;
+}
+.topbanner span{
+    height:64px; font-size:2.2em; font-weight:900; color:#F56600;
+}

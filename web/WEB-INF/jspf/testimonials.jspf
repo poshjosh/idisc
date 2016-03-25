@@ -1,0 +1,31 @@
+<%@page pageEncoding="UTF-8" %>
+<p>
+  Asked why they love the ${appName} app...
+</p>
+<ul>
+    <li>
+      I am always the first to know when breaking news occurs. This has been quite useful, for example when the Nyanya Bomb Blast occurred in Abuja, even though I was in Lagos at the time, I quickly called relatives to avoid the area.
+      <br/><small>Banke, fashion designer - Abuja</small>
+    </li>
+    <li>
+      The app is actually quite well organized for a Nigerian app. I also get news on sports and politics in one place.
+      <br/><small>Obi, banker - Kano</small>
+    </li>
+    <li>
+      I set the app to notify me anytime my Boss's name is mentioned in the news media. This makes my job very easy.
+      <br/><small>Joy, publicist - Lagos</small>
+    </li>
+    <li>
+      I think it's because it loads very fast and it doesn't consume much data.
+      <br/><small>Moses, student - PH</small>
+    </li>
+    <li>
+      As a reporter I need to be up to date with what's happening. ${appName} gives me quick and easy access to all thats happening in the news media including gossip and blogs.
+      <br/><small>Alice, reporter - Lagos</small>
+    </li>
+    <li>
+      The app is fast. I like that. I didn't know I needed the app until I tried it.
+      <br/><small>Amina, business woman - Lagos</small>
+    </li>
+</ul>        
+

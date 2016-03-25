@@ -1,0 +1,32 @@
+<%@page pageEncoding="UTF-8" %>
+<p>Seven (7) Reasons</p>
+<ul>
+    <li>
+      News both off and on-line.
+      <br/><small>Get news even when internet connection is lost</small>
+    </li>
+    <li>
+      Smart Filter.
+      <br/><small>Select categories and/or Publishers (E.g its possible to combine: entertainment, sports, Sahara Reporters, LindaIkeja and Naij)</small>
+    </li>
+    <li>
+      Customized Notifications.
+      <br/><small>Monitor things. Choose any word e.g 'BBOG' or 'p-square' and get notified anytime its mentioned in the news</small>
+    </li>
+    <li>
+      Save news items to read later (even on other devices).
+      <br/><small>Synchronize Bookmarks and Favorites across multiple devices</small>
+    </li>
+    <li>
+      Zero Load Time.
+      <br/><small>Smart caching means news loads very fast</small>
+    </li>
+    <li>
+      Voice Search.
+      <br/><small>Talk to this app and see</small>
+    </li>
+    <li>
+      Contribute.
+      <br/><small>A growing community of users will hear your views</small>
+    </li>
+</ul>        
