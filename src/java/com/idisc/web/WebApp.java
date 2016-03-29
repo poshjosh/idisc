@@ -113,12 +113,15 @@ public class WebApp
 
     this.config = loadConfig(defaultFileLocation, fileLocation, ',');
     
-    String logLevel = this.config.getString("logLevel");
-    try {
-      Level level = Level.parse(logLevel);
-      XLogger.getInstance().setLogLevel(level);
-    } catch (Exception e) {
-      XLogger.getInstance().log(Level.WARNING, "Error setting log level to: " + logLevel, getClass(), e);
+    String logLevelStr = this.config.getString("logLevel");
+    if(logLevelStr != null) {
+      try {
+        Level logLevel = Level.parse(logLevelStr);
+        XLogger.getInstance().setLogLevel(com.idisc.web.WebApp.class.getPackage().getName(), logLevel);
+        XLogger.getInstance().setLogLevelForConsoleHandlers(logLevel);
+      } catch (Exception e) {
+        XLogger.getInstance().log(Level.WARNING, "Error setting log level to: " + logLevelStr, getClass(), e);
+      }
     }
     
     String authsvc_url = this.config.getString("authsvc.url");

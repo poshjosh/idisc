@@ -1,6 +1,5 @@
 package com.idisc.web.listeners;
 
-import com.bc.util.XLogger;
 import com.idisc.core.FeedUpdateService;
 import com.idisc.core.FeedUpdateTask;
 import com.idisc.web.AppProperties;
@@ -40,7 +39,6 @@ public class ServletContextListener
   {
     try
     {
-      XLogger.getInstance().setRootLoggerName(WebApp.class.getName());
       
       ServletContext sc = sce.getServletContext();
       
