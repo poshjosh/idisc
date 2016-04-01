@@ -1,11 +1,5 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package com.idisc.web;
 
-import com.bc.htmlparser.Main;
 import com.bc.util.Util;
 import com.bc.util.XLogger;
 import com.idisc.core.IdiscApp;
@@ -134,7 +128,7 @@ if(true) {
             
             List<Feed> selected = new Selectfeeds().select(null, null, 0, 1000);
         
-XLogger.getInstance().log(Level.INFO, "Selected: {0} feeds", Main.class, selected==null?null:selected.size());
+XLogger.getInstance().log(Level.INFO, "Selected: {0} feeds", MainTest.class, selected==null?null:selected.size());
 
         }catch(Exception e) {
             
