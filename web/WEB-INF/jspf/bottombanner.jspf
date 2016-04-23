@@ -1,0 +1,16 @@
+<div class="bottombanner">
+    <table>
+      <tr>
+        <td><a href="${pageContext.servletContext.contextPath}/feeds.jsp">Latest News Feed</a></td>      
+        <td><a href="${pageContext.servletContext.contextPath}/login.jsp">Login</a></td>      
+      </tr>
+      <tr>
+        <td><a href="${pageContext.servletContext.contextPath}/usage.jsp">Usage Instruction</a></td>      
+        <td><a href="${pageContext.servletContext.contextPath}/whynewsminute.jsp">Reasons to use ${appName}</a></td>      
+      </tr>
+      <tr>
+        <td><a href="${pageContext.servletContext.contextPath}/testimonials.jsp">Testimonials</a></td>      
+        <td><a href="${pageContext.servletContext.contextPath}/privacypolicy.jsp">Privacy Policy</a></td>      
+      </tr>
+    </table>
+</div>

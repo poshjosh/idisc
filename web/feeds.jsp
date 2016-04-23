@@ -1,17 +1,27 @@
 <%@page contentType="text/html" pageEncoding="UTF-8" errorPage="/oops.jsp"%>
 <%@taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
-<c:redirect context="${pageContext.servletContext.contextPath}" url="/feedspage.jsp"/>
-<!DOCTYPE html>
-<html>
-    <head>
-        <%@include file="/WEB-INF/jspf/defaultHeadContents.jspf"%>
-        <title>${appName} News Feeds</title>
-        <meta name="keywords" content="news,latest news,breaking news,extracted news,various sources"/>
-        <meta name="description" content="Latest breaking news feeds from various sources"/>
-    </head>
-    <body class="content">
-        <%@include file="/WEB-INF/jspf/topbanner.jspf"%>
-        <h3>... Please wait redirecting</h3>    
-        <p>If redirection does not complete in 7 seconds click <a href="${pageContext.servletContext.contextPath}/feedspage.jsp">here</a></p>
-    </body>
-</html>
+<%@taglib uri="/WEB-INF/tlds/idisc" prefix="idisc"%>
+
+<idisc:page_with_slider 
+    pageTitle="${appName} News Feeds" 
+    pageKeywords="news,latest news,breaking news,extracted news,various sources" 
+    pageDescription="Latest breaking news feeds from various sources">
+    <jsp:attribute name="pageContent" trim="true">
+        <c:if test="${feeds == null}">
+            <c:set var="feeds" value="<%=com.idisc.web.FeedCache.getLastFeeds()%>"/>
+        </c:if>
+        <c:choose>
+            <c:when test="${feeds == null || empty feeds}">
+                
+                <c:set var="feedCycleIntervalMillis" value="<%=com.idisc.web.FeedCache.getFeedCycleIntervalMillis()%>"/>
+                
+                <h3>
+                    No current feeds available, check back in ${feedCycleIntervalMillis/60000} minutes
+                </h3>
+            </c:when>    
+            <c:otherwise>
+                <idisc:displayfeeds feeds="${feeds}" page="${page}" nextPage="/feeds.jsp"/>
+            </c:otherwise>
+        </c:choose>        
+    </jsp:attribute>
+</idisc:page_with_slider>

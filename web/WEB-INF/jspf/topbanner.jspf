@@ -1,9 +1,60 @@
-<%@page pageEncoding="UTF-8" %>
 <%@taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
-<%@taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn"%>
-<a class="topbanner" href="${pageContext.servletContext.contextPath}/welcome/home.jsp">
-    <img src="${pageContext.servletContext.contextPath}/images/appicon.png" 
-         alt="${appName} icon" title="${appName} icon"/>
-    &emsp;<span>News Minute Plus</span>
-</a>
-<div><i>News re-invented 4u</i></div>    
+<%-- This is just a bot trap, visit the page to see what i mean --%>
+<a href="${pageContext.servletContext.contextPath}/adminAdminPage">&nbsp;</a>
+
+<%-- //@related userMessage --%>    
+<c:if test="${userMessage != null}">
+    <div class="content_sub">${userMessage}</div>  
+</c:if> 
+<span style="float:left;">
+    <span class="justified"><%@include file="/WEB-INF/jspf/socialbox.jspf"%></span>
+</span>
+<span style="float:right;">
+    <c:choose>
+        <c:when test="${user == null}">
+            <a href="${pageContext.servletContext.contextPath}/login.jsp">Login</a>
+        </c:when>
+        <c:otherwise>
+            <a href="${pageContext.servletContext.contextPath}/logout">Logout 
+                <c:choose>
+                    <c:when test="${user.username != null}">
+                        <tt class="smallerLighter">${user.username}</tt>
+                    </c:when>
+                    <c:when test="${installation.screenname != null}">
+                        <tt class="smallerLighter">${installation.screenname}</tt>
+                    </c:when>
+                    <c:otherwise></c:otherwise>
+                </c:choose>
+            </a>
+        </c:otherwise>
+    </c:choose>
+</span>
+<table style="width:100%;">
+    <tr>
+        <td>
+            <a href="${pageContext.servletContext.contextPath}/home.jsp">
+                <img class="icon_medium" src="${pageContext.servletContext.contextPath}/images/appicon.png" 
+                     alt="${appName} icon" title="${appName} icon"/>
+            </a>
+        </td>    
+        <td>
+            <a href="${pageContext.servletContext.contextPath}/home.jsp">
+                <span class="font_heavy app_color">News Minute</span>
+            </a>
+<%-- 
+  App default format is text/json.
+  For format=text/html and req=searchresults, the response will be forwarded 
+  to page searchresults.jsp with a parameter named searchresults referencing
+  the search results
+--%>
+            <form id="searchForm" method="post" action="${pageContext.servletContext.contextPath}/searchresults">
+                <input type="hidden" name="format" value="text/html"/>
+                <input type="hidden" name="req" value="searchresults"/>
+                <input type="hidden" name="limit" value="20"/>
+                <input type="text" name="query"/>
+                <input type="submit" value="Search"/>
+            </form>
+        </td>    
+    </tr>    
+</table>
+

@@ -6,7 +6,7 @@ import com.idisc.core.IdiscApp;
 import com.idisc.pu.entities.Site;
 import com.idisc.pu.entities.Sitetype;
 import com.idisc.pu.entities.Feed;
-import com.idisc.web.servlets.handlers.Selectfeeds;
+import com.idisc.web.servlets.handlers.request.Selectfeeds;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -126,7 +126,7 @@ if(true) {
 }
             IdiscApp.getInstance().init();
             
-            List<Feed> selected = new Selectfeeds().select(null, null, 0, 1000);
+            List<Feed> selected = new Selectfeeds().select(null, null, null, 0, 1000);
         
 XLogger.getInstance().log(Level.INFO, "Selected: {0} feeds", MainTest.class, selected==null?null:selected.size());
 

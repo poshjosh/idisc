@@ -2,7 +2,7 @@ package com.idisc.web;
 
 import com.bc.util.XLogger;
 import com.idisc.core.AbstractFeedComparator;
-import com.idisc.web.servlets.handlers.Appproperties;
+import com.idisc.web.servlets.handlers.request.Appproperties;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Map;

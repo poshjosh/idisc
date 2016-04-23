@@ -1,9 +1,8 @@
-<%@page pageEncoding="UTF-8" %>
 <p>Seven (7) Reasons</p>
 <ul>
     <li>
       News both off and on-line.
-      <br/><small>Get news even when internet connection is lost</small>
+      <br/><small>Get news even when Internet connection is lost</small>
     </li>
     <li>
       Smart Filter.

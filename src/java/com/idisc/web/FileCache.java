@@ -2,20 +2,18 @@ package com.idisc.web;
 
 import com.bc.io.CharFileIO;
 import com.bc.util.XLogger;
-import com.idisc.web.servlets.handlers.Appproperties;
+import com.idisc.web.servlets.handlers.request.Appproperties;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
-import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import org.apache.catalina.tribes.util.Arrays;
 

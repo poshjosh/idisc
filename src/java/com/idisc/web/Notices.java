@@ -1,6 +1,5 @@
 package com.idisc.web;
 
-import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 
 public class Notices
@@ -13,6 +12,7 @@ public class Notices
     super(request, load);
   }
   
+  @Override
   public String getDirPath()
   {
     return WebApp.getInstance().getServletContext().getRealPath("/notices");

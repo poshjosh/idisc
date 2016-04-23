@@ -1,4 +1,3 @@
-<%@page pageEncoding="UTF-8" %>
 <p>
   Asked why they love the ${appName} app...
 </p>

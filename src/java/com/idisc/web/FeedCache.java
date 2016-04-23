@@ -1,34 +1,28 @@
 package com.idisc.web;
 
+import com.bc.util.IntegerArray;
 import com.bc.util.XLogger;
+import com.idisc.core.FeedFrequency;
+import com.idisc.core.jpa.FeedSearch;
+import com.idisc.core.Util;
 import com.idisc.pu.entities.Feed;
-import com.idisc.web.exceptions.ValidationException;
-import com.idisc.web.servlets.handlers.Selectfeeds;
+import com.idisc.pu.entities.Site;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
-import javax.servlet.http.HttpServletRequest;
 import org.apache.commons.configuration.Configuration;
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-public class FeedCache
-  extends Selectfeeds
+public class FeedCache extends FeedComparator
 {
   private static List<Feed> lastFeeds;
   private static long lastTime;
+  
+  public FeedCache() {
+      this.setInvertSort(true);
+  }
   
   public static boolean isCachedFeedsAvailable()
   {
@@ -57,7 +51,7 @@ public class FeedCache
   {
     int cacheLimit = getCacheLimit();
     
-    List<Feed> feeds = super.select(null, null, 0, cacheLimit * 2);
+    List<Feed> feeds = new FeedSearch().select(null, null, 0, cacheLimit * 2);
     
     if ((feeds == null) || (feeds.isEmpty())) {
       return false;
@@ -65,17 +59,9 @@ public class FeedCache
     
     try
     {
-      printFirstDateLastDateAndFeedIds("BEFORE SORT", feeds, Level.FINER);
+      Util.printFirstDateLastDateAndFeedIds("BEFORE SORT", feeds, Level.FINER);
       
-      FeedComparator comparator = new FeedComparator();
-      
-
-
-
-
-      comparator.setInvertSort(true);
-      
-      Collections.sort(feeds, comparator);
+      Collections.sort(feeds, this);
       
       Configuration config = WebApp.getInstance().getConfiguration();
       boolean rearrange = config.getBoolean("rearrangeOutput", true);
@@ -101,24 +87,96 @@ public class FeedCache
 
 
     XLogger.getInstance().log(Level.FINE, "Updated cache with {0} feeds", getClass(), lastFeeds == null ? null : Integer.valueOf(lastFeeds.size()));
-    printFirstDateLastDateAndFeedIds("AFTER UPDATING CACHE", feeds, Level.FINER);
+    Util.printFirstDateLastDateAndFeedIds("AFTER UPDATING CACHE", feeds, Level.FINER);
     
     lastTime = System.currentTimeMillis();
     
     return true;
   }
   
-  public synchronized List<Feed> select(HttpServletRequest request)
-    throws ValidationException
+  protected List<Feed> ensureEquality(List<Feed> feeds, int outputSize)
   {
-    if (!isCachedFeedsAvailable())
+    Util.printFirstDateLastDateAndFeedIds("BEFORE REARRANGE", feeds, Level.FINER);
+    
+    FeedFrequency ff = new FeedFrequency(feeds);
+    int numOfSites = ff.getSiteCount();
+
+    int multiple = 2;
+    
+    if ((outputSize > numOfSites) && (feeds.size() > numOfSites * 2))
     {
-      updateCache();
+      int ave = outputSize / numOfSites;
+      if (ave < 1) {
+        ave = 1;
+      }
+      
+      int max = ave * 2;
+      
+      IntegerArray siteIds = new IntegerArray(numOfSites);
+      IntegerArray siteCounts = new IntegerArray(numOfSites);
+      
+      Iterator<Feed> iter = feeds.iterator();
+      
+      List<Feed> appendAtEnd = null;
+      
+      int index = 0;
+      
+      while (iter.hasNext())
+      {
+        index++;
+        
+        Feed feed = (Feed)iter.next();
+        
+        Site site = feed.getSiteid();
+        
+        if (site == null) {
+          XLogger.getInstance().log(Level.WARNING, "No site found for Feed:: ID: {0}, title: {1}", getClass(), feed.getFeedid(), feed.getTitle());
+        }
+        else
+        {
+
+          int siteid = site.getSiteid().intValue();
+          
+          int siteIndex = siteIds.indexOf(siteid);
+          
+          int siteCount;
+          
+          if (siteIndex == -1) {
+            siteCount = 0;
+            siteIds.add(siteid);
+            siteCounts.add(++siteCount);
+          } else {
+            siteCount = siteCounts.get(siteIndex);
+            assert (siteCount > 0) : ("Expected count > 0 found: " + siteCount);
+            siteCounts.set(siteIndex, ++siteCount);
+          }
+          
+          if (siteCount >= max)
+          {
+            XLogger.getInstance().log(Level.FINER, "Index: {0}. Site: {1}, has appeared {2} times", getClass(), Integer.valueOf(index), feed.getSiteid() == null ? null : feed.getSiteid().getSite(), Integer.valueOf(siteCount));
+            
+            iter.remove();
+            
+            if (appendAtEnd == null) {
+              appendAtEnd = new ArrayList(ave * 2);
+            }
+            
+            XLogger.getInstance().log(Level.FINEST, "Relocating Feed. ID: {0}, Date: {1}", getClass(), feed.getFeedid(), feed.getFeeddate());
+            
+            appendAtEnd.add(feed);
+          }
+        }
+      }
+      if ((appendAtEnd != null) && (!appendAtEnd.isEmpty()))
+      {
+        feeds.addAll(appendAtEnd);
+      }
+      
+      Util.printFirstDateLastDateAndFeedIds("AFTER REARRANGE", feeds, Level.FINER);
     }
     
-    return lastFeeds;
+    return feeds.size() <= outputSize ? feeds : feeds.subList(0, outputSize);
   }
-  
   public static List<Feed> getLastFeeds() {
     return lastFeeds;
   }

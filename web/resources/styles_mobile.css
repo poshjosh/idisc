@@ -7,10 +7,22 @@ Mobile version of the styles contained in default.css
 Any modification here must be reflected there
 margin:0 is synchronized with file /resources/normalize.css
 */
-body{ font-size:24px; width:100%; margin:0; text-align:justify; color:#555555; font-family:Verdana,Helvetica,sans-serif,Arial; }       
+html { font-size: 100%; }/** IE 5/6 hack to enable use of em font sizes */
+body{ height:100%; font-size:16px; text-align:center; background-color:#d7d7d7; }
+#main_container{ 
+    height:100%; font-size:1.5em; width:30em; /** 27em at font-size 1.5em, 40em at font-size 1em */
+    margin:auto; border:0; padding:0;  
+    color:#333333; font-family:Verdana,Helvetica,sans-serif,Arial; 
+}
+.content{
+    padding:0.5em; text-align:left; background-color:#e8e8e8; 
+}
+.content_sub{
+    padding:0.25em; width:95%; text-align:left; background-color:#fafafa; 
+}
 a{ text-decoration:none; }
-.content{ width:100%; font-size:1.5em; color: #555555; margin:0 auto; border:0; padding:0.5em; }
-.smallerLighter{ font-size:smaller; color: #777777; }
+.smallerLighter{ font-size:0.75em; color: #777777; }
+.faint{font-size: 0.5em; color:#0595b5; }
 .borderless{ margin:0; border:0; padding:0; }
 ul li { margin-bottom: 1em; }
 /** http://stackoverflow.com/questions/2906582/how-to-create-an-html-button-that-acts-like-a-link */
@@ -30,9 +42,39 @@ a.button {
 .button_prompt:active{
     color:orange;
 }
-.topbanner img{
-    width: 64px; height: 64px;
+
+.icon_medium{
+    width: 3.5em; height: 3.5em;
 }
-.topbanner span{
-    height:64px; font-size:1em; font-weight:900; color:#F56600;
+
+.font_heavy{
+    font-size:2em; font-weight:900; margin:0; padding:0;
+}
+
+.app_color{ color:#F56600; }
+
+.app_color_bg { background-color:#F56600; }
+
+#searchForm { text-align:center; }
+
+.allow_horizontalscrolls { overflow-x:auto; }
+
+.justified { text-align:justify; }
+
+.bottombanner {
+    font-size:0.75em;
+    width:100%;
+    text-align:center;
+    background-color:#F56600; 
+    color:white;
+}
+.bottombanner table{
+    width:100%;
+    text-align:center;
+}
+.bottombanner table tr td{
+    text-align:left;
+}
+.bottombanner table tr td a{
+    color:white;
 }

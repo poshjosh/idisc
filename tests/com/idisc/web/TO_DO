@@ -1,0 +1,17 @@
+* Implements pagination for Comments as already done for Searchresults ???
+* Closing of paginated results
+
+* All getXXX(HttpServletREquest) in request handler should be initialized and
+made available via getXXX()
+
+* Getmultipleresults should take advantage of:
+1. multiple parameters of name 'req' e.g /idisc?req=feed&req=comments&feedid=455167
+2. The method RequestHandler.getNextRequestHandler
+
+* Each request handler should have a getParameterName method
+If this method returns null then the provided parameter name
+should be used?
+
+* After posting a comment, the servlet tried to redirect to the following page:
+/feed/467418__PMBInChina__Buhari_Directs_Establishment_of_Technical_Committees_to_Finalize_Discussions_on_China_Nigeria_Joint_Projects___Photos_.jsp
+The problem is 

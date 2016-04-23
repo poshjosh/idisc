@@ -1,9 +1,43 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <web-app version="3.0" xmlns="http://java.sun.com/xml/ns/javaee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd">
+    <context-param>
+        <param-name>productionMode</param-name>
+        <param-value>true</param-value>
+    </context-param>
+    <context-param>
+        <param-name>appName</param-name>
+        <param-value>NewsMinute</param-value>
+    </context-param>
+    <context-param>
+        <param-name>appUrl</param-name>
+        <param-value>https://play.google.com/store/apps/details?id=com.looseboxes.idisc.newsminutefree</param-value>
+    </context-param>
+    <context-param>
+        <param-name>appDownloadUrl</param-name>
+        <param-value>/downloads/newsminutefree.apk</param-value>
+    </context-param>
+    <filter>
+        <filter-name>BotFilter</filter-name>
+        <filter-class>com.idisc.web.filters.BotFilter</filter-class>
+    </filter>
+    <filter>
+        <filter-name>AppFilter</filter-name>
+        <filter-class>com.idisc.web.filters.AppFilter</filter-class>
+    </filter>
     <filter>
         <filter-name>PageFilter</filter-name>
         <filter-class>com.idisc.web.filters.PageFilter</filter-class>
     </filter>
+    <filter-mapping>
+        <filter-name>BotFilter</filter-name>
+        <url-pattern>/*</url-pattern>
+        <dispatcher>REQUEST</dispatcher>
+    </filter-mapping>
+    <filter-mapping>
+        <filter-name>AppFilter</filter-name>
+        <url-pattern>/*</url-pattern>
+        <dispatcher>REQUEST</dispatcher>
+    </filter-mapping>
     <filter-mapping>
         <filter-name>PageFilter</filter-name>
         <url-pattern>*.jsp</url-pattern>
@@ -24,9 +58,31 @@
         <url-pattern>*.xhtml</url-pattern>
         <dispatcher>REQUEST</dispatcher>
     </filter-mapping>
+    <filter-mapping>
+        <filter-name>PageFilter</filter-name>
+        <url-pattern>*.xht</url-pattern>
+        <dispatcher>REQUEST</dispatcher>
+    </filter-mapping>
+    <filter-mapping>
+        <filter-name>PageFilter</filter-name>
+        <url-pattern>*.htm</url-pattern>
+        <dispatcher>REQUEST</dispatcher>
+    </filter-mapping>
     <listener>
         <description>ServletContextListener</description>
         <listener-class>com.idisc.web.listeners.ServletContextListener</listener-class>
+    </listener>
+    <listener>
+        <description>Initializes servlet context attribute baseURL, as well as session attribute 'mobile' which designates the requesting client as a mobile platform or otherwise</description>
+        <listener-class>com.bc.webapputil.listeners.DefaultRequestListener</listener-class>
+    </listener>
+    <listener>
+        <description>HttpSessionAttributeListener</description>
+        <listener-class>com.idisc.web.listeners.SessionAttributeListener</listener-class>
+    </listener>
+    <listener>
+        <description>HttpSessionListener</description>
+        <listener-class>com.idisc.web.listeners.SessionListener</listener-class>
     </listener>
     <servlet>
         <servlet-name>Idisc</servlet-name>
@@ -61,6 +117,7 @@
         <url-pattern>/removebookmarkfeedids</url-pattern>
         <url-pattern>/removefavoritefeedids</url-pattern>
         <url-pattern>/requestpassword</url-pattern>
+        <url-pattern>/searchresults</url-pattern>
         <url-pattern>/selectfeeds</url-pattern>
         <url-pattern>/signup</url-pattern>
         <url-pattern>/syncbookmarks</url-pattern>
@@ -80,6 +137,22 @@
     </welcome-file-list>
     <error-page>
         <exception-type>java.lang.Throwable</exception-type>
+        <location>/oops.jsp</location>
+    </error-page>
+    <error-page>
+        <exception-type>javax.servlet.ServletException</exception-type>
+        <location>/oops.jsp</location>
+    </error-page>
+    <error-page>
+        <exception-type>java.io.IOException</exception-type>
+        <location>/oops.jsp</location>
+    </error-page>
+    <error-page>
+        <error-code>404</error-code>
+        <location>/oops.jsp</location>
+    </error-page>
+    <error-page>
+        <error-code>500</error-code>
         <location>/oops.jsp</location>
     </error-page>
 </web-app>

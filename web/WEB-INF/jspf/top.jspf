@@ -1,0 +1,26 @@
+<%@taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
+<c:set var="sliderDir" value="${pageContext.servletContext.contextPath}/slider"/>
+<div id="wowslider-container1">
+    <div class="ws_images"><ul>
+            <li><a href="${appUrl}" target="_blank"><img src="${sliderDir}/data1/images/banner_headlines.png" alt="" title="" id="wows1_0"/></a></li>
+            <li><a href="${appUrl}" target="_blank"><img src="${sliderDir}/data1/images/banner_social.png" alt="" title="" id="wows1_1"/></a></li>
+            <li><a href="${appUrl}" target="_blank"><img src="${sliderDir}/data1/images/banner_sports.png" alt="" title="" id="wows1_2"/></a></li>
+            <li><a href="${appUrl}" target="_blank"><img src="${sliderDir}/data1/images/banner_notification.png" alt="" title="" id="wows1_3"/></a></li>
+            <li><a href="${appUrl}" target="_blank"><img src="${sliderDir}/data1/images/banner_contribute.png" alt="" title="" id="wows1_4"/></a></li>
+    </ul></div>
+    <div class="ws_bullets">
+        <div>
+            <a href="#" title=""><span><img src="${sliderDir}/data1/tooltips/banner_headlines.png" alt=""/>1</span></a>
+            <a href="#" title=""><span><img src="${sliderDir}/data1/tooltips/banner_social.png" alt=""/>2</span></a>
+            <a href="#" title=""><span><img src="${sliderDir}/data1/tooltips/banner_sports.png" alt=""/>3</span></a>
+            <a href="#" title=""><span><img src="${sliderDir}/data1/tooltips/banner_notification.png" alt=""/>4</span></a>
+            <a href="#" title=""><span><img src="${sliderDir}/data1/tooltips/banner_contribute.png" alt=""/>5</span></a>
+        </div>
+    </div>
+    <div class="ws_shadow"></div>
+</div>	
+<script type="text/javascript" src="${sliderDir}/engine1/wowslider.js"></script>
+<script type="text/javascript" src="${sliderDir}/engine1/script.js"></script>
+<div style="text-align:center">
+    <%@include file="/WEB-INF/jspf/applink.jspf"%>
+</div>

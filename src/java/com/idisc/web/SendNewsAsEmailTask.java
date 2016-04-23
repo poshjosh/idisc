@@ -2,8 +2,6 @@ package com.idisc.web;
 
 import com.bc.io.CharFileIO;
 import com.bc.jpa.fk.EnumReferences;
-import com.bc.mailservice.Message;
-import com.bc.mailservice.SimpleMessage;
 import com.bc.util.XLogger;
 import com.idisc.core.AbstractSendNewsAsEmailTask;
 import com.idisc.core.IdiscApp;
@@ -30,6 +28,10 @@ public class SendNewsAsEmailTask
 {
   private final int numberOfFeeds;
   
+  private String subject;
+  
+  private String message;
+  
   public SendNewsAsEmailTask()
   {
     this(3);
@@ -37,6 +39,7 @@ public class SendNewsAsEmailTask
   
   public SendNewsAsEmailTask(int numberOfFeeds) {
     this.numberOfFeeds = numberOfFeeds;
+    this.createMessage();
   }
   
   public void reset()
@@ -55,7 +58,8 @@ public class SendNewsAsEmailTask
     throw new UnsupportedOperationException();
   }
   
-  protected Message createMessage()
+  
+  protected void createMessage()
   {
     List<Feed> feeds = FeedCache.getLastFeeds();
     if ((feeds == null) || (feeds.isEmpty())) {
@@ -71,10 +75,10 @@ public class SendNewsAsEmailTask
     
     XLogger.getInstance().log(Level.FINE, "Number of feeds: {0}, to send: {1}", getClass(), feeds == null ? null : Integer.valueOf(feeds.size()), Integer.valueOf(this.numberOfFeeds));
     
-    StringBuilder message = new StringBuilder();
+    StringBuilder builder = new StringBuilder();
     
-    message.append("<div style=\"font-size:1.5em\">");
-    message.append("<p>Hi,</p>");
+    builder.append("<div style=\"font-size:1.5em\">");
+    builder.append("<p>Hi,</p>");
     
     String firstHeading = null;
 
@@ -92,52 +96,46 @@ public class SendNewsAsEmailTask
         {
 
           if (firstHeading == null) {
-            message.append("<p><b>Here's latest news from NewsMinute</b></p>");
+            builder.append("<p><b>Here's latest news from NewsMinute</b></p>");
             firstHeading = heading;
           }
           
           if (i == 0) {
-            message.append("<ul>");
+            builder.append("<ul>");
           }
           
-          message.append("<li>").append(heading).append("</li>");
+          builder.append("<li>").append(heading).append("</li>");
         }
       }
-      message.append("</ul>");
+      builder.append("</ul>");
     }
     
-    String downloadurl = WebApp.getInstance().getConfiguration().getString("downloadurl");
-    if (downloadurl == null) {
+    String appUrl = WebApp.getInstance().getAppUrl();
+    if (appUrl == null) {
       throw new NullPointerException();
     }
-    message.append("<p>I love the NewsMinute app. you should try it. <a href=\"");
-    message.append(downloadurl).append("\">Download it here</a></p>");
+    builder.append("<p>I love the NewsMinute app. you should try it. <a href=\"");
+    builder.append(appUrl).append("\">Download it here</a></p>");
 
     String path = WebApp.getInstance().getServletContext().getRealPath("/WEB-INF/jspf/whynewsminute.jspf");
     try {
       CharSequence cs = new CharFileIO().readChars(path);
       if (cs != null) {
         cs = cs.toString().replaceFirst("(<%).+?(%>)", "");
-        message.append(cs);
+        builder.append(cs);
       }
     } catch (IOException e) {
       XLogger.getInstance().log(Level.WARNING, null, getClass(), e);
     }
     
-    message.append("</div>");
-    String subject;
+    builder.append("</div>");
     if ((firstHeading == null) || (firstHeading.isEmpty())) {
       subject = "Latest News from News Minute";
     } else {
       subject = "NewsMinute: " + firstHeading;
     }
     
-    SimpleMessage mailMessage = new SimpleMessage();
-    mailMessage.setSubject(subject);
-    mailMessage.setMessage(message.toString());
-    mailMessage.setContentType("text/html");
-    
-    return mailMessage;
+    message = builder.toString();
   }
   
   private boolean loadOwn = true;
@@ -381,9 +379,12 @@ public class SendNewsAsEmailTask
   {
     return WebApp.getInstance().getConfiguration().getString("password").toCharArray();
   }
-  
-  public Message getEmailMessage()
-  {
-    return createMessage();
+
+  public String getSubject() {
+    return subject;
+  }
+
+  public String getMessage() {
+    return message;
   }
 }

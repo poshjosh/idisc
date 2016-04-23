@@ -1,9 +1,7 @@
 package com.idisc.web.listeners;
 
+import com.bc.util.XLogger;
 import com.idisc.core.FeedUpdateService;
-import com.idisc.core.FeedUpdateTask;
-import com.idisc.web.AppProperties;
-import com.idisc.web.IdiscUpdateTask;
 import com.idisc.web.WebApp;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
@@ -14,27 +12,15 @@ import java.util.logging.Logger;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletException;
-import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 
 public class ServletContextListener
   implements javax.servlet.ServletContextListener
 {
-  private boolean productionMode;
-  private boolean startFeedUpdateService;
-  private FeedUpdateService feedUpdateService;
   
-  public ServletContextListener()
-  {
-    this.productionMode = true;
-    this.startFeedUpdateService = true;
-    if (!this.productionMode) {
-      com.idisc.core.FeedUpdateTask.LOG_LEVEL = Level.INFO;
-    } else {
-      com.idisc.core.FeedUpdateTask.LOG_LEVEL = Level.FINE;
-    }
-  }
+  public ServletContextListener() { }
   
+  @Override
   public void contextInitialized(ServletContextEvent sce)
   {
     try
@@ -44,31 +30,15 @@ public class ServletContextListener
       
       updateAttributesFromInitParameters(sc);
       
-      WebApp webApp = WebApp.getInstance();
+      String sval = sc.getInitParameter("productionMode");
       
-      String propertiesFileName = this.productionMode ? "META-INF/properties/idiscweb.properties" : "META-INF/properties/idiscweb_devmode.properties";
+XLogger.getInstance().log(Level.INFO, "Production mode: {0}", this.getClass(), sval);
+
+      final boolean productionMode = sval == null ? false : Boolean.parseBoolean(sval);
       
-      webApp.setPropertiesFileName(propertiesFileName);
+      WebApp webApp = WebApp.getInstance(productionMode);
       
       webApp.init(sc);
-      
-      Configuration config = webApp.getConfiguration();
-      
-      sc.setAttribute(AppProperties.APP_NAME, config.getString(AppProperties.APP_NAME));
-      
-      if (this.startFeedUpdateService) {
-        this.feedUpdateService = new FeedUpdateService(){
-            @Override
-            public FeedUpdateTask newTask() {
-                return new IdiscUpdateTask();
-            }
-        };
-
-        int delay = config.getInt(AppProperties.FEED_CYCLE_DELAY);
-        int interval = config.getInt(AppProperties.FEED_CYCLE_INTERVAL);
-        
-        this.feedUpdateService.start(delay, interval, TimeUnit.MINUTES);
-      }
     }
     catch (ServletException|IOException|ConfigurationException|IllegalAccessException|InterruptedException|InvocationTargetException e)
     {
@@ -94,24 +64,9 @@ public class ServletContextListener
   @Override
   public void contextDestroyed(ServletContextEvent sce)
   {
-    if (this.feedUpdateService != null) {
-      this.feedUpdateService.shutdownAndAwaitTermination(1500L, TimeUnit.MILLISECONDS);
+    FeedUpdateService feedUpdateService = WebApp.getInstance().getFeedUpdateService();
+    if(feedUpdateService != null) {
+      feedUpdateService.shutdownAndAwaitTermination(1000L, TimeUnit.MILLISECONDS);
     }
-  }
-  
-  public boolean isProductionMode() {
-    return this.productionMode;
-  }
-  
-  public void setProductionMode(boolean productionMode) {
-    this.productionMode = productionMode;
-  }
-  
-  public boolean isStartFeedUpdateService() {
-    return this.startFeedUpdateService;
-  }
-  
-  public void setStartFeedUpdateService(boolean startFeedUpdateService) {
-    this.startFeedUpdateService = startFeedUpdateService;
   }
 }

@@ -13,7 +13,7 @@
     "developerEmails": ["posh.bc@gmail.com", "chinomsoikwuagwu@yahoo.com", "looseboxes@gmail.com", "coolbuyng@gmail.com", "coolbuyng@yahoo.com", "nelotache@gmail.com", "nelotache@yahoo.com"],
     "connectTimeoutMillis": 15000,
     "readTimeoutMillis": 30000,
-    "feedDownloadLimit": 200,
+    "feedDownloadLimit": 100,
     "feedDownloadBufferSize": 1000,
     "textLengthXShort": 50,
     "textLengthShort": 100,

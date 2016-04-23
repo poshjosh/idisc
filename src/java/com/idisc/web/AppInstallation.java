@@ -2,27 +2,16 @@ package com.idisc.web;
 
 import com.bc.jpa.ControllerFactory;
 import com.bc.jpa.EntityController;
+import com.bc.util.XLogger;
 import com.idisc.core.IdiscApp;
 import com.idisc.core.User;
 import com.idisc.pu.entities.Installation;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.logging.Level;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 public class AppInstallation
 {
@@ -40,8 +29,20 @@ public class AppInstallation
   public static Installation getEntity(HttpServletRequest request, User user, boolean create)
     throws ServletException
   {
+XLogger.getInstance().log(Level.FINER, "Available user: {0}", AppInstallation.class, user);
     if (user != null) {
       List<Installation> list = user.getInstallationList();
+XLogger.getInstance().log(Level.FINER, "User has {0} installations", AppInstallation.class, (list==null?null:list.size()));
+      if(list == null) {
+        EntityController<Installation, Integer> ec = 
+                IdiscApp.getInstance().getControllerFactory().getEntityController(
+                        Installation.class, Integer.class);
+        list = ec.select("feeduserid", user.getFeeduserid(), 0, -1);
+        
+XLogger.getInstance().log(Level.FINER, "For user, selected {0} installations", AppInstallation.class, (list==null?null:list.size()));
+
+        user.setInstallationList(list);
+      }
       if ((list != null) && (!list.isEmpty()))
       {
         return (Installation)list.get(list.size() - 1);
@@ -59,7 +60,8 @@ public class AppInstallation
     try
     {
       output = getEntity(col, sval);
-      
+       
+XLogger.getInstance().log(Level.FINER, "{0} = {1}, found: ", AppInstallation.class, col, sval, output);
       if ((output == null) && (create))
       {
         Date date = new Date();
@@ -92,7 +94,11 @@ public class AppInstallation
         try
         {
           EntityController<Installation, Integer> ec = getEntityController();
+          
           ec.create(output);
+          
+XLogger.getInstance().log(Level.FINER, "{0} = {1}, created: ", AppInstallation.class, col, sval, output);
+          
         } catch (Exception e) {
           throw new ServletException("Error creating database record for installation with installationkey: " + sval, e);
         }
