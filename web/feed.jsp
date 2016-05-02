@@ -48,8 +48,7 @@
             <div><b>Comments</b></div>
             <idisc:displaycomments comments="${comments}"/> 
         </c:if>
-        <c:set var="lastFeeds" value="<%=com.idisc.web.FeedCache.getLastFeeds()%>"/>
-        <c:set var="feeds" value="${searchresults == null || empty searchresults ? (feeds == null || empty feeds ? lastFeeds : feeds) : searchresults}"/>
+        <c:set var="feeds" value="${searchresults == null || empty searchresults ? (feeds == null || empty feeds ? cachedFeeds : feeds) : searchresults}"/>
         <c:if test="${feeds != null && not empty feeds}">
             <div><b>More News</b></div>
             <idisc:displayfeeds feeds="${feeds}" nextPage="/feeds.jsp"/> 

@@ -8,15 +8,13 @@
     pageDescription="Latest breaking news feeds from various sources">
     <jsp:attribute name="pageContent" trim="true">
         <c:if test="${feeds == null}">
-            <c:set var="feeds" value="<%=com.idisc.web.FeedCache.getLastFeeds()%>"/>
+            <c:set var="feeds" value="${cachedFeeds}"/>
         </c:if>
         <c:choose>
             <c:when test="${feeds == null || empty feeds}">
                 
-                <c:set var="feedCycleIntervalMillis" value="<%=com.idisc.web.FeedCache.getFeedCycleIntervalMillis()%>"/>
-                
                 <h3>
-                    No current feeds available, check back in ${feedCycleIntervalMillis/60000} minutes
+                    No current feeds available, check back later
                 </h3>
             </c:when>    
             <c:otherwise>

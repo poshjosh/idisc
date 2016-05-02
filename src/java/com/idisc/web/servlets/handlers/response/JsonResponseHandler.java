@@ -13,8 +13,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-public class JsonResponseHandler<V>
-  extends AbstractResponseHandler<V>
+public class JsonResponseHandler<V> extends AbstractResponseHandler<V>
 {
   private JsonFormat _jf;
   
@@ -176,7 +175,8 @@ XLogger.getInstance().log(Level.FINE, "Output name: {0}, buffer length: {1}", th
     return outputJson;
   }
   
-  public void appendJsonOutput(HttpServletRequest request, Map outputMap, StringBuilder outputJson) {
+  public void appendJsonOutput(
+          HttpServletRequest request, Map outputMap, StringBuilder appendTo) {
       
     JsonFormat jsonFormat = getJsonFormat(request);
 
@@ -188,7 +188,7 @@ XLogger.getInstance().log(Level.FINE, "Output name: {0}, buffer length: {1}", th
     
     jsonFormat.setTidyOutput(this.isTidyOutput(request));
     
-    jsonFormat.appendJSONString(outputMap, outputJson);
+    jsonFormat.appendJSONString(outputMap, appendTo);
   }
 
   public boolean isTidyOutput(HttpServletRequest request) {

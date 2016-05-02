@@ -1,8 +1,8 @@
 package com.idisc.web.filters;
 
 import com.bc.util.XLogger;
-import com.bc.webapputil.ServletUtil;
-import com.bc.webapputil.filters.BaseFilter;
+import com.bc.web.core.util.ServletUtil;
+import com.bc.web.core.filters.BaseFilter;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;

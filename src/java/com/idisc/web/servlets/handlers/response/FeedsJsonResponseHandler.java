@@ -81,6 +81,56 @@ public class FeedsJsonResponseHandler extends SelectfeedsJsonResponseHandler {
     return json.length() > 1000 ? new String(json) : json.toString();
   }
 
+  public Map getCommentNotices(HttpServletRequest request, List<Feed> feeds)
+  {
+    if (this.installation == null) {
+      return null;
+    }
+    try
+    {
+      int maxAgeDays = 30;boolean directReplies = false;
+      List<Map<String, Object>> commentNotices = CommentNotification.getNotifications(this.installation, getJsonFormat(request), directReplies, 30);
+      
+      if ((commentNotices != null) && (!commentNotices.isEmpty())) {
+        return Collections.singletonMap("notices", commentNotices);
+      }
+      return null;
+    }
+    catch (Exception e) {
+      XLogger.getInstance().log(Level.WARNING, null, getClass(), e); }
+    return null;
+  }
+
+  private static Collection<Map> _ns;
+  public Collection<Map> getNotices(HttpServletRequest request, List<Feed> output)
+  {
+    try
+    {
+      if (_ns == null) {
+        XLogger.getInstance().log(Level.INFO, "Creating tips cache", getClass());
+        _ns = new Notices(request, true).values();
+      }
+      
+      if ((_ns != null) && (!_ns.isEmpty()))
+      {
+        XLogger.getInstance().log(Level.FINER, "Adding {0} tips to output", getClass(), Integer.valueOf(_ns.size()));
+        
+        Date date = Util.getEarliestDate(output);
+        
+        for (Map notice : _ns) {
+          notice.put(Feed_.datecreated.getName(), date);
+          notice.put(Feed_.feeddate.getName(), date);
+        }
+      }
+    } catch (Exception e) { 
+      XLogger.getInstance().log(Level.WARNING, "Error loading tips", getClass(), e);
+    }
+    
+    return _ns;
+  }
+}
+/**
+ * 
   public Object getOutput_old(HttpServletRequest request, String name, List<Feed> feeds)
   {
       
@@ -128,54 +178,5 @@ public class FeedsJsonResponseHandler extends SelectfeedsJsonResponseHandler {
     
     return json.length() > 1000 ? new String(json) : json.toString();
   }
-  
-  public Map getCommentNotices(HttpServletRequest request, List<Feed> feeds)
-  {
-    if (this.installation == null) {
-      return null;
-    }
-    try
-    {
-      int maxAgeDays = 30;boolean directReplies = false;
-      List<Map<String, Object>> commentNotices = CommentNotification.getNotifications(this.installation, getJsonFormat(request), directReplies, 30);
-      
-      if ((commentNotices != null) && (!commentNotices.isEmpty())) {
-        return Collections.singletonMap("notices", commentNotices);
-      }
-      return null;
-    }
-    catch (Exception e) {
-      XLogger.getInstance().log(Level.WARNING, null, getClass(), e); }
-    return null;
-  }
-  
-
-
-  private static Collection<Map> _ns;
-  public Collection<Map> getNotices(HttpServletRequest request, List<Feed> output)
-  {
-    try
-    {
-      if (_ns == null) {
-        XLogger.getInstance().log(Level.INFO, "Creating tips cache", getClass());
-        _ns = new Notices(request, true).values();
-      }
-      
-      if ((_ns != null) && (!_ns.isEmpty()))
-      {
-        XLogger.getInstance().log(Level.FINER, "Adding {0} tips to output", getClass(), Integer.valueOf(_ns.size()));
-        
-        Date date = Util.getEarliestDate(output);
-        
-        for (Map notice : _ns) {
-          notice.put(Feed_.datecreated.getName(), date);
-          notice.put(Feed_.feeddate.getName(), date);
-        }
-      }
-    } catch (Exception e) { 
-      XLogger.getInstance().log(Level.WARNING, "Error loading tips", getClass(), e);
-    }
-    
-    return _ns;
-  }
-}
+ * 
+ */

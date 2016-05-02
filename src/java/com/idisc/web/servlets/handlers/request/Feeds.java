@@ -2,8 +2,8 @@ package com.idisc.web.servlets.handlers.request;
 
 import com.idisc.pu.entities.Feed;
 import com.idisc.pu.entities.Installation;
-import com.idisc.web.FeedCache;
-import com.idisc.web.FeedComparator;
+import com.idisc.web.DefaultFeedCache;
+import com.idisc.web.DefaultFeedComparator;
 import com.idisc.web.exceptions.ValidationException;
 import com.idisc.web.servlets.handlers.response.FeedsJsonResponseHandler;
 import com.idisc.web.servlets.handlers.response.HtmlResponseHandler;
@@ -51,38 +51,31 @@ public class Feeds extends Selectfeeds
   public synchronized List<Feed> select(HttpServletRequest request)
     throws ValidationException
   {
-    if (!FeedCache.isCachedFeedsAvailable())
+    if (!DefaultFeedCache.isCachedFeedsAvailable())
     {
-      FeedCache fc = new FeedCache();
+      DefaultFeedCache fc = new DefaultFeedCache();
       
       fc.updateCache();
     }
     
     int userLimit = getLimit(request);
     
-    List<Feed> lastFeeds = FeedCache.getLastFeeds();
+    List<Feed> cachedFeeds = DefaultFeedCache.getCachedFeeds(request);
     
+    final int cacheSize = cachedFeeds.size();
+    
+    List<Feed> output = new ArrayList(cacheSize <= userLimit ? cachedFeeds : cachedFeeds.subList(0, userLimit));
+    
+//long tb4 = System.currentTimeMillis();
+//long mb4 = Runtime.getRuntime().freeMemory();
+    try (DefaultFeedComparator autoCloseableFeedComparator = new DefaultFeedComparator(installation)) {
+          
+      Collections.sort(output, autoCloseableFeedComparator);
+    }
+//XLogger.getInstance().log(Level.INFO, "Sorted {0} feeds. Consumed time: {1}, memory: {1}", 
+//this.getClass(), output.size(), (System.currentTimeMillis()-tb4), (mb4-Runtime.getRuntime().freeMemory()));
 
-    request.getSession().getServletContext().setAttribute("lastFeeds", lastFeeds);
-    
-    final int cacheSize = lastFeeds.size();
-    
-    List<Feed> output = new ArrayList(cacheSize <= userLimit ? lastFeeds : lastFeeds.subList(0, userLimit));
-    
-    FeedComparator comparator = new FeedComparator(){
-      // Having an installation specified makes the sort user specific
-      @Override
-      public Installation getInstallation() {
-        return installation;
-      }
-    };
-
-    comparator.setInvertSort(true);
-    
-    Collections.sort(output, comparator);
-    
-
-    request.getSession().setAttribute("output", lastFeeds);
+    request.getSession().setAttribute("output", cachedFeeds);
     
     return output;
   }

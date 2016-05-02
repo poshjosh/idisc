@@ -1,13 +1,8 @@
 package com.idisc.web.servlets.handlers.request;
 
-import com.idisc.web.servlets.handlers.response.HtmlBooleanResponseHandler;
-import com.idisc.web.servlets.handlers.response.EntityJsonBooleanResponseHandler;
-import com.idisc.web.servlets.handlers.response.ResponseHandler;
-import com.bc.jpa.ControllerFactory;
 import com.bc.jpa.EntityController;
 import com.bc.jpa.exceptions.PreexistingEntityException;
 import com.bc.util.XLogger;
-import com.idisc.core.IdiscApp;
 import com.idisc.pu.entities.Comment;
 import com.idisc.pu.entities.Feed;
 import com.idisc.pu.entities.Installation;
@@ -20,42 +15,11 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-public class Newcomment
-  extends AbstractRequestHandler<Boolean>
-{
-  @Override
-  public boolean isProtected()
-  {
-    return false;
-  }
+public class Newcomment extends NewEntityHandler<Comment> {
 
-  @Override
-  public ResponseHandler<Boolean> createResponseHandler(HttpServletRequest request) {
-    ResponseHandler<Boolean> responseHandler;
-    if (this.isHtmlResponse(request))
-    {
-      responseHandler = new HtmlBooleanResponseHandler(){
-        @Override
-        public int getStatusCode(HttpServletRequest request, String name, Boolean success) {
-          return Newcomment.this.getStatusCode(success);
-        }
-      };
-    }
-    else
-    {
-      responseHandler = new EntityJsonBooleanResponseHandler(){
-        @Override
-        public int getStatusCode(HttpServletRequest request, String name, Boolean success) {
-          return Newcomment.this.getStatusCode(success);
-        }
-      };
-    }
-    return responseHandler;
-  }
-  
-  private int getStatusCode(Boolean success)
-  {
-    return success ? HttpServletResponse.SC_CREATED : HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
+    @Override
+  public Class getEntityType() {
+    return Comment.class;
   }
   
   @Override
@@ -79,7 +43,7 @@ XLogger.getInstance().log(Level.FINER, "execute(HttpServletRequest, HttpServletR
     
     comment.setInstallationid(installation);
     
-    EntityController<Comment, Object> ec = getEntityController(Comment.class);
+    EntityController<Comment, Object> ec = getEntityController();
     
     Integer repliedto_id = getInteger(request, "repliedto");
     if (repliedto_id != null) {
@@ -118,11 +82,5 @@ XLogger.getInstance().log(Level.FINER, "execute(HttpServletRequest, HttpServletR
       return null;
     }
     return Integer.valueOf(paramValue);
-  }
-  
-  private <T> EntityController<T, Object> getEntityController(Class<T> aClass)
-  {
-    ControllerFactory factory = IdiscApp.getInstance().getControllerFactory();
-    return factory.getEntityController(aClass);
   }
 }

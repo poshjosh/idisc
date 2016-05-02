@@ -4,7 +4,7 @@ import com.bc.jpa.ControllerFactory;
 import com.bc.jpa.EntityController;
 import com.bc.util.XLogger;
 import com.idisc.core.IdiscApp;
-import com.idisc.web.FeedCache;
+import com.idisc.web.DefaultFeedCache;
 import com.idisc.web.exceptions.ValidationException;
 import java.io.IOException;
 import java.util.List;
@@ -74,7 +74,7 @@ XLogger.getInstance().log(Level.FINE, "Created next request handler: {0}", this.
     
     com.idisc.pu.entities.Feed feed = null;
     
-    List<com.idisc.pu.entities.Feed> lastFeeds = FeedCache.getLastFeeds();
+    List<com.idisc.pu.entities.Feed> lastFeeds = DefaultFeedCache.getCachedFeeds(request);
     
     if ((lastFeeds != null) && (!lastFeeds.isEmpty()))
     {
@@ -86,8 +86,6 @@ XLogger.getInstance().log(Level.FINE, "Created next request handler: {0}", this.
           }
         }
       }
-      
-      request.getSession().getServletContext().setAttribute("lastFeeds", lastFeeds);
     }
     
     if (feed == null)

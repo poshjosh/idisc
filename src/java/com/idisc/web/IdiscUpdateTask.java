@@ -2,7 +2,6 @@ package com.idisc.web;
 
 import com.bc.util.XLogger;
 import com.idisc.core.FeedUpdateTask;
-import com.idisc.core.Updateusersitehitcounts;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -123,6 +122,7 @@ public class IdiscUpdateTask
     }
   }
   
+  @Override
   public int archiveFeeds() {
     XLogger.getInstance().log(Level.INFO, "Archiving feeds", getClass());
     int updateCount = super.archiveFeeds();
@@ -130,6 +130,7 @@ public class IdiscUpdateTask
     return updateCount;
   }
   
+  @Override
   public boolean downloadFeeds()
   {
     XLogger.getInstance().log(Level.INFO, "Downloading feeds", getClass());
@@ -138,26 +139,10 @@ public class IdiscUpdateTask
     return success;
   }
   
-  private static volatile int x = 0;
-  
-  public boolean updateUsersitehitcounts() { if (++x == 4) {
-      x = 0;
-      try {
-        XLogger.getInstance().log(Level.INFO, "Updating user site hit counts", getClass());
-        new Updateusersitehitcounts().run();
-        XLogger.getInstance().log(Level.INFO, "Done updating user site hit counts", getClass());
-        return true;
-      } catch (RuntimeException e) {
-        XLogger.getInstance().log(Level.WARNING, "Unexpected exception", getClass(), e);
-      }
-    }
-    return false;
-  }
-  
   public boolean updateFeedCache() {
     try {
       XLogger.getInstance().log(Level.INFO, "Updating feed cache", getClass());
-      new FeedCache().updateCache();
+      new DefaultFeedCache().updateCache();
       XLogger.getInstance().log(Level.INFO, "Done updating feed cache", getClass());
       return true;
     } catch (RuntimeException e) {
@@ -198,14 +183,6 @@ public class IdiscUpdateTask
                 ++completed;
             }
         }
-//                ,
-//            new Runnable(){
-//                @Override
-//                public void run() {
-//                    IdiscUpdateTask.this.updateUsersitehitcounts();
-//                    ++completed;
-//                }
-//            }
     };
     return tasks;
   }

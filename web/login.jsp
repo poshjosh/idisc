@@ -11,6 +11,7 @@
         <form id="loginFormId" method="post" action="${pageContext.servletContext.contextPath}/login">
             <p><label>&emsp;&nbsp;&nbsp;Email: <input size="50" type="text" name="emailaddress"/></label></p>
             <p><label>Password: <input size="50" type="password" name="password"/></label></p>    
+            <input type="hidden" name="format" value="text/html"/>
             <input type="submit" value="Login"/>
         </form>
     </jsp:attribute>

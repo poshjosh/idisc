@@ -15,6 +15,7 @@ body{ height:100%; font-size:16px; text-align:center; background-color:#d7d7d7; 
     margin:auto; border:0; padding:0;  
     color:#333333; font-family:Verdana,Helvetica,sans-serif,Arial; 
 }
+img{max-width: 28em; width:auto; height: auto;} /** max-width here must not be greater than that of #main_container */
 .content{
     padding:1em; text-align:left; background-color:#e8e8e8; 
 }

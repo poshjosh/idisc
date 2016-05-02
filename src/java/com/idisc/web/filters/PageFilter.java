@@ -1,8 +1,8 @@
 package com.idisc.web.filters;
 
-import com.bc.webapputil.AbstractRedirect;
-import com.bc.webapputil.Redirect;
-import com.bc.webapputil.filters.PageRedirectionFilter;
+import com.bc.web.core.util.AbstractRedirect;
+import com.bc.web.core.util.Redirect;
+import com.bc.web.core.filters.PageRedirectionFilter;
 import javax.servlet.http.HttpServletRequest;
 
 public class PageFilter

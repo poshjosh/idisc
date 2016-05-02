@@ -61,10 +61,10 @@ public class SendNewsAsEmailTask
   
   protected void createMessage()
   {
-    List<Feed> feeds = FeedCache.getLastFeeds();
+    List<Feed> feeds = DefaultFeedCache.getCachedFeeds();
     if ((feeds == null) || (feeds.isEmpty())) {
-      new FeedCache().updateCache();
-      List<Feed> update = FeedCache.getLastFeeds();
+      new DefaultFeedCache().updateCache();
+      List<Feed> update = DefaultFeedCache.getCachedFeeds();
       if (update != null) {
         feeds = new ArrayList(update);
       }

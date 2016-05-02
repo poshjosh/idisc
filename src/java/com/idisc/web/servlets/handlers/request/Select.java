@@ -17,8 +17,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.configuration.Configuration;
 
-public abstract class Select<T>
-  extends AbstractRequestHandler<List<T>>
+public abstract class Select<T> extends AbstractRequestHandler<List<T>>
 {
   private final long maxLimit;
   private final long defaultLimit;

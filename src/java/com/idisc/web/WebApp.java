@@ -28,7 +28,7 @@ public class WebApp
   
   private final long memoryAtStartup;
   
-  private String propertiesFileName;
+  private final String propertiesFileName;
   
   private final String defaultPropertiesFileName;
   
@@ -46,6 +46,7 @@ public class WebApp
   {
     this.productionMode = productionMode;
     this.memoryAtStartup = Runtime.getRuntime().freeMemory();
+    XLogger.getInstance().log(Level.INFO, "Memory at startup: {0}", this.getClass(), this.memoryAtStartup);
     this.defaultPropertiesFileName = "META-INF/properties/idiscwebdefaults.properties";
     this.propertiesFileName = this.productionMode ?
             "META-INF/properties/idiscweb.properties" :
@@ -67,6 +68,7 @@ public class WebApp
     throws ServletException, IOException, ConfigurationException, 
           IllegalAccessException, InterruptedException, InvocationTargetException
   {
+    
     URL defaultFileLoc = context.getResource(this.defaultPropertiesFileName);
     
     URL fileLoc = context.getResource(this.propertiesFileName);

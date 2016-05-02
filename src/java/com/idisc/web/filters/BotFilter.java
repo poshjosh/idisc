@@ -11,7 +11,7 @@ import org.apache.commons.configuration.Configuration;
 /**
  * @author poshjosh
  */
-public class BotFilter extends com.bc.webapputil.filters.BotFilter {
+public class BotFilter extends com.bc.web.core.filters.BotFilter {
     
     private final long memoryCeiling;
     

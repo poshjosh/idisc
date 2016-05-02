@@ -73,16 +73,16 @@
         <listener-class>com.idisc.web.listeners.ServletContextListener</listener-class>
     </listener>
     <listener>
-        <description>Initializes servlet context attribute baseURL, as well as session attribute 'mobile' which designates the requesting client as a mobile platform or otherwise</description>
-        <listener-class>com.bc.webapputil.listeners.DefaultRequestListener</listener-class>
-    </listener>
-    <listener>
         <description>HttpSessionAttributeListener</description>
         <listener-class>com.idisc.web.listeners.SessionAttributeListener</listener-class>
     </listener>
     <listener>
         <description>HttpSessionListener</description>
         <listener-class>com.idisc.web.listeners.SessionListener</listener-class>
+    </listener>
+    <listener>
+        <description>RequestListener. Amongst others, initializes servlet context attribute baseURL, as well as session attribute 'mobile' which designates the requesting client as a mobile platform or otherwise</description>
+        <listener-class>com.idisc.web.listeners.RequestListener</listener-class>
     </listener>
     <servlet>
         <servlet-name>Idisc</servlet-name>
@@ -114,6 +114,7 @@
         <url-pattern>/login</url-pattern>
         <url-pattern>/logout</url-pattern>
         <url-pattern>/newcomment</url-pattern>
+        <url-pattern>/newfeed</url-pattern>
         <url-pattern>/removebookmarkfeedids</url-pattern>
         <url-pattern>/removefavoritefeedids</url-pattern>
         <url-pattern>/requestpassword</url-pattern>

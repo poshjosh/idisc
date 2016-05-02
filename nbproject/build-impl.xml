@@ -1163,12 +1163,12 @@ exists or setup the property manually. For example like this:
         <copyfiles files="${reference.authsvcclient.jar}" iftldtodir="${build.web.dir}/WEB-INF" todir="${dist.ear.dir}/lib"/>
         <copyfiles files="${reference.idiscpu.jar}" iftldtodir="${build.web.dir}/WEB-INF" todir="${dist.ear.dir}/lib"/>
         <copyfiles files="${reference.jsonconfig.jar}" iftldtodir="${build.web.dir}/WEB-INF" todir="${dist.ear.dir}/lib"/>
-        <copyfiles files="${reference.bcwebapputil.jar}" iftldtodir="${build.web.dir}/WEB-INF" todir="${dist.ear.dir}/lib"/>
         <copyfiles files="${reference.webdatex.jar}" iftldtodir="${build.web.dir}/WEB-INF" todir="${dist.ear.dir}/lib"/>
         <copyfiles files="${reference.idisccore.jar}" iftldtodir="${build.web.dir}/WEB-INF" todir="${dist.ear.dir}/lib"/>
         <copyfiles files="${reference.scrapper.jar}" iftldtodir="${build.web.dir}/WEB-INF" todir="${dist.ear.dir}/lib"/>
         <copyfiles files="${reference.bcwebappbotchecker.jar}" iftldtodir="${build.web.dir}/WEB-INF" todir="${dist.ear.dir}/lib"/>
         <copyfiles files="${reference.bcmailconfig.jar}" iftldtodir="${build.web.dir}/WEB-INF" todir="${dist.ear.dir}/lib"/>
+        <copyfiles files="${reference.bcwebapputil.jar}" iftldtodir="${build.web.dir}/WEB-INF" todir="${dist.ear.dir}/lib"/>
         <mkdir dir="${build.web.dir}/META-INF"/>
         <manifest file="${build.web.dir}/META-INF/MANIFEST.MF" mode="update"/>
     </target>
@@ -1196,12 +1196,12 @@ exists or setup the property manually. For example like this:
         <copyfiles files="${reference.authsvcclient.jar}" todir="${build.web.dir}/WEB-INF/lib"/>
         <copyfiles files="${reference.idiscpu.jar}" todir="${build.web.dir}/WEB-INF/lib"/>
         <copyfiles files="${reference.jsonconfig.jar}" todir="${build.web.dir}/WEB-INF/lib"/>
-        <copyfiles files="${reference.bcwebapputil.jar}" todir="${build.web.dir}/WEB-INF/lib"/>
         <copyfiles files="${reference.webdatex.jar}" todir="${build.web.dir}/WEB-INF/lib"/>
         <copyfiles files="${reference.idisccore.jar}" todir="${build.web.dir}/WEB-INF/lib"/>
         <copyfiles files="${reference.scrapper.jar}" todir="${build.web.dir}/WEB-INF/lib"/>
         <copyfiles files="${reference.bcwebappbotchecker.jar}" todir="${build.web.dir}/WEB-INF/lib"/>
         <copyfiles files="${reference.bcmailconfig.jar}" todir="${build.web.dir}/WEB-INF/lib"/>
+        <copyfiles files="${reference.bcwebapputil.jar}" todir="${build.web.dir}/WEB-INF/lib"/>
     </target>
     <target depends="init" if="dist.ear.dir" name="-clean-webinf-lib">
         <delete dir="${build.web.dir}/WEB-INF/lib"/>

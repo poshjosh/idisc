@@ -15,12 +15,12 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-public abstract class AbstractRequestHandler<V> 
-  implements RequestHandler<V>
+public abstract class AbstractRequestHandler<V> implements RequestHandler<V>
 {
   
-  public abstract V execute(HttpServletRequest paramHttpServletRequest, HttpServletResponse paramHttpServletResponse)
-    throws ServletException, IOException;
+  public abstract V execute(
+          HttpServletRequest paramHttpServletRequest, HttpServletResponse paramHttpServletResponse)
+          throws ServletException, IOException;
   
   @Override
   public RequestHandler.RequestHandlerEntry getNextRequestHandler(HttpServletRequest request) {

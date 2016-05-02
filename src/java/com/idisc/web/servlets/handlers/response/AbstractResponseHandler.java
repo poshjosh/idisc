@@ -9,8 +9,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-public abstract class AbstractResponseHandler<V>
-  implements ResponseHandler<V>
+public abstract class AbstractResponseHandler<V> implements ResponseHandler<V>
 {
   
   @Override

@@ -18,7 +18,7 @@ import java.net.URL;
 
 
 public class ServletUtil
-  extends com.bc.webapputil.ServletUtil
+  extends com.bc.web.core.util.ServletUtil
 {
   public static String getMessage(Throwable t)
   {
