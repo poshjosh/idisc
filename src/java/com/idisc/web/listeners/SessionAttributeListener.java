@@ -24,6 +24,6 @@ public class SessionAttributeListener extends CloseAutoCloseable implements Http
     public void attributeReplaced(HttpSessionBindingEvent event) {
         String name = event.getName();
         Object val = event.getValue();
-        this.attempt(name, val);
+        this.closeAutoCloseable(name, val);
     }
 }

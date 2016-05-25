@@ -5,7 +5,11 @@ import com.bc.web.botchecker.BotChecker;
 import com.bc.web.botchecker.BotCheckerInMemoryCache;
 import com.idisc.web.AppProperties;
 import com.idisc.web.WebApp;
+import java.io.IOException;
 import java.util.logging.Level;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.configuration.Configuration;
 
 /**
@@ -27,6 +31,21 @@ XLogger.getInstance().log(Level.FINE, "BotFilter, memory ceiling: {0}, floor: {1
         this.getClass(), this.memoryCeiling, this.memoryFloor);
     }
 
+    @Override
+    protected boolean doBeforeProcessing(
+            HttpServletRequest request, HttpServletResponse response) 
+            throws IOException, ServletException {
+        
+        final boolean isNotABot = super.doBeforeProcessing(request, response);
+        
+        if(isNotABot && request.getRequestURI().contains("/feeds")) {
+XLogger.getInstance().log(Level.INFO, 
+        "#doBeforeProcessing. Is bot: {0}, user-agent: {1}", 
+        this.getClass(), !isNotABot, request.getHeader("User-Agent"));
+        }
+
+        return isNotABot;
+    }
     @Override
     protected BotChecker createBotChecker() {
         

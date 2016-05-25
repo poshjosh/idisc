@@ -45,7 +45,7 @@ public class FeedsJsonResponseHandler extends SelectfeedsJsonResponseHandler {
     
     if ((feedCount + extraCount) < 1)
     {
-      return this.getEmptyJsonOutput(request, name);
+      return super.getJsonOutput(request, name, (List<Feed>)null, null);
     }
     
     StringBuilder json;

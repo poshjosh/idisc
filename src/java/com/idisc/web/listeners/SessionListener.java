@@ -23,7 +23,7 @@ public class SessionListener implements HttpSessionListener {
         while(en.hasMoreElements()) {
             String name = en.nextElement();
             Object value = session.getAttribute(name);
-            cac.attempt(name, value);
+            cac.closeAutoCloseable(name, value);
         }
     }
 }

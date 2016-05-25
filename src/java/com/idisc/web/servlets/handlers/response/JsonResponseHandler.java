@@ -136,15 +136,36 @@ public class JsonResponseHandler<V> extends AbstractResponseHandler<V>
 
 XLogger.getInstance().log(Level.FINE, "Output name: {0}, buffer length: {1}", this.getClass(), key, bufferLen);
 
-    StringBuilder outputJson;
+    Map outputMap;
     if(msg == null) {
         
-        outputJson = this.getEmptyJsonOutput(request, key);
-        
+        outputMap = Collections.singletonMap(key, "");
+    
     }else{
         
-        Map outputMap = Collections.singletonMap(key, msg);
+        outputMap = Collections.singletonMap(key, msg);
+    }
+    
+    StringBuilder outputJson = this.getJsonOutputBuffer(request, key, msg, bufferLen);
+    
+    this.appendJsonOutput(request, outputMap, outputJson);
+    
+    return outputJson;
+  }
 
+  public StringBuilder getJsonOutputBuffer(HttpServletRequest request, String key, Object msg, int bufferLen) {
+      
+    if (key == null) {
+      throw new NullPointerException();
+    }
+    
+    StringBuilder outputJsonBuffer;
+    if(msg == null) {
+        
+        outputJsonBuffer = new StringBuilder(key.length() + 16);
+    
+    }else{
+        
         if(bufferLen < 1) {
             bufferLen = 16;
         }
@@ -153,26 +174,10 @@ XLogger.getInstance().log(Level.FINE, "Output name: {0}, buffer length: {1}", th
             bufferLen += (bufferLen * 0.3);
         }
 
-        outputJson = new StringBuilder(bufferLen);
-
-        this.appendJsonOutput(request, outputMap, outputJson);
+        outputJsonBuffer = new StringBuilder(bufferLen);
     }
     
-    return outputJson;
-  }
-  
-  public StringBuilder getEmptyJsonOutput(HttpServletRequest request, String key) {
-    if (key == null) {
-      throw new NullPointerException();
-    }
-    
-    Map outputMap = Collections.singletonMap(key, "");
-    
-    StringBuilder outputJson = new StringBuilder(key.length() + 16);
-    
-    this.appendJsonOutput(request, outputMap, outputJson);
-    
-    return outputJson;
+    return outputJsonBuffer;
   }
   
   public void appendJsonOutput(

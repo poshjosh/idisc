@@ -8,7 +8,7 @@ import java.util.logging.Level;
  */
 public class CloseAutoCloseable {
     
-    public boolean attempt(String name, Object val) {
+    public boolean closeAutoCloseable(String name, Object val) {
         boolean output = false;
         try{
             AutoCloseable current = (AutoCloseable)val;
