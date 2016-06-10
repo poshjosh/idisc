@@ -1,15 +1,17 @@
 package com.idisc.web;
 
-public abstract interface AppProperties
-{
+public abstract interface ConfigNames {
+    
   public static final String START_FEED_UPDATE_SERVICE = "startFeedUpdateService";
+  public static final String REQUEST_EXECUTOR_SERVICE_THREAD_COUNT = "requestExecutorService.threadCount";
+  public static final String STREAM_LARGE_RESPONSES = "streamLargeResponses";
   public static final String BOTFILTER_ENABLE_AT_MEMORY_BELOW = "botfilter.enableAtMemoryBelow";
   public static final String BOTFILTER_DISABLE_AT_MEMORY_ABOVE = "botfilter.disableAtMemoryAbove";
   public static final String BOTFILTER_ENABLED = "botfilter.enabled";
   public static final String BOTCONFIGS_DIR = "botconfigs.dir";   
   public static final String MULTITASK_REQUEST_DEFAULT_POOL_SIZE = "multiTaskRequestDefaultPoolSize";
   public static final String MULTITASK_REQUEST_TIMEOUT_SECONDS = "multiTaskRequestTimeoutSeconds";
-  public static final String LOG_LEVEL = "logLevel";
+  public static final String LOGGING_PROPERTIES_FILE = "logging.propertiesFile";
   public static final String SCRAPPER_PROPERTIES_FILE = "scrapperPropertiesFile";
   public static final String IDISCCORE_PROPERTIES_FILE = "idisccorePropertiesFile";
   public static final String PERSISTENCE_FILE = "persistenceFile";

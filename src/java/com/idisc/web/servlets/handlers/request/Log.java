@@ -8,7 +8,6 @@ import java.util.Map;
 import java.util.logging.Level;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 public class Log
   extends AbstractRequestHandler<Boolean>
@@ -20,7 +19,7 @@ public class Log
   }
   
   @Override
-  public Boolean execute(HttpServletRequest request, HttpServletResponse response)
+  public Boolean execute(HttpServletRequest request)
     throws ServletException, IOException
   {
     RequestParameters params = new RequestParameters(request);
@@ -31,13 +30,13 @@ public class Log
       throw new ServletException("Required parameter 'id' is missing");
     }
     
-    return log(request, response, id);
+    return log(request, id);
   }
   
-  private Boolean log(HttpServletRequest request, HttpServletResponse response, String logTypeId)
+  private Boolean log(HttpServletRequest request, String logTypeId)
     throws ServletException
   {
-    Installation installation = getInstallation(request, response, false);
+    Installation installation = getInstallation(request, false);
     Map map = installation == null ? null : new EntityJsonFormat().toMap(installation);
     XLogger.getInstance().log(Level.WARNING, "x = x = x = " + getName(logTypeId) + " = x = x = x = on device with installation details::\n{0}", getClass(), map);
     return Boolean.TRUE;

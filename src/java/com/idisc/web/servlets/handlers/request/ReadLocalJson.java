@@ -10,72 +10,64 @@ import java.io.Reader;
 import java.util.Collections;
 import java.util.Map;
 import java.util.logging.Level;
-import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
-
-
-public abstract class ReadLocalJson
-  extends AbstractRequestHandler<Map>
-{
-  public abstract String getFilename();
+public class ReadLocalJson extends AbstractRequestHandler<Map> {
+    
+  private final String filename;
   
-  public boolean isProtected()
-  {
+  public ReadLocalJson(String filename) {
+    this.filename = filename;
+  }
+  
+  public final String getFilename() {
+    return filename;
+  }
+  
+  @Override
+  public boolean isProtected() {
     return false;
   }
   
-  public String getResponseFormat(HttpServletRequest request)
-  {
+  @Override
+  public String getResponseFormat(HttpServletRequest request) {
     return "text/json";
   }
   
-
-
-
-  public Map execute(HttpServletRequest request, HttpServletResponse response)
-    throws ServletException, IOException
-  {
+  @Override
+  public Map execute(HttpServletRequest request) throws ServletException, IOException {
+      
     Map output = load();
     
     return output == null ? Collections.emptyMap() : output;
   }
   
 
-  public Map load()
-    throws IOException
-  {
-    String filename = getFilename();
-    
+  public Map load() throws IOException {
+      
     String realPath = WebApp.getInstance().getServletContext().getRealPath(filename);
     Map output;
     try { Reader r = new BufferedReader(new InputStreamReader(new FileInputStream(realPath), "utf-8"));Throwable localThrowable2 = null;
       
-
-      try
-      {
+      try {
+          
         JSONParser parser = new JSONParser();
         
         output = (Map)parser.parse(r);
         
         XLogger.getInstance().log(Level.FINE, "Read json:\n{0}", getClass(), output);
       }
-      catch (Throwable localThrowable1)
+      catch (IOException | ParseException localThrowable1)
       {
         localThrowable2 = localThrowable1;throw localThrowable1;
 
 
 
 
-      }
-      finally
-      {
-
-
+      } finally {
 
         if (r != null) if (localThrowable2 != null) try { r.close(); } catch (Throwable x2) { localThrowable2.addSuppressed(x2); } else r.close();
       }

@@ -1,11 +1,11 @@
 package com.idisc.web.servlets.handlers.request;
 
-import com.bc.jpa.search.SearchResultsList;
 import com.idisc.core.jpa.FeedSearchResults;
 import com.idisc.pu.entities.Comment;
 import com.idisc.web.exceptions.ValidationException;
 import com.idisc.web.servlets.handlers.response.CommentsJsonResponseHandler;
 import com.idisc.web.servlets.handlers.response.HtmlResponseHandler;
+import com.idisc.web.servlets.handlers.response.ListToReaderResponseHandler;
 import com.idisc.web.servlets.handlers.response.ResponseHandler;
 import java.util.Collections;
 import java.util.Date;
@@ -14,19 +14,24 @@ import java.util.Map;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 
-public class Comments extends Select<Comment>
-{
+public class Comments extends Select<Comment> {
     
   @Override
-  public ResponseHandler<List<Comment>> createResponseHandler(HttpServletRequest request) {
-    ResponseHandler<List<Comment>> responseHandler;
-    if (this.isHtmlResponse(request))
-    {
+  public boolean isOutputLarge() {
+    return true;
+  }
+  
+  @Override
+  public ResponseHandler<List<Comment>, Object> createResponseHandler(HttpServletRequest request) {
+    ResponseHandler<List<Comment>, Object> responseHandler;
+    if (this.isHtmlResponse(request)) {
       responseHandler = new HtmlResponseHandler();
-    }
-    else
-    {
-      responseHandler = new CommentsJsonResponseHandler();
+    }else {
+      if(this.isOutputLarge() && this.isStreamLargeResponses()) {
+        responseHandler = new ListToReaderResponseHandler();  
+      }else{
+        responseHandler = new CommentsJsonResponseHandler();  
+      }
     }
     
     return responseHandler;
@@ -64,9 +69,7 @@ public class Comments extends Select<Comment>
 
     FeedSearchResults searchresults = new FeedSearchResults(toFind, after, limit);
     
-    List<com.idisc.pu.entities.Feed> feeds = new SearchResultsList(searchresults);
-
-    return feeds;
+    return searchresults.getAllResults();
   }
 
   public Object getFeedid(HttpServletRequest request) throws ValidationException {

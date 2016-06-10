@@ -14,11 +14,9 @@ import java.util.Map;
 import java.util.logging.Level;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.configuration.Configuration;
 
-public abstract class Select<T> extends AbstractRequestHandler<List<T>>
-{
+public abstract class Select<T> extends AbstractRequestHandler<List<T>>{
   private final long maxLimit;
   private final long defaultLimit;
   private final long minLimit;
@@ -51,17 +49,15 @@ public abstract class Select<T> extends AbstractRequestHandler<List<T>>
   }
   
   @Override
-  public List<T> execute(HttpServletRequest request, HttpServletResponse response)
-    throws ServletException, IOException
-  {
+  public List<T> execute(HttpServletRequest request)
+    throws ServletException, IOException{
 XLogger.getInstance().entering(this.getClass(), "#execute(HttpServletRequest, HttpServletResponse)", "");
     List<T> entities = select(request);
     
     return entities;
   }
   
-  protected List<T> select(HttpServletRequest request) throws ServletException
-  {
+  protected List<T> select(HttpServletRequest request) throws ServletException{
       
     Map<String, Object> searchParams = getSearchParams(request);
     
@@ -120,7 +116,7 @@ XLogger.getInstance().entering(this.getClass(), "#execute(HttpServletRequest, Ht
       // 100 x 0.5 = 50. However 100 x 0.5 x 0.5 = 25
       result = (int)(limit * memoryLevel * memoryLevel);
 XLogger.getInstance().log(Level.FINER, 
-        "Based on memory factor: {0}, formatted limit from {1} to {2} ", 
+        "Based on memory level: {0}, formatted limit from {1} to {2} ", 
         this.getClass(), memoryLevel, limit, result);
     }
     return result;

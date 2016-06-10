@@ -9,29 +9,21 @@ import java.io.IOException;
 import java.util.Map;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.ParseException;
 
-public class Login
-  extends AbstractRequestHandler<Boolean>
-{
+public class Login extends AbstractRequestHandler<Boolean> {
   @Override
-  public boolean isProtected()
-  {
+  public boolean isProtected() {
     return false;
   }
   
   @Override
-  public ResponseHandler<Boolean> createResponseHandler(HttpServletRequest request)
-  {
-    ResponseHandler<Boolean> responseHandler;
-    if (this.isHtmlResponse(request))
-    {
+  public ResponseHandler<Boolean, Object> createResponseHandler(HttpServletRequest request) {
+    ResponseHandler<Boolean, Object> responseHandler;
+    if (this.isHtmlResponse(request)) {
       responseHandler = new HtmlBooleanResponseHandler();
-    }
-    else
-    {
+    } else {
       responseHandler = super.createResponseHandler(request);
     }
     
@@ -39,7 +31,7 @@ public class Login
   }
 
   @Override
-  public Boolean execute(HttpServletRequest request, HttpServletResponse response)
+  public Boolean execute(HttpServletRequest request)
     throws ServletException, IOException
   {
     if (isLoggedIn(request)) {
@@ -69,8 +61,7 @@ public class Login
       User user = setLoggedIn(request, authuserdetails, false);
       
       output = Boolean.valueOf(user != null);
-    }
-    catch (ParseException e) {
+    } catch (ParseException e) {
       throw new ServletException("Error processing request", e);
     }
     return output;

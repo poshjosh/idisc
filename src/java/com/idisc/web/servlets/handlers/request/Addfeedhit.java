@@ -11,21 +11,9 @@ import java.util.Date;
 import java.util.Map;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
-
-
-
-
-
-
-
-
-
-
-public class Addfeedhit
-  extends AbstractRequestHandler<Long>
-{
+public class Addfeedhit extends AbstractRequestHandler<Long> {
+    
   private ControllerFactory _cf;
   private EntityController<Feedhit, Integer> _fhc;
   private EntityController<Feed, Integer> _fc;
@@ -39,10 +27,9 @@ public class Addfeedhit
 
 
   @Override
-  public Long execute(HttpServletRequest request, HttpServletResponse response)
-    throws ServletException
-  {
-    Installation installation = getInstallation(request, response, true);
+  public Long execute(HttpServletRequest request) throws ServletException {
+      
+    Installation installation = getInstallation(request, true);
     
     if(installation == null) {
       throw new ServletException("You are not authorized to perform the requested operation");

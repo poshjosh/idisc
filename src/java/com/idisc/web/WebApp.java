@@ -3,16 +3,26 @@ package com.idisc.web;
 import com.authsvc.client.AuthSvcSession;
 import com.authsvc.client.SessionLoader;
 import com.bc.util.XLogger;
+import com.bc.util.concurrent.DirectExecutorService;
 import com.idisc.core.FeedUpdateService;
 import com.idisc.core.FeedUpdateTask;
 import com.idisc.core.IdiscApp;
 import com.idisc.core.IdiscAuthSvcSession;
+import com.idisc.web.servlets.handlers.request.Appproperties;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.lang.ref.WeakReference;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.logging.LogManager;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import org.apache.commons.configuration.CompositeConfiguration;
@@ -20,10 +30,8 @@ import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
 
-public class WebApp
-{
-  private static final transient Logger logger = Logger.getLogger(WebApp.class.getName());
-  
+public class WebApp {
+    
   private final boolean productionMode;
   
   private final long memoryAtStartup;
@@ -36,14 +44,15 @@ public class WebApp
   
   private Configuration config;
   
+  private transient ExecutorService requestExecutorService;
+  
   private AuthSvcSession authSvcSession;
   
   private ServletContext servletContext;
   
   private static WebApp instance;
   
-  private WebApp(boolean productionMode)
-  {
+  private WebApp(boolean productionMode){
     this.productionMode = productionMode;
     this.memoryAtStartup = Runtime.getRuntime().freeMemory();
     XLogger.getInstance().log(Level.INFO, "Memory at startup: {0}", this.getClass(), this.memoryAtStartup);
@@ -64,6 +73,39 @@ public class WebApp
     return instance;
   }
   
+  private WeakReference<Map> _appProperties_weakReference;
+  public Map getAppProperties() {
+    Map appProps;
+    if(_appProperties_weakReference == null || _appProperties_weakReference.get() ==  null) {
+      if(_appProperties_weakReference != null) {
+        _appProperties_weakReference.clear();
+      }
+      Appproperties loader = new Appproperties();
+      try{
+        appProps = Collections.unmodifiableMap(loader.load());
+      }catch(IOException e) {
+        XLogger.getInstance().log(Level.WARNING, "Error loading: "+loader.getFilename(), this.getClass(), e);
+        appProps = Collections.EMPTY_MAP;  
+      }
+      _appProperties_weakReference = new WeakReference<>(appProps);
+    }else{
+      appProps = _appProperties_weakReference.get();
+    } 
+    return appProps;
+  }
+
+  public ExecutorService getRequestExecutorService(boolean createIfNeed) {
+    if(requestExecutorService == null && createIfNeed) {
+      final int threadCount = config.getInt(ConfigNames.REQUEST_EXECUTOR_SERVICE_THREAD_COUNT, -1);
+      if(threadCount < 1) {
+        requestExecutorService = new DirectExecutorService();
+      }else{
+        requestExecutorService = Executors.newFixedThreadPool(threadCount);
+      }
+    }
+    return requestExecutorService;
+  }
+  
   public void init(ServletContext context)
     throws ServletException, IOException, ConfigurationException, 
           IllegalAccessException, InterruptedException, InvocationTargetException
@@ -76,7 +118,6 @@ public class WebApp
     init(context, defaultFileLoc, fileLoc);
   }
   
-
   public void init(ServletContext context, URL defaultFileLocation, URL fileLocation)
     throws ServletException, IOException, ConfigurationException, 
           IllegalAccessException, InterruptedException, InvocationTargetException
@@ -85,27 +126,6 @@ public class WebApp
     this.servletContext = context;
     
     this.config = loadConfig(defaultFileLocation, fileLocation, ',');
-    
-    String logLevelStr = this.config.getString("logLevel");
-    if(logLevelStr != null) {
-      try {
-        Level logLevel = Level.parse(logLevelStr);
-        String packageLoggerName = com.idisc.web.WebApp.class.getPackage().getName();
-        if(!this.isProductionMode()) {
-            XLogger.getInstance().transferConsoleHandler("", packageLoggerName, true);
-            // Most home grown libraries start with com.bc
-            // Only top level projects, that is projects which may not be used
-            // as libraries for others should do this
-            XLogger.getInstance().setLogLevel("com.bc", logLevel);
-            
-//            XLogger.getInstance().setLogLevel("com.bc.jpa.paging", logLevel);
-//            XLogger.getInstance().setLogLevel("com.bc.jpa.search", logLevel);
-        }
-        XLogger.getInstance().setLogLevel(packageLoggerName, logLevel);
-      } catch (Exception e) {
-        XLogger.getInstance().log(Level.WARNING, "Error setting log level to: " + logLevelStr, getClass(), e);
-      }
-    }
     
     String authsvc_url = this.config.getString("authsvc.url");
     String app_name = this.getAppName();
@@ -128,7 +148,7 @@ public class WebApp
 
     sessLoader.loadAfter(30L, TimeUnit.SECONDS, authsvc_url, app_name, app_email, app_pass);
 
-    boolean startFeedUpdateService = config.getBoolean(AppProperties.START_FEED_UPDATE_SERVICE, true);
+    boolean startFeedUpdateService = config.getBoolean(ConfigNames.START_FEED_UPDATE_SERVICE, true);
     if (startFeedUpdateService) {
       this.feedUpdateService = new FeedUpdateService(){
         @Override
@@ -137,8 +157,8 @@ public class WebApp
         }
       };
 
-      int delay = config.getInt(AppProperties.FEED_CYCLE_DELAY);
-      int interval = config.getInt(AppProperties.FEED_CYCLE_INTERVAL);
+      int delay = config.getInt(ConfigNames.FEED_CYCLE_DELAY);
+      int interval = config.getInt(ConfigNames.FEED_CYCLE_INTERVAL);
         
       this.feedUpdateService.start(delay, interval, TimeUnit.MINUTES);
     }
@@ -146,7 +166,70 @@ public class WebApp
     this.initIdiscApp();
     
     this.servletContext.setAttribute("App", this);
+    
+    // We call this after initializing the IdiscApp so that its properties will
+    // supercede any previously loaded logging configuration file
+    //
+    this.initLogging2();
   }
+  
+  private void initLogging() {
+    final String loggingPropertiesFile = this.config.getString(ConfigNames.LOGGING_PROPERTIES_FILE, null);
+    
+    try{
+      InputStream inputStream = new FileInputStream(loggingPropertiesFile);
+      LogManager.getLogManager().readConfiguration(inputStream);
+      XLogger.getInstance().log(Level.INFO, "Succesfully loaded {0} from: {1}", 
+      this.getClass(), ConfigNames.LOGGING_PROPERTIES_FILE, loggingPropertiesFile);
+    }catch (final IOException e) {
+      XLogger.getInstance().log(Level.WARNING, "Failed to load "+ConfigNames.LOGGING_PROPERTIES_FILE+
+              " from: "+loggingPropertiesFile, this.getClass(), e);
+    }    
+  }
+/**
+ * 
+com.idisc.web.servlets.RequestHandlerProviderServlet.level = ALL
+com.idisc.web.beans.FeedSelectorBean.level = ALL
+com.idisc.web.servlets.Idisc.level = ALL
+com.idisc.web.servlets.handlers.request.Getmultipleresults.level = ALL
+com.idisc.web.listeners.CloseAutoCloseable.level = ALL
+com.idisc.web.servlets.handlers.request.Select.level = ALL
+com.idisc.web.servlets.handlers.response.JsonResponseHandler.level = ALL
+ * 
+ */
+  private void initLogging2() {
+    Map<String, Level> loggers = new HashMap<>();
+//    loggers.put(com.idisc.web.servlets.RequestHandlerProviderServlet.class.getName(), Level.FINER);
+//    loggers.put(com.idisc.web.servlets.RequestHandlerProviderServlet.class.getName(), Level.FINER);
+//    loggers.put(com.idisc.web.beans.FeedSelectorBean.class.getName(), Level.FINER);
+//    loggers.put(com.idisc.web.servlets.Idisc.class.getName(), Level.FINER);
+////    loggers.put(com.idisc.web.servlets.handlers.request.Getmultipleresults.class.getName(), Level.FINER);
+////    loggers.put(com.idisc.web.listeners.CloseAutoCloseable.class.getName(), Level.FINER);
+//    loggers.put(com.idisc.web.servlets.handlers.request.Select.class.getName(), Level.FINER);
+//    loggers.put(com.idisc.web.servlets.handlers.response.JsonResponseHandler.class.getName(), Level.FINER);
+    String logLevelStr = this.config.getString("logLevel");
+    if(logLevelStr != null) {
+      try {
+        Level logLevel = Level.parse(logLevelStr);
+        XLogger logger = XLogger.getInstance();
+        String packageLoggerName = com.idisc.web.WebApp.class.getPackage().getName();
+        if(!this.isProductionMode()) {
+            logger.transferConsoleHandler("", packageLoggerName, true);
+            // Most home grown libraries start with com.bc
+            // Only top level projects, that is projects which may not be used
+            // as libraries for others should do this
+            logger.setLogLevel("com.bc", logLevel);
+            for(String loggerName:loggers.keySet()) {
+                Level level = loggers.get(loggerName);
+                logger.setLogLevel(loggerName, level);
+            }
+        }
+        XLogger.getInstance().setLogLevel(packageLoggerName, logLevel);
+      } catch (Exception e) {
+        XLogger.getInstance().log(Level.WARNING, "Error setting log level to: " + logLevelStr, getClass(), e);
+      }
+    }
+  }  
   
   private IdiscApp initIdiscApp()
     throws ConfigurationException, IOException, IllegalAccessException, 
@@ -206,7 +289,9 @@ public class WebApp
   public Configuration loadConfig(URL defaultFileLocation, URL fileLocation, char listDelimiter)
     throws ConfigurationException
   {
-    logger.log(Level.INFO, "Loading properties configuration. List delimiter: {0}\nDefault file: {1}\nFile: {2}", new Object[] { Character.valueOf(listDelimiter), defaultFileLocation, fileLocation });
+    XLogger.getInstance().log(Level.INFO, 
+            "Loading properties configuration. List delimiter: {0}\nDefault file: {1}\nFile: {2}", 
+            this.getClass(), Character.valueOf(listDelimiter), defaultFileLocation, fileLocation);
 
     if (fileLocation == null) {
       throw new NullPointerException();

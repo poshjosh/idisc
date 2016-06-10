@@ -2,9 +2,7 @@ package com.idisc.web;
 
 import javax.servlet.http.HttpServletRequest;
 
-public class Notices
-  extends FileCache
-{
+public class Notices extends FileCache {
   public Notices() {}
   
   public Notices(HttpServletRequest request, boolean load)

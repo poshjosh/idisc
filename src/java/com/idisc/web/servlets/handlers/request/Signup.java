@@ -6,36 +6,19 @@ import java.io.IOException;
 import java.util.Map;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.ParseException;
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-public class Signup
-  extends AbstractRequestHandler<Boolean>
+public class Signup extends AbstractRequestHandler<Boolean>
 {
+  @Override
   public boolean isProtected()
   {
     return false;
   }
   
-
-
-
-  public Boolean execute(HttpServletRequest request, HttpServletResponse response)
+  @Override
+  public Boolean execute(HttpServletRequest request)
     throws ServletException, IOException
   {
     if (isLoggedIn(request)) {

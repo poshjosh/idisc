@@ -2,6 +2,7 @@ package com.idisc.web.servlets.handlers.response;
 
 import com.bc.util.XLogger;
 import com.idisc.core.CommentNotification;
+import com.idisc.core.EntityJsonFormat;
 import com.idisc.core.Util;
 import com.idisc.pu.entities.Feed;
 import com.idisc.pu.entities.Installation;
@@ -19,77 +20,87 @@ import javax.servlet.http.HttpServletRequest;
 /**
  * @author poshjosh
  */
-public class FeedsJsonResponseHandler extends SelectfeedsJsonResponseHandler {
+public class FeedsJsonResponseHandler<E extends Feed> extends SelectfeedsJsonResponseHandler<E> {
     
   private final Installation installation;
   
+  public FeedsJsonResponseHandler() {
+    this(null);
+  }
+
   public FeedsJsonResponseHandler(Installation installation) {
     this.installation = installation;
   }
-
-  @Override
-  public Object getOutput(HttpServletRequest request, String name, List<Feed> feeds)
-  {
-
+  
+  public List buildCompositeOutput(HttpServletRequest request, String name, List<E> feeds) {
+      
     final int feedCount = feeds == null ? 0 : feeds.size();
     
     Collection<Map> notifications = getNotices(request, feeds);
     
     final int noticeCount = notifications == null ? 0 : notifications.size();
     
-    Map commentNotices = getCommentNotices(request, feeds);
+    Map commentNotices = installation == null ? null : 
+            getCommentNotices(request, installation, this.getJsonFormat(request), feeds);
     
     final int commentNoticeCount = commentNotices == null ? 0 : 1;
     
     final int extraCount = noticeCount + commentNoticeCount;
     
-    if ((feedCount + extraCount) < 1)
-    {
-      return super.getJsonOutput(request, name, (List<Feed>)null, null);
-    }
+    final List compositeOutput;
     
-    StringBuilder json;
-    
-    if(extraCount < 1) {
+    if ((feedCount + extraCount) < 1) {
         
-        json = super.getJsonOutput(request, name, feeds, feeds);
+      compositeOutput = Collections.EMPTY_LIST;
+      
+    }else if(extraCount < 1) {
         
+      compositeOutput = feeds;  
+      
     }else{
         
-        List combinedOutput = new ArrayList(feedCount + extraCount);
+        compositeOutput = new ArrayList(feedCount + extraCount);
 
         if ((feeds != null) && (!feeds.isEmpty())) {
-          combinedOutput.addAll(feeds);
+          compositeOutput.addAll(feeds);
         }
         
         if ((notifications != null) && (!notifications.isEmpty())) {
-          combinedOutput.addAll(notifications);
+          compositeOutput.addAll(notifications);
         }
 
         if ((commentNotices != null) && (!commentNotices.isEmpty())) {
-          combinedOutput.add(commentNotices);
+          compositeOutput.add(commentNotices);
         }
-        
-        final int feedsSize = this.getEstimatedBufferCapacity(feeds, feeds);
-        final int extraSize = extraCount * 300;
-        
-        final int buffLen = feedsSize + extraSize;
-        
-        json = super.getJsonOutput(request, name, combinedOutput, buffLen);
     }
     
-    return json.length() > 1000 ? new String(json) : json.toString();
+    return compositeOutput;
   }
 
-  public Map getCommentNotices(HttpServletRequest request, List<Feed> feeds)
-  {
-    if (this.installation == null) {
+  @Override
+  public StringBuilder getOutput(HttpServletRequest request, String name, List<E> feeds) {
+    
+    final List compositeOutput = this.buildCompositeOutput(request, name, feeds);
+
+    final int feedsSize = this.getEstimatedLengthChars(feeds, compositeOutput);
+    final int extrasCount = compositeOutput.size() - (feeds==null?0:feeds.size());
+    final int extraSize = extrasCount * 300;
+
+    final int buffLen = feedsSize + extraSize;
+
+    return super.getJsonOutput(request, name, compositeOutput, buffLen);
+  }
+
+  public Map getCommentNotices(
+          HttpServletRequest request, Installation installation, 
+          EntityJsonFormat jsonFormat, List<E> feeds) {
+    if (installation == null) {
       return null;
     }
     try
     {
       int maxAgeDays = 30;boolean directReplies = false;
-      List<Map<String, Object>> commentNotices = CommentNotification.getNotifications(this.installation, getJsonFormat(request), directReplies, 30);
+      List<Map<String, Object>> commentNotices = CommentNotification.getNotifications(installation, jsonFormat, directReplies, 30);
       
       if ((commentNotices != null) && (!commentNotices.isEmpty())) {
         return Collections.singletonMap("notices", commentNotices);
@@ -102,10 +113,8 @@ public class FeedsJsonResponseHandler extends SelectfeedsJsonResponseHandler {
   }
 
   private static Collection<Map> _ns;
-  public Collection<Map> getNotices(HttpServletRequest request, List<Feed> output)
-  {
-    try
-    {
+  public Collection<Map> getNotices(HttpServletRequest request, List<E> feeds) {
+    try {
       if (_ns == null) {
         XLogger.getInstance().log(Level.INFO, "Creating tips cache", getClass());
         _ns = new Notices(request, true).values();
@@ -115,7 +124,7 @@ public class FeedsJsonResponseHandler extends SelectfeedsJsonResponseHandler {
       {
         XLogger.getInstance().log(Level.FINER, "Adding {0} tips to output", getClass(), Integer.valueOf(_ns.size()));
         
-        Date date = Util.getEarliestDate(output);
+        Date date = Util.getEarliestDate(feeds);
         
         for (Map notice : _ns) {
           notice.put(Feed_.datecreated.getName(), date);

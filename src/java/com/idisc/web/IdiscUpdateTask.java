@@ -7,9 +7,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 
-public class IdiscUpdateTask
-  extends FeedUpdateTask
-{
+public class IdiscUpdateTask extends FeedUpdateTask {
+    
   private boolean multipleProcesses;
   private volatile int completed;
   
@@ -106,7 +105,7 @@ public class IdiscUpdateTask
       long sleepTime = TimeUnit.MINUTES.toMillis(getTimeAvailableMinutes()) / tasks.length;
       
       for (int i = 0; i < tasks.length; i++) {
-        tasks[i].run();
+        tasks[i].run(); 
         if (i < tasks.length - 1) {
           sleep(sleepTime);
         }
@@ -139,6 +138,7 @@ public class IdiscUpdateTask
     return success;
   }
   
+  @Override
   public boolean updateFeedCache() {
     try {
       XLogger.getInstance().log(Level.INFO, "Updating feed cache", getClass());

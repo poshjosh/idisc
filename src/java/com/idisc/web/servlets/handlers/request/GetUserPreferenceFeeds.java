@@ -3,18 +3,14 @@ package com.idisc.web.servlets.handlers.request;
 import com.idisc.core.User;
 import com.idisc.pu.entities.Feed;
 import com.idisc.pu.entities.Installation;
-import com.idisc.web.exceptions.ValidationException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
-
-public abstract class GetUserPreferenceFeeds<K>
-  extends Selectfeeds
-{
+public abstract class GetUserPreferenceFeeds<K> extends Selectfeeds {
+    
   private User user;
   
   public abstract Class<K> getPreferenceEntityClass();
@@ -23,22 +19,25 @@ public abstract class GetUserPreferenceFeeds<K>
   
   public abstract Feed getFeed(K paramK);
   
+  @Override
   public boolean isProtected()
   {
     return true;
   }
   
-  public List<Feed> execute(HttpServletRequest request, HttpServletResponse response)
+  @Override
+  public List<Feed> execute(HttpServletRequest request)
     throws ServletException, IOException
   {
-    this.user = findUser(request, response);
+    this.user = findUser(request);
     
-    return super.execute(request, response);
+    return super.execute(request);
   }
   
-  protected List<Feed> select(HttpServletRequest request) throws ServletException
-  {
-    Installation installation = getInstallation(request, null, true);
+  @Override
+  protected List<Feed> select(HttpServletRequest request) throws ServletException {
+      
+    Installation installation = getInstallation(request, true);
     if(installation == null) {
         throw new ServletException("You are not authorized to perform the requested operation");
     }

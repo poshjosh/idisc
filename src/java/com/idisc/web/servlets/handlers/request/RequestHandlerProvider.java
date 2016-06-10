@@ -2,8 +2,8 @@ package com.idisc.web.servlets.handlers.request;
 
 import javax.servlet.http.HttpServletRequest;
 
-public interface RequestHandlerProvider
-{
+public interface RequestHandlerProvider{
+    
     String getRequestHandlerParamName(HttpServletRequest request);
   
     String[] getRequestHandlerParamNames(HttpServletRequest request);

@@ -37,7 +37,7 @@ public class Newfeed extends NewEntityHandler<com.idisc.pu.entities.Feed> {
   }
 
   @Override
-  public Boolean execute(HttpServletRequest request, HttpServletResponse response)
+  public Boolean execute(HttpServletRequest request)
     throws ServletException, IOException
   {
       
@@ -47,7 +47,7 @@ public class Newfeed extends NewEntityHandler<com.idisc.pu.entities.Feed> {
     
     log.log(Level.FINER, "execute(HttpServletRequest, HttpServletResponse)", cls);
 
-    Installation installation = getInstallation(request, response, true);
+    Installation installation = getInstallation(request, true);
     
     log.log(Level.FINER, "Installation: {0}", cls, installation);
     if(installation == null) {

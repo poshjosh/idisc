@@ -23,11 +23,11 @@ public abstract class GetUserPreferenceFeedids
 
 
 
-  public List execute(HttpServletRequest request, HttpServletResponse response)
+  public List execute(HttpServletRequest request)
     throws ServletException, IOException
   {
     boolean create = true;
-    Installation installation = getInstallation(request, response, create);
+    Installation installation = getInstallation(request, create);
     
     if(installation == null) {
       throw new ServletException("You are not authorized to perform the requested operation");

@@ -6,10 +6,10 @@ import java.util.logging.Level;
 import javax.servlet.http.HttpServletRequest;
 
 
-public class RequestHandlerProviderImpl
-  implements RequestHandlerProvider
-{
+public class RequestHandlerProviderImpl implements RequestHandlerProvider{
     
+  public RequestHandlerProviderImpl() { }
+  
   @Override
   public String getRequestParamName(HttpServletRequest request) {
       return "req";
@@ -32,7 +32,7 @@ public class RequestHandlerProviderImpl
   }
   
   @Override
-  public String[] getRequestHandlerParamNames(HttpServletRequest request)
+  public String [] getRequestHandlerParamNames(HttpServletRequest request)
   {
     String[] tokens = request.getParameterValues(this.getRequestParamName(request));
     if ((tokens == null) || (tokens.length == 0)) {

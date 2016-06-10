@@ -6,34 +6,17 @@ import java.io.IOException;
 import java.util.Map;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-public class Activateuser
-  extends AbstractRequestHandler<Boolean>
-{
-  public boolean isProtected()
-  {
+public class Activateuser extends AbstractRequestHandler<Boolean> {
+    
+  @Override
+  public boolean isProtected() {
+      
     return false;
   }
   
-
-
-
-  public Boolean execute(HttpServletRequest request, HttpServletResponse response)
+  @Override
+  public Boolean execute(HttpServletRequest request)
     throws ServletException, IOException
   {
     if (isLoggedIn(request)) {
@@ -52,13 +35,6 @@ public class Activateuser
     
     Boolean output = Boolean.TRUE;
     
-
-
-
-
-
-
-
     return output;
   }
 }

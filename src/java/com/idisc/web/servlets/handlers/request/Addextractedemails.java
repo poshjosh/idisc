@@ -13,9 +13,8 @@ import java.util.logging.Level;
 import javax.persistence.EntityManager;
 import org.json.simple.JSONObject;
 
-public class Addextractedemails
-  extends AbstractUpdateValues
-{
+public class Addextractedemails extends AbstractUpdateValues {
+    
   @Override
   public String[] getNames()
   {

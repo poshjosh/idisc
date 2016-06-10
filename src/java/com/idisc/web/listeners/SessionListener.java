@@ -23,7 +23,9 @@ public class SessionListener implements HttpSessionListener {
         while(en.hasMoreElements()) {
             String name = en.nextElement();
             Object value = session.getAttribute(name);
-            cac.closeAutoCloseable(name, value);
+            if(value instanceof AutoCloseable) {
+                cac.execute(name, (AutoCloseable)value);
+            }
         }
     }
 }

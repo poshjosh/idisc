@@ -39,11 +39,11 @@ public abstract class AbstractUpdateValues
   }
   
   @Override
-  public Map execute(HttpServletRequest request, HttpServletResponse response)
+  public Map execute(HttpServletRequest request)
     throws ServletException
   {
     boolean create = true;
-    Installation installation = getInstallation(request, response, create);
+    Installation installation = getInstallation(request, create);
     
     String[] names = getNames();
     

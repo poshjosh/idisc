@@ -71,18 +71,13 @@ public abstract class FileCache extends HashMap<String, Map> implements Filename
     }
     
     CharFileIO io = new CharFileIO();
-    Object category;
-    try
-    {
-      category = new Appproperties().load().get(Appproperties.ADVERT_CATEGORY_NAME);
-      XLogger.getInstance().log(Level.FINE, "Advert category name: {0}", getClass(), category);
-    } catch (IOException e) {
+    Object category = WebApp.getInstance().getAppProperties().get(Appproperties.ADVERT_CATEGORY_NAME);
+    if(category == null) {
       return;
     }
     
     Date date = getDate();
     
-
     int feedid = Integer.MAX_VALUE;
     
     for (String name : names)

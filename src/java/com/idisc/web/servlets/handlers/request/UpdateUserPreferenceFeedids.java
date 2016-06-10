@@ -4,23 +4,12 @@ import com.idisc.pu.entities.Installation;
 import java.util.List;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import org.json.simple.JSONArray;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
-
-
-
-
-
-
-
-
-
-public abstract class UpdateUserPreferenceFeedids
-  extends AbstractRequestHandler<List>
-{
+public abstract class UpdateUserPreferenceFeedids extends AbstractRequestHandler<List> {
+    
   public abstract String getRequestParameterName();
   
   protected abstract List execute(String paramString, JSONArray paramJSONArray, Installation paramInstallation)
@@ -47,11 +36,11 @@ public abstract class UpdateUserPreferenceFeedids
   }
   
   @Override
-  public List execute(HttpServletRequest request, HttpServletResponse response)
+  public List execute(HttpServletRequest request)
     throws ServletException
   {
     boolean create = true;
-    Installation installation = getInstallation(request, response, create);
+    Installation installation = getInstallation(request, create);
     if(installation == null) {
         throw new ServletException("You are not authorized to perform the requested operation");
     }

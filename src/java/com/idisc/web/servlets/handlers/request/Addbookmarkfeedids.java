@@ -15,11 +15,13 @@ import org.json.simple.JSONArray;
 
 public class Addbookmarkfeedids extends UpdateUserPreferenceFeedids
 {
+  @Override
   public String getRequestParameterName()
   {
     return "com.looseboxes.idisc.addbookmarkfeedids.feedids";
   }
   
+  @Override
   protected List execute(String name, JSONArray feedids, Installation installation)
     throws Exception
   {

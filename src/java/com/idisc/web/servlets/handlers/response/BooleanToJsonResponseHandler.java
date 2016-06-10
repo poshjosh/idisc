@@ -6,7 +6,7 @@ import javax.servlet.http.HttpServletResponse;
 /**
  * @author USER
  */
-public class EntityJsonBooleanResponseHandler extends EntityJsonResponseHandler<Boolean> {
+public class BooleanToJsonResponseHandler<E extends Boolean> extends ObjectToJsonResponseHandler<E> {
     
     @Override
     public int getStatusCode(HttpServletRequest request, String name, Boolean success) {

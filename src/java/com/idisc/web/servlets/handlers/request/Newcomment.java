@@ -23,11 +23,11 @@ public class Newcomment extends NewEntityHandler<Comment> {
   }
   
   @Override
-  public Boolean execute(HttpServletRequest request, HttpServletResponse response)
+  public Boolean execute(HttpServletRequest request)
     throws ServletException, IOException
   {
 XLogger.getInstance().log(Level.FINER, "execute(HttpServletRequest, HttpServletResponse)", this.getClass());
-    Installation installation = getInstallation(request, response, true);
+    Installation installation = getInstallation(request, true);
     
     if(installation == null) {
       throw new InstallationException("You are not authorized to perform the requested operation");

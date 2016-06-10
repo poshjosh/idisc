@@ -13,13 +13,15 @@ import java.util.logging.Level;
 import javax.persistence.EntityManager;
 import org.json.simple.JSONArray;
 
-public class Addfavoritefeedids extends UpdateUserPreferenceFeedids
-{
+public class Addfavoritefeedids extends UpdateUserPreferenceFeedids {
+    
+  @Override
   public String getRequestParameterName()
   {
     return "com.looseboxes.idisc.addfavoritefeedids.feedids";
   }
   
+  @Override
   protected List execute(String name, JSONArray feedids, Installation installation)
     throws Exception
   {

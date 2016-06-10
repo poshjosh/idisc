@@ -3,7 +3,7 @@ package com.idisc.web.servlets.handlers.request;
 import com.bc.jpa.ControllerFactory;
 import com.bc.jpa.EntityController;
 import com.idisc.core.IdiscApp;
-import com.idisc.web.servlets.handlers.response.EntityJsonBooleanResponseHandler;
+import com.idisc.web.servlets.handlers.response.BooleanToJsonResponseHandler;
 import com.idisc.web.servlets.handlers.response.HtmlBooleanResponseHandler;
 import com.idisc.web.servlets.handlers.response.ResponseHandler;
 import javax.servlet.http.HttpServletRequest;
@@ -23,20 +23,17 @@ public abstract class NewEntityHandler<E> extends AbstractRequestHandler<Boolean
   public abstract Class<E> getEntityType();
 
   @Override
-  public ResponseHandler<Boolean> createResponseHandler(HttpServletRequest request) {
-    ResponseHandler<Boolean> responseHandler;
-    if (this.isHtmlResponse(request))
-    {
+  public ResponseHandler<Boolean, Object> createResponseHandler(HttpServletRequest request) {
+    ResponseHandler<Boolean, Object> responseHandler;
+    if (this.isHtmlResponse(request)) {
       responseHandler = new HtmlBooleanResponseHandler(){
         @Override
         public int getStatusCode(HttpServletRequest request, String name, Boolean success) {
           return NewEntityHandler.this.getStatusCode(success);
         }
       };
-    }
-    else
-    {
-      responseHandler = new EntityJsonBooleanResponseHandler(){
+    } else {
+      responseHandler = new BooleanToJsonResponseHandler(){
         @Override
         public int getStatusCode(HttpServletRequest request, String name, Boolean success) {
           return NewEntityHandler.this.getStatusCode(success);
@@ -46,8 +43,7 @@ public abstract class NewEntityHandler<E> extends AbstractRequestHandler<Boolean
     return responseHandler;
   }
   
-  private int getStatusCode(Boolean success)
-  {
+  private int getStatusCode(Boolean success) {
     return success ? HttpServletResponse.SC_CREATED : HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
   }
   

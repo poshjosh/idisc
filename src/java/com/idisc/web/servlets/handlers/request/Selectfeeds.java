@@ -4,13 +4,13 @@ import com.idisc.core.jpa.FeedSearch;
 import com.idisc.core.jpa.Search;
 import com.idisc.pu.entities.Feed;
 import com.idisc.web.servlets.handlers.response.HtmlResponseHandler;
+import com.idisc.web.servlets.handlers.response.ListToReaderResponseHandler;
 import com.idisc.web.servlets.handlers.response.ResponseHandler;
 import com.idisc.web.servlets.handlers.response.SelectfeedsJsonResponseHandler;
 import java.util.List;
 import javax.servlet.http.HttpServletRequest;
 
-public class Selectfeeds extends SearchHandler<Feed>
-{
+public class Selectfeeds extends SearchHandler<Feed> {
 
   public Selectfeeds() { }
 
@@ -19,15 +19,21 @@ public class Selectfeeds extends SearchHandler<Feed>
   }
   
   @Override
-  public ResponseHandler<List<Feed>> createResponseHandler(HttpServletRequest request) {
-    ResponseHandler<List<Feed>> responseHandler;
-    if (this.isHtmlResponse(request))
-    {
+  public boolean isOutputLarge() {
+    return true;
+  }
+  
+  @Override
+  public ResponseHandler<List<Feed>, Object> createResponseHandler(HttpServletRequest request) {
+    ResponseHandler<List<Feed>, Object> responseHandler;
+    if (this.isHtmlResponse(request)) {
       responseHandler = new HtmlResponseHandler();
-    }
-    else
-    {
-      responseHandler = new SelectfeedsJsonResponseHandler();
+    } else {
+      if(this.isOutputLarge() && this.isStreamLargeResponses()) {  
+        responseHandler = new ListToReaderResponseHandler();
+      }else{
+        responseHandler = new SelectfeedsJsonResponseHandler();
+      }
     }
     
     return responseHandler;

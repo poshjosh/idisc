@@ -13,13 +13,8 @@ import java.io.IOException;
 import java.util.List;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
-
-
-
-public class Valueexists
-  extends AbstractRequestHandler<Boolean>
+public class Valueexists extends AbstractRequestHandler<Boolean>
 {
   public boolean isProtected()
   {
@@ -29,7 +24,7 @@ public class Valueexists
 
 
 
-  public Boolean execute(HttpServletRequest request, HttpServletResponse response)
+  public Boolean execute(HttpServletRequest request)
     throws ServletException, IOException
   {
     RequestParameters params = new RequestParameters(request);

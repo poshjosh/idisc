@@ -5,9 +5,8 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-public interface ResponseHandler<V>
-{
-  
+public interface ResponseHandler<V, O> {
+    
   void processResponse(
           HttpServletRequest request, HttpServletResponse response, 
           String name, V value)
@@ -36,7 +35,7 @@ public interface ResponseHandler<V>
   
   int getStatusCode(HttpServletRequest paramHttpServletRequest, String name, Throwable value);
   
-  Object getOutput(HttpServletRequest paramHttpServletRequest, String name, V value);
+  O getOutput(HttpServletRequest paramHttpServletRequest, String name, V value);
   
-  Object getOutput(HttpServletRequest paramHttpServletRequest, String name, Throwable value);
+  O getOutput(HttpServletRequest paramHttpServletRequest, String name, Throwable value);
 }

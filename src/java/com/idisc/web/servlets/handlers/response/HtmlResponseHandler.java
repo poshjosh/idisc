@@ -10,12 +10,19 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-public class HtmlResponseHandler<V>
-  extends AbstractResponseHandler<V>
-{
+public class HtmlResponseHandler<V> extends AbstractResponseHandler<V, Object> {
     
-  protected String getResponseMessage(HttpServletRequest request, String name, V value)
-  {
+  @Override
+  public Object getOutput(HttpServletRequest request, String name, V value) {
+    return this.getDefaultOutput(request, name, value);
+  }
+  
+  @Override
+  public Object getOutput(HttpServletRequest request, String name, Throwable value) {
+    return this.getDefaultOutput(request, name, value);
+  }
+
+  protected String getResponseMessage(HttpServletRequest request, String name, V value) {
     return null;
   }
   
@@ -27,8 +34,7 @@ public class HtmlResponseHandler<V>
   }
 
   @Override
-  public String getContentType(HttpServletRequest request)
-  {
+  public String getContentType(HttpServletRequest request) {
     return "text/html;charset=" + getCharacterEncoding(request);
   }
 
@@ -44,7 +50,9 @@ public class HtmlResponseHandler<V>
     // Session attribute
     //
     Object output = getOutput(request, name, message);
+    
     request.getSession().setAttribute(name, output);
+    
 XLogger.getInstance().log(Level.FINER, "{0} = {1}", getClass(), name, output);
     
     // @related userMessage
@@ -52,7 +60,9 @@ XLogger.getInstance().log(Level.FINER, "{0} = {1}", getClass(), name, output);
     // Request attribute
     //
     String userMessage = this.getResponseMessage(request, name, message);
+    
     request.setAttribute("userMessage", userMessage);
+    
 XLogger.getInstance().log(Level.FINE, "Request param name: {0}, {1} = {2}", 
         getClass(), name, "userMessage", userMessage);
   }
@@ -113,14 +123,12 @@ XLogger.getInstance().log(Level.FINE, "Target Page: {0}", getClass(), targetPage
   }
   
   public String getTargetPage(HttpServletRequest request, String name, V message)
-    throws ValidationException
-  {
+    throws ValidationException {
     
     return '/' + name + ".jsp";
   }
   
-  public String getTargetPage(HttpServletRequest request, String name, Throwable t)
-  {
+  public String getTargetPage(HttpServletRequest request, String name, Throwable t) {
     String output;
     if(t instanceof LoginException || t instanceof InstallationException ) {
       output = "/login.jsp";

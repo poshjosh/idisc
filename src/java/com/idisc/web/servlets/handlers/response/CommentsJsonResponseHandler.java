@@ -5,10 +5,10 @@ import com.idisc.pu.entities.Comment;
 /**
  * @author poshjosh
  */
-public class CommentsJsonResponseHandler extends EntityListJsonResponseHandler<Comment> {
+public class CommentsJsonResponseHandler<E extends Comment> extends ListToJsonResponseHandler<E> {
 
   @Override
-  public int getEstimatedBufferCapacity(Comment value) {
+  public int getEstimatedLengthChars(Comment value) {
     return 500;
   }
 }

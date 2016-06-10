@@ -13,13 +13,9 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-public class Feed
-  extends AbstractRequestHandler<com.idisc.pu.entities.Feed>
-{
+public class Feed extends AbstractRequestHandler<com.idisc.pu.entities.Feed>{
 
   private com.idisc.pu.entities.Feed feed;
-  
-  private RequestHandler.RequestHandlerEntry requestHandlerEntry;
   
   @Override
   public String getResponseFormat(HttpServletRequest request)
@@ -34,35 +30,18 @@ public class Feed
   }
 
   @Override
-  public RequestHandler.RequestHandlerEntry getNextRequestHandler(HttpServletRequest request) {
-      
-    if(this.requestHandlerEntry == null && this.feed != null && this.isHtmlResponse(request)) {
-
-      final Comments comments = new Comments();
-      final String name = comments.getClass().getSimpleName().toLowerCase();
-XLogger.getInstance().log(Level.FINE, "Created next request handler: {0}", this.getClass(), comments.getClass().getName());
-
-      this.requestHandlerEntry = new RequestHandler.RequestHandlerEntry() {
-        @Override
-        public String getName() {
-            return name;
-        }
-        @Override
-        public RequestHandler getRequestHandler() {
-            return comments;
-        }
-      };  
-    }
-    
-    return this.requestHandlerEntry;
-  }
-  
-  @Override
-  public com.idisc.pu.entities.Feed execute(HttpServletRequest request, HttpServletResponse response)
+  public com.idisc.pu.entities.Feed execute(HttpServletRequest request)
     throws ServletException, IOException
   {
     
     this.feed = this.select(request);
+    
+    if(feed != null) {
+        
+      final Comments comments = new Comments();
+        
+      comments.execute(request);
+    }
     
     return feed;
   }
@@ -74,22 +53,19 @@ XLogger.getInstance().log(Level.FINE, "Created next request handler: {0}", this.
     
     com.idisc.pu.entities.Feed feed = null;
     
-    List<com.idisc.pu.entities.Feed> lastFeeds = DefaultFeedCache.getCachedFeeds(request);
+    List<com.idisc.pu.entities.Feed> lastFeeds = DefaultFeedCache.getCachedFeeds();
     
     if ((lastFeeds != null) && (!lastFeeds.isEmpty()))
     {
-      synchronized (lastFeeds) {
-        for (com.idisc.pu.entities.Feed lastFeed : lastFeeds) {
-          if (lastFeed.getFeedid().intValue() == feedid) {
-            feed = lastFeed;
-            break;
-          }
+      for (com.idisc.pu.entities.Feed lastFeed : lastFeeds) {
+        if (lastFeed.getFeedid().intValue() == feedid) {
+          feed = lastFeed;
+          break;
         }
       }
     }
     
-    if (feed == null)
-    {
+    if (feed == null) {
 
       feed = select(feedid);
     }
@@ -130,3 +106,32 @@ XLogger.getInstance().log(Level.FINE, "Created next request handler: {0}", this.
     return Integer.valueOf(ival);
   }
 }
+/**
+ * 
+  @Override
+  public RequestHandler.RequestHandlerEntry getNextRequestHandler(HttpServletRequest request) {
+      
+    if(this.requestHandlerEntry == null && this.feed != null && this.isHtmlResponse(request)) {
+
+      final Comments comments = new Comments();
+      final String name = comments.getClass().getSimpleName().toLowerCase();
+XLogger.getInstance().log(Level.FINE, "Created next request handler: {0}", this.getClass(), comments.getClass().getName());
+
+      this.requestHandlerEntry = new RequestHandler.RequestHandlerEntry() {
+        @Override
+        public String getName() {
+            return name;
+        }
+        @Override
+        public RequestHandler getRequestHandler() {
+            return comments;
+        }
+      };  
+    }
+    
+    return this.requestHandlerEntry;
+  }
+  
+ * 
+ * 
+ */

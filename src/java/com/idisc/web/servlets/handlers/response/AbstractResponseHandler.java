@@ -1,6 +1,7 @@
 package com.idisc.web.servlets.handlers.response;
 
 import com.bc.util.XLogger;
+import com.bc.web.core.util.ServletUtil;
 import com.idisc.web.exceptions.ValidationException;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -9,8 +10,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-public abstract class AbstractResponseHandler<V> implements ResponseHandler<V>
-{
+public abstract class AbstractResponseHandler<V, O> implements ResponseHandler<V, O> {
   
   @Override
   public abstract void sendResponse(
@@ -24,9 +24,30 @@ public abstract class AbstractResponseHandler<V> implements ResponseHandler<V>
           String name, Throwable value)
     throws ServletException, IOException;
   
+  
+  public String getRefererRelativePath(HttpServletRequest request) {
+    final String referer = request.getHeader("referer");  
+    String output = referer == null ? null : ServletUtil.getRelativePath(
+            request.getServletContext(), referer, "baseURL");
+    return output;
+  }
+  
+  protected Object getDefaultOutput(HttpServletRequest request, String name, V value) {
+    if ((value instanceof Boolean)) {
+      return ((Boolean)value) ? "Success" : "Error";
+    }
+    return value;
+  }
+  
+  protected Object getDefaultOutput(HttpServletRequest request, String name, Throwable value) {
+    if ((value instanceof ServletException)) {
+      return value.getLocalizedMessage();
+    }
+    return "Unexpected Error";
+  }
+  
   @Override
-  public String getCharacterEncoding(HttpServletRequest request)
-  {
+  public String getCharacterEncoding(HttpServletRequest request) {
     return "UTF-8";
   }
   
@@ -85,23 +106,5 @@ XLogger.getInstance().log(Level.FINE, "Response status code: {0}, contentType: {
       return 404;
     }
     return 500;
-  }
-  
-  @Override
-  public Object getOutput(HttpServletRequest request, String name, V value)
-  {
-    if ((value instanceof Boolean)) {
-      return ((Boolean)value).booleanValue() ? "Success" : "Error";
-    }
-    return value;
-  }
-  
-  @Override
-  public Object getOutput(HttpServletRequest request, String name, Throwable value)
-  {
-    if ((value instanceof ServletException)) {
-      return value.getLocalizedMessage();
-    }
-    return "Unexpected Error";
   }
 }

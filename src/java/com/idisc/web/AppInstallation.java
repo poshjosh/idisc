@@ -26,9 +26,9 @@ public class AppInstallation
   }
   
 
-  public static Installation getEntity(HttpServletRequest request, User user, boolean create)
-    throws ServletException
-  {
+  public static Installation getEntity(
+          HttpServletRequest request, User user, boolean create)
+    throws ServletException  {
 XLogger.getInstance().log(Level.FINER, "Available user: {0}", AppInstallation.class, user);
     if (user != null) {
       List<Installation> list = user.getInstallationList();
@@ -62,16 +62,18 @@ XLogger.getInstance().log(Level.FINER, "For user, selected {0} installations", A
       output = getEntity(col, sval);
        
 XLogger.getInstance().log(Level.FINER, "{0} = {1}, found: ", AppInstallation.class, col, sval, output);
-      if ((output == null) && (create))
-      {
+      if ((output == null) && (create)) {
+          
         Date date = new Date();
         
         String screenname = request.getParameter("screenname");
         
         if ((screenname != null) && (!screenname.isEmpty())) {
+            
           Installation _orignal_screenname_owner = getEntity("screenname", screenname);
-          if (_orignal_screenname_owner != null)
-          {
+          
+          if (_orignal_screenname_owner != null) {
+              
             screenname = generateUniqueId(date.getTime());
           }
         }
@@ -136,16 +138,18 @@ XLogger.getInstance().log(Level.FINER, "{0} = {1}, created: ", AppInstallation.c
       EntityController<Installation, Integer> ec = getEntityController();
       return (Installation)getEntity(ec, columnName, columnValue);
     } catch (RuntimeException e) {
-      throw new ServletException("Error accessing database installation record for installationkey: " + columnValue, e);
+      throw new ServletException("Error accessing database installation record for "+columnName+" = " + columnValue, e);
     }
   }
   
 
   public static <E> E getEntity(EntityController<E, Integer> ec, String columnName, String columnValue)
-    throws ServletException
-  {
+    throws ServletException {
+    if(columnName == null) {
+      throw new NullPointerException("Attempted to select a 'null' column name from the database");
+    }
     if ((columnValue == null) || (columnValue.isEmpty())) {
-      throw new ServletException("Required parameter 'installationkey' is missing");
+      throw new ServletException("Required parameter "+columnName+" is missing");
     }
     E output;
     try {
@@ -156,11 +160,12 @@ XLogger.getInstance().log(Level.FINER, "{0} = {1}, created: ", AppInstallation.c
       } else { 
         if (count == 1) {
           output = found.get(0);
-        } else
-          throw new ServletException("Found > 1 record where only 1 was expected for installationkey=" + columnValue);
+        } else {
+          throw new ServletException("Found > 1 record where only 1 was expected for "+columnName+" = " + columnValue);
+        }  
       }
     } catch (RuntimeException e) {
-      throw new ServletException("Error accessing database installation record for installationkey: " + columnValue, e);
+      throw new ServletException("Error accessing database installation record for "+columnName+" = " + columnValue, e);
     }
     return output;
   }

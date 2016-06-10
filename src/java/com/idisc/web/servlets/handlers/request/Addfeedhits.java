@@ -16,7 +16,6 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
@@ -34,10 +33,10 @@ public class Addfeedhits extends AbstractRequestHandler<Map<Integer, Long>>
 
 
   @Override
-  public Map<Integer, Long> execute(HttpServletRequest request, HttpServletResponse response)
+  public Map<Integer, Long> execute(HttpServletRequest request)
     throws ServletException
   {
-    Installation installation = getInstallation(request, response, true);
+    Installation installation = getInstallation(request, true);
     
     if(installation == null) {
       throw new ServletException("You are not authorized to perform the requested operation");
@@ -64,16 +63,6 @@ public class Addfeedhits extends AbstractRequestHandler<Map<Integer, Long>>
     }
   }
   
-
-
-
-
-
-
-
-
-
-
   protected Map<Integer, Long> execute(Installation installation, List<String> hits)
     throws ServletException
   {

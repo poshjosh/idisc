@@ -1,12 +1,6 @@
 package com.idisc.web.servlets.handlers.response;
 
-import com.bc.util.Util;
-import com.bc.util.XLogger;
 import com.idisc.web.exceptions.ValidationException;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.logging.Level;
-import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -19,23 +13,10 @@ public class HtmlBooleanResponseHandler extends HtmlResponseHandler<Boolean> {
     public String getTargetPage(HttpServletRequest request, String name, Boolean success) throws ValidationException {
         String targetPage;
         if(success) {
-            String referer = request.getHeader("referer");
-            if(referer != null) {
-                ServletContext context = request.getServletContext();
-                try{
-                    URL url = context.getResource(context.getContextPath());
-XLogger.getInstance().log(Level.FINER, "Context URL from ServletContext.getResource(contextPath)", this.getClass(), url);
-                    if(url == null) {
-                        String urlStr = (String)context.getAttribute("baseURL")+context.getContextPath();
-XLogger.getInstance().log(Level.FINER, "Context URL from ServletContext.getAttribute(baseURL)+contextPath", this.getClass(), urlStr);
-                        url = new URL(urlStr);
-                    }
-                    targetPage = Util.getRelativePath(referer, url.toExternalForm());
-                }catch(MalformedURLException e) {
-                    targetPage = super.getTargetPage(request, name, success);
-                }
-            }else{
-                targetPage = super.getTargetPage(request, name, success);
+            // Back to sender
+            targetPage = this.getRefererRelativePath(request);
+            if(targetPage == null) {
+                targetPage = super.getTargetPage(request, name, success);                    
             }
         }else{
             targetPage = "/oops.jsp";

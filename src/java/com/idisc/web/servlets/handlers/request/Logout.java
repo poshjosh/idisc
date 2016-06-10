@@ -5,27 +5,21 @@ import com.idisc.web.servlets.handlers.response.ResponseHandler;
 import java.io.IOException;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
-public class Logout
-  extends AbstractRequestHandler<Boolean>
-{
+public class Logout extends AbstractRequestHandler<Boolean> {
+    
   @Override
-  public boolean isProtected()
-  {
+  public boolean isProtected() {
     return false;
   }
   
   @Override
-  public ResponseHandler<Boolean> createResponseHandler(HttpServletRequest request)
-  {
-    ResponseHandler<Boolean> responseHandler;
-    if (this.isHtmlResponse(request))
-    {
+  public ResponseHandler<Boolean, Object> createResponseHandler(HttpServletRequest request) {
+      
+    ResponseHandler<Boolean, Object> responseHandler;
+    if (this.isHtmlResponse(request)) {
       responseHandler = new HtmlBooleanResponseHandler();
-    }
-    else
-    {
+    }else {
       responseHandler = super.createResponseHandler(request);
     }
     
@@ -33,9 +27,7 @@ public class Logout
   }
 
   @Override
-  public Boolean execute(HttpServletRequest request, HttpServletResponse response)
-    throws ServletException, IOException
-  {
+  public Boolean execute(HttpServletRequest request) throws ServletException, IOException {
     if (!isLoggedIn(request)) {
       return Boolean.TRUE;
     }

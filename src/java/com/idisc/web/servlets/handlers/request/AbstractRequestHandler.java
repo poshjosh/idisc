@@ -1,40 +1,47 @@
 package com.idisc.web.servlets.handlers.request;
 
 import com.idisc.web.servlets.handlers.response.HtmlResponseHandler;
-import com.idisc.web.servlets.handlers.response.EntityJsonResponseHandler;
 import com.idisc.web.servlets.handlers.response.ResponseHandler;
 import com.bc.util.XLogger;
-import com.idisc.core.User;
-import com.idisc.pu.entities.Installation;
-import com.idisc.web.AppInstallation;
+import com.idisc.web.ConfigNames;
+import com.idisc.web.WebApp;
 import com.idisc.web.exceptions.LoginException;
+import com.idisc.web.servlets.handlers.response.ObjectToJsonResponseHandler;
 import java.io.IOException;
-import java.util.Map;
 import java.util.logging.Level;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
-public abstract class AbstractRequestHandler<V> implements RequestHandler<V>
-{
+public abstract class AbstractRequestHandler<V> 
+        extends SessionUserHandlerImpl 
+        implements RequestHandler<V, Object> {
   
-  public abstract V execute(
-          HttpServletRequest paramHttpServletRequest, HttpServletResponse paramHttpServletResponse)
+  private final boolean streamLargeResponses;
+
+  public AbstractRequestHandler() {
+    this(WebApp.getInstance().getConfiguration().getBoolean(ConfigNames.STREAM_LARGE_RESPONSES, true));
+  }
+  
+  public AbstractRequestHandler(boolean streamLargeResponses) {
+    this.streamLargeResponses = streamLargeResponses;
+  }
+  
+  public abstract V execute(HttpServletRequest request)
           throws ServletException, IOException;
   
   @Override
-  public RequestHandler.RequestHandlerEntry getNextRequestHandler(HttpServletRequest request) {
-      return null;
+  public boolean isOutputLarge() {
+    return false;
   }
   
   @Override
-  public V processRequest(HttpServletRequest request, HttpServletResponse response)
-    throws ServletException, IOException
-  {
-    XLogger.getInstance().entering(getClass(), "processRequest(HttpServletRequest, HttpServletResponse)", null);
+  public V processRequest(HttpServletRequest request) 
+      throws ServletException, IOException {
+      
+    XLogger.getInstance().entering(getClass(), "processRequest(HttpServletRequest)", null);
 
       if ((isProtected()) && (!isLoggedIn(request))) {
-        tryLogin(request, response);
+        tryLogin(request);
       }
       
       if ((isProtected()) && (!isLoggedIn(request))) {
@@ -43,11 +50,16 @@ public abstract class AbstractRequestHandler<V> implements RequestHandler<V>
       
       XLogger.getInstance().log(Level.FINER, "Executing", getClass());
       
-      V x = execute(request, response);
+      V x = execute(request);
       
       XLogger.getInstance().log(Level.FINER, "Execution finished, output:\n{0}", getClass(), x);
       
       return x;
+  }
+  
+  @Override
+  public boolean isProtected() {
+    return true;
   }
   
   public final boolean isHtmlResponse(HttpServletRequest request) {
@@ -56,9 +68,9 @@ public abstract class AbstractRequestHandler<V> implements RequestHandler<V>
     return output;
   }
 
-  private ResponseHandler<V> responseHandler;
+  private ResponseHandler<V, Object> responseHandler;
   @Override
-  public final ResponseHandler<V> getResponseHandler(HttpServletRequest request)
+  public final ResponseHandler<V, Object> getResponseHandler(HttpServletRequest request)
   {
       if(responseHandler == null) {
           responseHandler = this.createResponseHandler(request);
@@ -66,16 +78,12 @@ public abstract class AbstractRequestHandler<V> implements RequestHandler<V>
       return responseHandler;
   }
   
-  public ResponseHandler<V> createResponseHandler(HttpServletRequest request)
-  {
-    ResponseHandler<V> output;
-    if (this.isHtmlResponse(request))
-    {
+  public ResponseHandler<V, Object> createResponseHandler(HttpServletRequest request) {
+    ResponseHandler<V, Object> output;
+    if (this.isHtmlResponse(request)) {
       output = new HtmlResponseHandler();
-    }
-    else
-    {
-      output = new EntityJsonResponseHandler();
+    } else {
+      output = new ObjectToJsonResponseHandler();  
     }
     
     return output;
@@ -103,104 +111,8 @@ XLogger.getInstance().log(Level.FINER, "Response format: {0}", this.getClass(), 
     
     return format;
   }
-  
-  public Installation getInstallation(HttpServletRequest request, HttpServletResponse response, boolean create)
-  {
-XLogger.getInstance().log(Level.FINER, "getInstallation(HttpServletRequest, HttpServletResponse, boolean)", this.getClass());
-    Installation installation;
-    
-    try
-    {
-      User user = findUser(request, response);
-      installation = AppInstallation.getEntity(request, user, create);
-    }
-    catch (Exception ignored) {
-      installation = null;
-    }
-    if(installation != null) {
-        
-      // ////////////////////////
-      //
-      request.getSession().setAttribute("installation", installation);
-    }
-    return installation;
-  }
 
-  @Override
-  public boolean isProtected()
-  {
-    return true;
-  }
-  
-  @Override
-  public User tryLogin(HttpServletRequest request, HttpServletResponse response)
-  {
-    User user;
-    try {
-      Login login = new Login();
-      login.execute(request, response);
-      
-      user = getUser(request);
-    }
-    catch (ServletException|IOException|RuntimeException e)
-    {
-      user = null;
-    }
-    return user;
-  }
-  
-  @Override
-  public void setLoggedout(HttpServletRequest request)
-  {
-    request.getSession().removeAttribute("user");
-  }
-  
-  @Override
-  public void setLoggedIn(HttpServletRequest request, User user)
-  {
-    request.getSession().setAttribute("user", user);
-XLogger.getInstance().log(Level.FINER, "Updated session attribute user = {0}", this.getClass(), user);
-  }
-  
-  @Override
-  public User findUser(HttpServletRequest request, HttpServletResponse response) {
-XLogger.getInstance().log(Level.FINER, "findUser(HttpServletRequest, HttpServletResponse)", this.getClass());
-    User user;
-    if (isLoggedIn(request)) {
-      user = getUser(request);
-    } else {
-      user = tryLogin(request, response);
-    }
-XLogger.getInstance().log(Level.FINE, "Found user: {0}", User.class, user);
-    return user;
-  }
-  
-  @Override
-  public User getUser(HttpServletRequest request)
-  {
-    User user = (User)request.getSession().getAttribute("user");
-XLogger.getInstance().log(Level.FINER, "User: {0}", this.getClass(), user);
-    return user;
-  }
-  
-  @Override
-  public boolean isLoggedIn(HttpServletRequest request)
-  {
-    return getUser(request) != null;
-  }
-
-  @Override
-  public User setLoggedIn(HttpServletRequest request, Map authuserdetails, boolean create)
-    throws ServletException
-  {
-    User user = null;
-    try {
-      user = User.getInstance(authuserdetails, create);
-XLogger.getInstance().log(Level.FINER, "User: {0}", this.getClass(), user);
-      setLoggedIn(request, user);
-    } catch (Exception e) {
-      throw new ServletException("Unexpected Error", e);
-    }
-    return user;
+  public boolean isStreamLargeResponses() {
+    return streamLargeResponses;
   }
 }

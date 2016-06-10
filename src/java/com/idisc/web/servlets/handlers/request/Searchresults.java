@@ -1,6 +1,5 @@
 package com.idisc.web.servlets.handlers.request;
 
-import com.bc.jpa.search.SearchResultsList;
 import com.idisc.core.jpa.FeedSearchResults;
 import com.idisc.web.exceptions.ValidationException;
 import java.util.Date;
@@ -27,7 +26,8 @@ public class Searchresults extends Selectfeeds {
         
         FeedSearchResults searchresults = new FeedSearchResults(toFind, after, limit);
 
-        feeds = new SearchResultsList(searchresults);
+        feeds = searchresults.getAllResults();
+        
     }else{
         
         feeds = super.select(request, toFind, after, offset, limit);

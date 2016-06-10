@@ -8,7 +8,7 @@ import javax.servlet.http.HttpSessionBindingEvent;
  *
  * @author poshjosh
  */
-public class SessionAttributeListener extends CloseAutoCloseable implements HttpSessionAttributeListener {
+public class SessionAttributeListener implements HttpSessionAttributeListener {
 
     @Override
     public void attributeAdded(HttpSessionBindingEvent event) { 
@@ -23,7 +23,10 @@ public class SessionAttributeListener extends CloseAutoCloseable implements Http
     @Override
     public void attributeReplaced(HttpSessionBindingEvent event) {
         String name = event.getName();
-        Object val = event.getValue();
-        this.closeAutoCloseable(name, val);
+        Object replaced = event.getValue();
+        if(replaced instanceof AutoCloseable) {
+            CloseAutoCloseable cac = new CloseAutoCloseable();
+            cac.execute(name, (AutoCloseable)replaced);
+        }
     }
 }

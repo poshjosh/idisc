@@ -10,8 +10,7 @@ import javax.servlet.http.HttpServletRequest;
 /**
  * @author poshjosh
  */
-public abstract class SearchHandler<T> extends Select<T>
-{
+public abstract class SearchHandler<T> extends Select<T> {
 
   public SearchHandler() { }
 

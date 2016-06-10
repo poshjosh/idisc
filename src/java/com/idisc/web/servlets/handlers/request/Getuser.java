@@ -35,7 +35,7 @@ public class Getuser
   }
   
 
-  public Map execute(HttpServletRequest request, HttpServletResponse response)
+  public Map execute(HttpServletRequest request)
     throws ServletException, IOException
   {
     Map output;
