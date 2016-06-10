@@ -1,12 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <web-app version="3.0" xmlns="http://java.sun.com/xml/ns/javaee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd">
+<!-- This is set in the app
+    <session-config>
+        <session-timeout>
+            1
+        </session-timeout>
+    </session-config>
+-->    
     <context-param>
         <param-name>productionMode</param-name>
-        <param-value>true</param-value>
+        <param-value>false</param-value>
     </context-param>
     <context-param>
         <param-name>appName</param-name>
-        <param-value>NewsMinute</param-value>
+        <param-value>News Minute</param-value>
     </context-param>
     <context-param>
         <param-name>appUrl</param-name>
@@ -19,14 +26,17 @@
     <filter>
         <filter-name>BotFilter</filter-name>
         <filter-class>com.idisc.web.filters.BotFilter</filter-class>
+        <async-supported>true</async-supported>
     </filter>
     <filter>
         <filter-name>AppFilter</filter-name>
         <filter-class>com.idisc.web.filters.AppFilter</filter-class>
+        <async-supported>true</async-supported>
     </filter>
     <filter>
         <filter-name>PageFilter</filter-name>
         <filter-class>com.idisc.web.filters.PageFilter</filter-class>
+        <async-supported>true</async-supported>
     </filter>
     <filter-mapping>
         <filter-name>BotFilter</filter-name>
@@ -86,11 +96,13 @@
     </listener>
     <servlet>
         <servlet-name>Idisc</servlet-name>
-        <servlet-class>com.idisc.web.servlets.Idisc</servlet-class>
+        <servlet-class>com.idisc.web.servlets.IdiscAsyncServlet</servlet-class>
+        <async-supported>true</async-supported>
     </servlet>
     <servlet>
         <servlet-name>tempmailer</servlet-name>
         <servlet-class>com.idisc.web.servlets.tempmailer</servlet-class>
+        <async-supported>true</async-supported>
     </servlet>
     <servlet-mapping>
         <servlet-name>Idisc</servlet-name>
@@ -128,11 +140,6 @@
         <servlet-name>tempmailer</servlet-name>
         <url-pattern>/tempmailer</url-pattern>
     </servlet-mapping>
-    <session-config>
-        <session-timeout>
-            30
-        </session-timeout>
-    </session-config>
     <welcome-file-list>
         <welcome-file>feeds.jsp</welcome-file>
     </welcome-file-list>

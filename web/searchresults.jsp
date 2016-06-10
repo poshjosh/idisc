@@ -12,7 +12,8 @@
                 <p>0 search results <c:if test="${query != null && query != ''}"> for <tt>${query}</tt></c:if></p>
             </c:when>    
             <c:otherwise>
-                <idisc:displayfeeds feeds="${searchresults}" page="${page}" nextPage="/searchresults.jsp"/>
+                <idisc:displayfeeds displayPageNav="true" displayPageLinks="true" 
+                                    feeds="${searchresults}" page="${page}" nextPage="/searchresults.jsp"/>
             </c:otherwise>
         </c:choose>        
     </jsp:attribute>

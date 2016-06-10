@@ -16,30 +16,52 @@
 <%@attribute name="nextPage" required="false" type="java.lang.String" 
              description="The next page beginning with a forward slash e.g /servletName or /jspPage.jsp"%>
 
-<idisc:displayrows items="${feeds}" nextPage="${nextPage}" page="${page}" pageSize="${pageSize}">
-    
-    <jsp:attribute name="rowFragment" trim="true">
-<%--@currentRowItem Exported request scope variable from displayrows tag--%>    
-        <c:set var="feed" value="${currentRowItem}" scope="page"/>
-        <p class="content_sub">
-<%-- 
-Servlet 3.0 / EL 2.2 or newer (Tomcat 7 or newer), EL started to support invoking 
-methods with arguments directly. 
-In this case we repace all non-word characters
---%>            
-            <c:set var="dfUrlTitle" value="${feed.title.replaceAll('[^a-zA-Z0-9]', '_')}"/>
-            <c:url var="dfFeedUrl" context="${pageContext.servletContext.contextPath}" 
-                   value="/feed/${feed.feedid}_${dfUrlTitle}.jsp"/>
-            <a href="${dfFeedUrl}">${feed.title}</a> 
-            <br/>
-            <span class="smallerLighter">
-                By ${feed.siteid.site} on <idisc:displaydate date="${feed.feeddate}" displayAsTimeElapsed="true"/> 
-            </span>
-        </p>
-    </jsp:attribute>
-        
-    <jsp:body>
-      <jsp:doBody/>  
-    </jsp:body> 
-        
-</idisc:displayrows>
+<%@attribute name="displayPageNav" required="false"%>
+<%@attribute name="displayPageLinks" required="false"%>
+
+<c:if test="${displayPageNav == 'true'}">
+    <idisc:displaypagenav nextPage="${nextPage}" page="${page}" pageSize="${pageSize}" totalSize="${fn:length(feeds)}"/>
+</c:if>
+
+<table>
+    <idisc:displayrows items="${feeds}" page="${page}" pageSize="${pageSize}">
+
+        <jsp:attribute name="rowFragment" trim="true">
+    <%--@currentRowItem Exported request scope variable from displayrows tag--%>    
+            <c:set var="feed" value="${currentRowItem}" scope="page"/>
+            <jsp:useBean id="feed" class="com.idisc.pu.entities.Feed"/>
+            
+            <tr class="content_sub" style="margin:0.5em; padding:0.5em; vertical-align:top;">
+                <td style="margin:0.5em; padding:0.5em;">
+                    <c:set var="appIconUrl" value="${pageContext.servletContext.contextPath}/images/appicon.png"/>
+                    <c:set var="iconUrl" value="${feed.imageurl != null && feed.imageurl != '' ? feed.imageurl : appIconUrl}"/>
+                    <img style="width:64px; height:64px" width="64" height="64" src="${iconUrl}"/>    
+                </td>    
+                <td style="margin:0.5em; padding:0.5em;">
+    <%-- 
+    Servlet 3.0 / EL 2.2 or newer (Tomcat 7 or newer), EL started to support invoking 
+    methods with arguments directly. 
+    In this case we repace all non-word characters
+    --%>            
+                    <c:set var="dfUrlTitle" value="${feed.title.replaceAll('[^a-zA-Z0-9]', '_')}"/>
+                    <c:url var="dfFeedUrl" context="${pageContext.servletContext.contextPath}" 
+                           value="/feed/${feed.feedid}_${dfUrlTitle}.jsp"/>
+                    <a href="${dfFeedUrl}">${feed.title}</a> 
+                    <br/>
+                    <span class="smallerLighter">
+                        By ${feed.siteid.site} on <idisc:displaydate date="${feed.feeddate}" displayAsTimeElapsed="true"/> 
+                    </span>
+                </td>  
+            </tr>
+        </jsp:attribute>
+
+        <jsp:body>
+          <jsp:doBody/>  
+        </jsp:body> 
+
+    </idisc:displayrows>
+</table>    
+
+<c:if test="${displayPageLinks == 'true'}">
+    <idisc:displaypagelinks nextPage="${nextPage}" page="${page}" pageSize="${pageSize}" totalSize="${fn:length(feeds)}"/>
+</c:if>

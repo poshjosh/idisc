@@ -20,10 +20,10 @@
 <link rel="icon" type="image/gif" href="${contextURL}/images/animated_favicon.gif" />
 <c:choose>
   <c:when test="${mobile}">
-    <link href="${contextURL}/resources/styles1_mobile.css" rel="stylesheet" type="text/css"/>
+    <link href="${contextURL}/resources/styles2_mobile.css" rel="stylesheet" type="text/css"/>
   </c:when>  
   <c:otherwise>
-    <link href="${contextURL}/resources/styles1.css" rel="stylesheet" type="text/css"/>
+    <link href="${contextURL}/resources/styles2.css" rel="stylesheet" type="text/css"/>
   </c:otherwise>  
 </c:choose>
 <script type="text/javascript" src="${contextURL}/resources/looseboxes.js"></script>

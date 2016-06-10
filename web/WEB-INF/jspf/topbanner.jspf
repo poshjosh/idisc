@@ -39,7 +39,7 @@
         </td>    
         <td>
             <a href="${pageContext.servletContext.contextPath}/home.jsp">
-                <span class="font_heavy app_color">News Minute</span>
+                <span class="font_heavy app_color">${appName}</span>
             </a>
 <%-- 
   App default format is text/json.

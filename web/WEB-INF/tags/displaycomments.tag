@@ -16,7 +16,14 @@
 <%@attribute name="nextPage" required="false" type="java.lang.String" 
              description="The next page beginning with a forward slash e.g /servletName or /jspPage.jsp"%>
 
-<idisc:displayrows items="${comments}" nextPage="${nextPage}" page="${page}" pageSize="${pageSize}">
+<%@attribute name="displayPageNav" required="false"%>
+<%@attribute name="displayPageLinks" required="false"%>
+
+<c:if test="${displayPageNav == 'true'}">
+    <idisc:displaypagenav nextPage="${nextPage}" page="${page}" pageSize="${pageSize}" totalSize="${fn:length(comments)}"/>
+</c:if>
+
+<idisc:displayrows items="${comments}" page="${page}" pageSize="${pageSize}">
     
     <jsp:attribute name="rowFragment" trim="true">
 <%--@currentRowItem Exported request scope variable from displayrows tag--%>    
@@ -47,3 +54,9 @@
     </jsp:body> 
         
 </idisc:displayrows>
+
+<c:if test="${displayPageLinks == 'true'}">
+    <idisc:displaypagelinks nextPage="${nextPage}" page="${page}" pageSize="${pageSize}" totalSize="${fn:length(comments)}"/>
+</c:if>
+        
+ 
