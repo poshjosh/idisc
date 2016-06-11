@@ -51,10 +51,11 @@
         <c:set var="feeds" value="${searchresults == null || empty searchresults ? (feeds == null || empty feeds ? WebappContext.cachedFeeds : feeds) : searchresults}"/>
         
 <%-- // @related Topfeeds --%>
-        <jsp:useBean id="Topfeeds" scope="session" class="com.idisc.web.beans.FeedSelectorBean"/>
+        <jsp:useBean id="Topfeeds" scope="session" class="com.idisc.web.beans.FeedSelectorBean">
+            <jsp:setProperty name="Topfeeds" property="async" value="true"/>
+            <jsp:setProperty name="Topfeeds" property="request" value="<%=request%>"/>
+        </jsp:useBean>
         
-        <jsp:setProperty name="Topfeeds" property="request" value="<%=request%>"/>
-
         <c:if test="${Topfeeds != null && Topfeeds.list != null && not empty Topfeeds.list}">
             <div><b>More News</b></div>
             <idisc:displayfeeds displayPageNav="false" displayPageLinks="false" 
