@@ -1,5 +1,7 @@
 package com.idisc.web.servlets;
 
+import com.idisc.web.ConfigNames;
+import com.idisc.web.WebApp;
 import com.idisc.web.servlets.handlers.request.RequestHandler;
 import java.io.IOException;
 import java.util.Queue;
@@ -14,7 +16,11 @@ import javax.servlet.http.HttpServletResponse;
  */
 public class IdiscAsyncServlet extends HttpServlet {
     
-  public IdiscAsyncServlet() { }
+  private final boolean processRequestAsync;  
+    
+  public IdiscAsyncServlet() { 
+    processRequestAsync = WebApp.getInstance().getConfiguration().getBoolean(ConfigNames.PROCESS_REQUEST_ASYNC, true);
+  }
 
   @Override
   protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -32,7 +38,13 @@ public class IdiscAsyncServlet extends HttpServlet {
 
     ServiceController sc = new ServiceController();
     
-    RequestHandler rh = sc.getRequestHandler(request);
+    if(!this.processRequestAsync) {
+        
+        sc.process(request, response);
+        
+    }else{
+    
+      RequestHandler rh = sc.getRequestHandler(request);
     
 //    if(rh instanceof SearchHandler) {
         
@@ -51,6 +63,7 @@ public class IdiscAsyncServlet extends HttpServlet {
 
 //        sc.process(rh, request, response, paramNames[0], true);
 //    }
+    }
   }
   
   @Override

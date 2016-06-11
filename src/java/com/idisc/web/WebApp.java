@@ -16,7 +16,6 @@ import java.lang.ref.WeakReference;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -32,6 +31,8 @@ import org.apache.commons.configuration.PropertiesConfiguration;
 
 public class WebApp {
     
+  private boolean debug;
+    
   private final boolean productionMode;
   
   private final long memoryAtStartup;
@@ -40,11 +41,11 @@ public class WebApp {
   
   private final String defaultPropertiesFileName;
   
+  private ExecutorService globalExecutor;
+  
   private FeedUpdateService feedUpdateService;
   
   private Configuration config;
-  
-  private transient ExecutorService requestExecutorService;
   
   private AuthSvcSession authSvcSession;
   
@@ -55,7 +56,8 @@ public class WebApp {
   private WebApp(boolean productionMode){
     this.productionMode = productionMode;
     this.memoryAtStartup = Runtime.getRuntime().freeMemory();
-    XLogger.getInstance().log(Level.INFO, "Memory at startup: {0}", this.getClass(), this.memoryAtStartup);
+    XLogger.getInstance().log(Level.INFO, "Memory at startup: {0}, available processors: {1}", 
+            this.getClass(), this.memoryAtStartup, Runtime.getRuntime().availableProcessors());
     this.defaultPropertiesFileName = "META-INF/properties/idiscwebdefaults.properties";
     this.propertiesFileName = this.productionMode ?
             "META-INF/properties/idiscweb.properties" :
@@ -71,6 +73,28 @@ public class WebApp {
       instance = new WebApp(productionMode);
     }
     return instance;
+  }
+  
+  public ExecutorService getGlobalExecutorService(boolean createIfNeed) {
+    if(this.globalExecutor == null && createIfNeed) {
+        this.globalExecutor = this.createExecutorService(1);
+    } 
+    return this.globalExecutor;
+  }
+  
+  /**
+   * A poolSize < 1 will result in a {@link com.bc.util.concurrent.DirectExecutorService}
+   * @param poolSize The thread pool size for the executor service
+   * @return An executor service
+   */
+  public ExecutorService createExecutorService(int poolSize) {
+    ExecutorService es;
+    if(poolSize < 1) {
+      es = new DirectExecutorService();
+    }else{
+      es = Executors.newFixedThreadPool(poolSize);
+    }
+    return es;
   }
   
   private WeakReference<Map> _appProperties_weakReference;
@@ -93,18 +117,6 @@ public class WebApp {
     } 
     return appProps;
   }
-
-  public ExecutorService getRequestExecutorService(boolean createIfNeed) {
-    if(requestExecutorService == null && createIfNeed) {
-      final int threadCount = config.getInt(ConfigNames.REQUEST_EXECUTOR_SERVICE_THREAD_COUNT, -1);
-      if(threadCount < 1) {
-        requestExecutorService = new DirectExecutorService();
-      }else{
-        requestExecutorService = Executors.newFixedThreadPool(threadCount);
-      }
-    }
-    return requestExecutorService;
-  }
   
   public void init(ServletContext context)
     throws ServletException, IOException, ConfigurationException, 
@@ -126,6 +138,8 @@ public class WebApp {
     this.servletContext = context;
     
     this.config = loadConfig(defaultFileLocation, fileLocation, ',');
+    
+    debug = this.config.getBoolean("debug", false);
     
     String authsvc_url = this.config.getString("authsvc.url");
     String app_name = this.getAppName();
@@ -165,7 +179,7 @@ public class WebApp {
     
     this.initIdiscApp();
     
-    this.servletContext.setAttribute("App", this);
+    this.servletContext.setAttribute(Attributes.APP, this);
     
     // We call this after initializing the IdiscApp so that its properties will
     // supercede any previously loaded logging configuration file
@@ -186,27 +200,8 @@ public class WebApp {
               " from: "+loggingPropertiesFile, this.getClass(), e);
     }    
   }
-/**
- * 
-com.idisc.web.servlets.RequestHandlerProviderServlet.level = ALL
-com.idisc.web.beans.FeedSelectorBean.level = ALL
-com.idisc.web.servlets.Idisc.level = ALL
-com.idisc.web.servlets.handlers.request.Getmultipleresults.level = ALL
-com.idisc.web.listeners.CloseAutoCloseable.level = ALL
-com.idisc.web.servlets.handlers.request.Select.level = ALL
-com.idisc.web.servlets.handlers.response.JsonResponseHandler.level = ALL
- * 
- */
+  
   private void initLogging2() {
-    Map<String, Level> loggers = new HashMap<>();
-//    loggers.put(com.idisc.web.servlets.RequestHandlerProviderServlet.class.getName(), Level.FINER);
-//    loggers.put(com.idisc.web.servlets.RequestHandlerProviderServlet.class.getName(), Level.FINER);
-//    loggers.put(com.idisc.web.beans.FeedSelectorBean.class.getName(), Level.FINER);
-//    loggers.put(com.idisc.web.servlets.Idisc.class.getName(), Level.FINER);
-////    loggers.put(com.idisc.web.servlets.handlers.request.Getmultipleresults.class.getName(), Level.FINER);
-////    loggers.put(com.idisc.web.listeners.CloseAutoCloseable.class.getName(), Level.FINER);
-//    loggers.put(com.idisc.web.servlets.handlers.request.Select.class.getName(), Level.FINER);
-//    loggers.put(com.idisc.web.servlets.handlers.response.JsonResponseHandler.class.getName(), Level.FINER);
     String logLevelStr = this.config.getString("logLevel");
     if(logLevelStr != null) {
       try {
@@ -219,10 +214,6 @@ com.idisc.web.servlets.handlers.response.JsonResponseHandler.level = ALL
             // Only top level projects, that is projects which may not be used
             // as libraries for others should do this
             logger.setLogLevel("com.bc", logLevel);
-            for(String loggerName:loggers.keySet()) {
-                Level level = loggers.get(loggerName);
-                logger.setLogLevel(loggerName, level);
-            }
         }
         XLogger.getInstance().setLogLevel(packageLoggerName, logLevel);
       } catch (Exception e) {
@@ -369,4 +360,18 @@ com.idisc.web.servlets.handlers.response.JsonResponseHandler.level = ALL
   public long getMemoryAtStartup() {
     return memoryAtStartup;
   }
+
+  public boolean isDebug() {
+    return debug;
+  }
 }
+/**
+ * 
+com.idisc.web.servlets.RequestHandlerProviderServlet.level = ALL
+com.idisc.web.beans.FeedSelectorBean.level = ALL
+com.idisc.web.servlets.handlers.request.Getmultipleresults.level = ALL
+com.idisc.web.listeners.CloseAutoCloseable.level = ALL
+com.idisc.web.servlets.handlers.request.Select.level = ALL
+com.idisc.web.servlets.handlers.response.JsonResponseHandler.level = ALL
+ * 
+ */

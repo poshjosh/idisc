@@ -1,5 +1,7 @@
 package com.idisc.web.servlets.handlers.response;
 
+import com.bc.util.XLogger;
+import com.idisc.core.EntityJsonFormat;
 import com.idisc.core.util.CharIteratorReader;
 import com.idisc.core.util.ListJsonCharIterator;
 import com.idisc.core.util.SequenceReader;
@@ -9,9 +11,8 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
+import java.util.logging.Level;
 import javax.servlet.http.HttpServletRequest;
-import org.json.simple.JSONValue;
 
 /**
  * @author Josh
@@ -28,20 +29,41 @@ public class ListToReaderResponseHandler<E> extends ReaderResponseHandler<List<E
 
   @Override
   public Reader getOutput(HttpServletRequest request, String name, List<E> value) {
-    return this.getOutputReader(request, name, value);
+    return this.getJsonOutputReader(request, name, value);
   }
   
-  protected Reader getOutputReader(HttpServletRequest request, String name, List value) {
-    // We build a reader that will serve a json Map of format (name = value)
-    Reader prefixReader = new StringReader("{\""+name+"\":");
-    Reader mainReader = new CharIteratorReader(new ListJsonCharIterator(value, this.getBufferSize(), this.getJsonFormat(request)));
-    Reader suffixReader = new StringReader("}");
-    return new SequenceReader(prefixReader, mainReader, suffixReader);
+  protected Reader getJsonOutputReader(HttpServletRequest request, String name, List value) {
+    Reader reader;
+    if(value == null || value.isEmpty()) {
+      reader = this.toJsonOutputReader(request, name, value);
+    }else{
+      Reader prefixReader = new StringReader("{\""+name+"\":");
+      Reader mainReader = new CharIteratorReader(
+          new ListJsonCharIterator(value, this.getBufferSize(), this.getJsonFormat(request)){
+            @Override
+            protected void appendChars(StringBuilder appendTo, Object listItem) {
+              super.appendChars(appendTo, listItem);
+//Level level = WebApp.getInstance().isDebug() ? Level.INFO : Level.FINER;
+XLogger.getInstance().log(Level.FINER, "= = = = = = = In: {0} chars = {1}", 
+this.getClass(), appendTo.length(), appendTo);
+            }              
+          }
+      );
+      Reader suffixReader = new StringReader("}");
+      reader = new SequenceReader(prefixReader, mainReader, suffixReader);
+    }
+    return reader;
   }
   
   @Override
   public Reader getOutput(HttpServletRequest request, String name, Throwable value) {
-    Map map = Collections.singletonMap(name, value);
-    return new StringReader(JSONValue.toJSONString(map));
+    return this.toJsonOutputReader(request, name, value);
+  }
+  
+  private Reader toJsonOutputReader(HttpServletRequest request, String name, Object value) {
+    EntityJsonFormat jsonFormat = this.getJsonFormat(request);
+    StringBuilder builder = new StringBuilder();
+    jsonFormat.appendJSONString(Collections.singletonMap(name, value), builder);
+    return new StringReader(builder.toString());
   }
 }

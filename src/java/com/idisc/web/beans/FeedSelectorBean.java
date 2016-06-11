@@ -9,8 +9,7 @@ import com.idisc.web.servlets.handlers.request.SessionUserHandlerImpl;
 import java.io.Serializable;
 import java.util.Comparator;
 import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.concurrent.Future;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import javax.servlet.http.HttpServletRequest;
@@ -19,6 +18,8 @@ import javax.servlet.http.HttpServletRequest;
  * @author Josh
  */
 public class FeedSelectorBean extends com.idisc.core.FeedSelector implements Serializable {
+    
+    private boolean async;
     
     private int maxAgeDays;
     
@@ -36,10 +37,11 @@ public class FeedSelectorBean extends com.idisc.core.FeedSelector implements Ser
     
     private List<Feed> topfeeds;
     
-    private transient Future<List<Feed>> future;
+    private transient Runnable currentTask;
     
     public FeedSelectorBean() { 
-XLogger.getInstance().log(Level.FINE, "<init>", this.getClass());                
+XLogger.getInstance().log(Level.FINE, "<init>", this.getClass());  
+        this.async = true;
         this.updateInterval = TimeUnit.MINUTES.toMillis(5);
         this.maxAgeDays = 3;
         this.maxSpread = 2000;
@@ -48,7 +50,7 @@ XLogger.getInstance().log(Level.FINE, "<init>", this.getClass());
     }
     
     public boolean isTaskSubmitted() {
-        return future != null;
+        return currentTask != null;
     }
     
     public boolean isNextUpdateDue() {
@@ -78,26 +80,42 @@ XLogger.getInstance().log(Level.FINER, "Refreshing Topfeeds", this.getClass());
             
             task.sessionId = request.getSession().getId();
             
-            future = WebApp.getInstance().getRequestExecutorService(true).submit(task);
+            currentTask = task;
+            
+            if(async) {
+                ExecutorService globalSvc = WebApp.getInstance().getGlobalExecutorService(true);
+                if(globalSvc != null) {
+                    globalSvc.submit(task);
+                }
+            }else{
+                task.run();
+            }
         }
     }
     
-    private final class FeedSelectionTask implements Callable<List<Feed>> {
+    private final class FeedSelectionTask implements Runnable {
         String sessionId;
         @Override
-        public List<Feed> call() {
+        public void run() {
             List<Feed> selected = getList(maxAgeDays, maxSpread, batchSize);
             topfeeds = sort(selected, createComparator(), maxOutputSize);
 XLogger.getInstance().log(Level.FINER, "Session ID: {1}, Topfeeds: {0}", 
 this.getClass(), sessionId, topfeeds == null ? null : topfeeds.size());
             lastUpdateTime = System.currentTimeMillis();
-            future = null;
-            return topfeeds;
+            currentTask = null;
         }
     }
 
     public Installation getInstallation() {
         return installation;
+    }
+
+    public boolean isAsync() {
+        return async;
+    }
+
+    public void setAsync(boolean async) {
+        this.async = async;
     }
 
     public int getMaxAgeDays() {

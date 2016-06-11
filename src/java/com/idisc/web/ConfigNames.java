@@ -3,6 +3,7 @@ package com.idisc.web;
 public abstract interface ConfigNames {
     
   public static final String START_FEED_UPDATE_SERVICE = "startFeedUpdateService";
+  public static final String PROCESS_REQUEST_ASYNC = "processRequestAsync";
   public static final String REQUEST_EXECUTOR_SERVICE_THREAD_COUNT = "requestExecutorService.threadCount";
   public static final String STREAM_LARGE_RESPONSES = "streamLargeResponses";
   public static final String BOTFILTER_ENABLE_AT_MEMORY_BELOW = "botfilter.enableAtMemoryBelow";

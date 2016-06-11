@@ -19,7 +19,7 @@ public abstract class ReaderResponseHandler<V> extends DirectResponseHandler<V, 
   private final int bufferSize;
   
   public ReaderResponseHandler() {
-    this(1024);
+    this(1024);//this(0x800); // 2K chars (4K bytes) 
   }
   
   public ReaderResponseHandler(int bufferSize) {
@@ -84,14 +84,22 @@ public abstract class ReaderResponseHandler<V> extends DirectResponseHandler<V, 
   
   private long copyChars(Readable from, Appendable to) throws IOException {
         
-    CharBuffer buf = CharBuffer.allocate(0x800); // 2K chars (4K bytes) 
+    CharBuffer buf = CharBuffer.allocate(this.getBufferSize());
 
     long total = 0;
 
     while (from.read(buf) != -1) {
+        
         buf.flip();
+        
         to.append(buf);
+        
+//Level level = WebApp.getInstance().isDebug() ? Level.INFO : Level.FINER;
+XLogger.getInstance().log(Level.FINER, "= = = = = = =Out: {0} chars = {1}", 
+this.getClass(), buf.length(), buf);
+        
         total += buf.remaining();
+        
         buf.clear();
     }
     return total;

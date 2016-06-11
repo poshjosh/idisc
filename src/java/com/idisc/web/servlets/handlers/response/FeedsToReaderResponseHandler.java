@@ -31,6 +31,6 @@ public class FeedsToReaderResponseHandler<E extends Feed> extends ListToReaderRe
       
     List compositeOutput = new FeedsJsonResponseHandler(installation).buildCompositeOutput(request, name, feeds);
     
-    return this.getOutputReader(request, name, compositeOutput);
+    return this.getJsonOutputReader(request, name, compositeOutput);
   }
 }

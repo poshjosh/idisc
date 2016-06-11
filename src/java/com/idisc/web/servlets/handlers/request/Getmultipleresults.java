@@ -53,7 +53,9 @@ public class Getmultipleresults extends AbstractRequestHandler<Map> {
     
     String[] paramNames = provider.getRequestHandlerParamNames(request);
     
-XLogger.getInstance().log(Level.INFO, "Parameter names: {0}", this.getClass(), paramNames==null?null:Arrays.toString(paramNames));
+    final Level level = WebApp.getInstance().isDebug() ? Level.INFO : Level.FINE;
+
+XLogger.getInstance().log(level, "Parameter names: {0}", this.getClass(), paramNames==null?null:Arrays.toString(paramNames));
 
     final int corePoolSize = paramNames.length >= this.defaultPoolSize ? this.defaultPoolSize : paramNames.length;
     
@@ -72,7 +74,7 @@ XLogger.getInstance().log(Level.INFO, "Parameter names: {0}", this.getClass(), p
       Util.shutdownAndAwaitTermination(executorService, this.timeoutSeconds, TimeUnit.SECONDS);
     }
     
-XLogger.getInstance().log(Level.INFO, "{0}", this.getClass(), output);
+XLogger.getInstance().log(level, "{0}", this.getClass(), output);
 
     return output;
   }
