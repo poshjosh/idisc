@@ -1148,13 +1148,13 @@ exists or setup the property manually. For example like this:
         <copyfiles files="${libs.scribe-java-1.3.5.classpath}" iftldtodir="${build.web.dir}/WEB-INF" todir="${dist.ear.dir}/lib"/>
         <copyfiles files="${libs.restfb-1.6.14.classpath}" iftldtodir="${build.web.dir}/WEB-INF" todir="${dist.ear.dir}/lib"/>
         <copyfiles files="${libs.JDom.classpath}" iftldtodir="${build.web.dir}/WEB-INF" todir="${dist.ear.dir}/lib"/>
-        <copyfiles files="${libs.MySQLDriver.classpath}" iftldtodir="${build.web.dir}/WEB-INF" todir="${dist.ear.dir}/lib"/>
         <copyfiles files="${libs.EclipseLink-2.6.0__JPA_2.1__.classpath}" iftldtodir="${build.web.dir}/WEB-INF" todir="${dist.ear.dir}/lib"/>
         <copyfiles files="${libs.Rome.classpath}" iftldtodir="${build.web.dir}/WEB-INF" todir="${dist.ear.dir}/lib"/>
         <copyfiles files="${libs.twitter4j_core_3.0.5.classpath}" iftldtodir="${build.web.dir}/WEB-INF" todir="${dist.ear.dir}/lib"/>
         <copyfiles files="${libs.jstl.classpath}" iftldtodir="${build.web.dir}/WEB-INF" todir="${dist.ear.dir}/lib"/>
         <copyfiles files="${libs.javax.mail.classpath}" iftldtodir="${build.web.dir}/WEB-INF" todir="${dist.ear.dir}/lib"/>
         <copyfiles files="${libs.commons-email-1.4.classpath}" iftldtodir="${build.web.dir}/WEB-INF" todir="${dist.ear.dir}/lib"/>
+        <copyfiles files="${libs.MySQL_JDBC_Driver_5.1.39.classpath}" iftldtodir="${build.web.dir}/WEB-INF" todir="${dist.ear.dir}/lib"/>
         <copyfiles files="${reference.bcbase.jar}" iftldtodir="${build.web.dir}/WEB-INF" todir="${dist.ear.dir}/lib"/>
         <copyfiles files="${reference.bchtmlparser.jar}" iftldtodir="${build.web.dir}/WEB-INF" todir="${dist.ear.dir}/lib"/>
         <copyfiles files="${reference.currencyrateserviceapi.jar}" iftldtodir="${build.web.dir}/WEB-INF" todir="${dist.ear.dir}/lib"/>
@@ -1181,13 +1181,13 @@ exists or setup the property manually. For example like this:
         <copyfiles files="${libs.scribe-java-1.3.5.classpath}" todir="${build.web.dir}/WEB-INF/lib"/>
         <copyfiles files="${libs.restfb-1.6.14.classpath}" todir="${build.web.dir}/WEB-INF/lib"/>
         <copyfiles files="${libs.JDom.classpath}" todir="${build.web.dir}/WEB-INF/lib"/>
-        <copyfiles files="${libs.MySQLDriver.classpath}" todir="${build.web.dir}/WEB-INF/lib"/>
         <copyfiles files="${libs.EclipseLink-2.6.0__JPA_2.1__.classpath}" todir="${build.web.dir}/WEB-INF/lib"/>
         <copyfiles files="${libs.Rome.classpath}" todir="${build.web.dir}/WEB-INF/lib"/>
         <copyfiles files="${libs.twitter4j_core_3.0.5.classpath}" todir="${build.web.dir}/WEB-INF/lib"/>
         <copyfiles files="${libs.jstl.classpath}" todir="${build.web.dir}/WEB-INF/lib"/>
         <copyfiles files="${libs.javax.mail.classpath}" todir="${build.web.dir}/WEB-INF/lib"/>
         <copyfiles files="${libs.commons-email-1.4.classpath}" todir="${build.web.dir}/WEB-INF/lib"/>
+        <copyfiles files="${libs.MySQL_JDBC_Driver_5.1.39.classpath}" todir="${build.web.dir}/WEB-INF/lib"/>
         <copyfiles files="${reference.bcbase.jar}" todir="${build.web.dir}/WEB-INF/lib"/>
         <copyfiles files="${reference.bchtmlparser.jar}" todir="${build.web.dir}/WEB-INF/lib"/>
         <copyfiles files="${reference.currencyrateserviceapi.jar}" todir="${build.web.dir}/WEB-INF/lib"/>

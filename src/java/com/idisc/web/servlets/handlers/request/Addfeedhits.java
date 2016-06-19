@@ -112,7 +112,9 @@ public class Addfeedhits extends AbstractRequestHandler<Map<Integer, Long>>
         }
       }
       finally {
-        if (!t.isActive()) {}
+        if (t.isActive()) {
+          t.rollback();
+        }
       }
       
     }

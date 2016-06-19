@@ -1,12 +1,13 @@
 package com.idisc.web.servlets.handlers.request;
 
-import com.idisc.web.servlets.handlers.response.HtmlBooleanResponseHandler;
-import com.idisc.web.servlets.handlers.response.ResponseHandler;
 import com.authsvc.client.AuthSvcSession;
+import com.bc.util.XLogger;
 import com.idisc.core.User;
 import com.idisc.web.WebApp;
+import com.idisc.web.servlets.request.RequestParameters;
 import java.io.IOException;
 import java.util.Map;
+import java.util.logging.Level;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import org.json.simple.JSONObject;
@@ -19,21 +20,8 @@ public class Login extends AbstractRequestHandler<Boolean> {
   }
   
   @Override
-  public ResponseHandler<Boolean, Object> createResponseHandler(HttpServletRequest request) {
-    ResponseHandler<Boolean, Object> responseHandler;
-    if (this.isHtmlResponse(request)) {
-      responseHandler = new HtmlBooleanResponseHandler();
-    } else {
-      responseHandler = super.createResponseHandler(request);
-    }
-    
-    return responseHandler;
-  }
-
-  @Override
   public Boolean execute(HttpServletRequest request)
-    throws ServletException, IOException
-  {
+    throws ServletException, IOException {
     if (isLoggedIn(request)) {
       return Boolean.TRUE;
     }
@@ -46,12 +34,14 @@ public class Login extends AbstractRequestHandler<Boolean> {
     
     Map<String, String> params = new RequestParameters(request);
     
+XLogger.getInstance().log(Level.FINE, "Request parameters: {0}", this.getClass(), params);
+    
     AuthSvcSession authSession = WebApp.getInstance().getAuthSvcSession();
     
     Boolean output;
     
-    try
-    {
+    try {
+        
       JSONObject authuserdetails = authSession.getUser(params);
       
       if (authuserdetails == null) {
@@ -60,8 +50,10 @@ public class Login extends AbstractRequestHandler<Boolean> {
       
       User user = setLoggedIn(request, authuserdetails, false);
       
-      output = Boolean.valueOf(user != null);
+      output = user != null ? Boolean.TRUE : Boolean.FALSE;
+      
     } catch (ParseException e) {
+        
       throw new ServletException("Error processing request", e);
     }
     return output;

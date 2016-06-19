@@ -1,110 +1,69 @@
 package com.idisc.web.servlets.handlers.response;
 
 import com.bc.util.XLogger;
-import com.bc.web.core.util.ServletUtil;
-import com.idisc.web.exceptions.ValidationException;
-import java.io.FileNotFoundException;
+import com.idisc.web.servlets.handlers.BaseHandler;
 import java.io.IOException;
 import java.util.logging.Level;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-public abstract class AbstractResponseHandler<V, O> implements ResponseHandler<V, O> {
+public abstract class AbstractResponseHandler<V, O> extends BaseHandler implements ResponseHandler<V, O> {
+    
+  private final ResponseContext<V> context;
+  
+  public AbstractResponseHandler(ResponseContext context) {
+    this.context = context;
+  }
   
   @Override
-  public abstract void sendResponse(
+  public void processAndSendResponse(
           HttpServletRequest request, HttpServletResponse response, 
           String name, V value)
-    throws ServletException, IOException;
+    throws ServletException, IOException {
+      
+    O output = this.processResponse(request, response, name, value);
+    
+    this.prepareResponse(request, response, name, value);
+    
+    this.sendResponse(request, response, name, output);
+  }
   
-  @Override
-  public abstract void sendResponse(
+  protected void prepareResponse(
           HttpServletRequest request, HttpServletResponse response, 
-          String name, Throwable value)
-    throws ServletException, IOException;
-  
-  
-  public String getRefererRelativePath(HttpServletRequest request) {
-    final String referer = request.getHeader("referer");  
-    String output = referer == null ? null : ServletUtil.getRelativePath(
-            request.getServletContext(), referer, "baseURL");
-    return output;
-  }
-  
-  protected Object getDefaultOutput(HttpServletRequest request, String name, V value) {
-    if ((value instanceof Boolean)) {
-      return ((Boolean)value) ? "Success" : "Error";
+          String name, V value)
+    throws ServletException, IOException {
+      
+    int statusCode = context.getStatusCode(name, value);
+    String contentType = this.getContentType();
+    String charEncoding = this.getCharacterEncoding();
+    
+XLogger.getInstance().log(Level.FINE, "Response status code: {0}, contentType: {1}, character encoding: {2}", 
+        getClass(), statusCode, contentType, charEncoding);
+
+    if(!response.isCommitted()) {
+
+      response.setStatus(statusCode);
+
+      response.setContentType(contentType);
+
+      response.setCharacterEncoding(charEncoding);
+        
+    }else{
+      
+XLogger.getInstance().log(Level.WARNING, 
+"#prepareResponse. Response is already committed. Cannot prepare response for: {0}", 
+this.getClass(), name);
     }
-    return value;
-  }
-  
-  protected Object getDefaultOutput(HttpServletRequest request, String name, Throwable value) {
-    if ((value instanceof ServletException)) {
-      return value.getLocalizedMessage();
-    }
-    return "Unexpected Error";
   }
   
   @Override
-  public String getCharacterEncoding(HttpServletRequest request) {
+  public String getCharacterEncoding() {
     return "UTF-8";
   }
-  
-  @Override
-  public void processResponse(
-          HttpServletRequest request, HttpServletResponse response, 
-          String name, V message)
-    throws ServletException, IOException
-  {
-    int statusCode = getStatusCode(request, name, message);
-    String contentType = getContentType(request);
-    String charEncoding = getCharacterEncoding(request);
-    
-XLogger.getInstance().log(Level.FINE, "Response status code: {0}, contentType: {1}, character encoding: {2}", 
-        getClass(), Integer.valueOf(statusCode), contentType, charEncoding);
 
-    response.setStatus(statusCode);
-    
-    response.setContentType(contentType);
-    
-    response.setCharacterEncoding(charEncoding);
-  }
-  
   @Override
-  public void processResponse(
-          HttpServletRequest request, HttpServletResponse response, 
-          String name, Throwable message)
-    throws ServletException, IOException
-  {
-    int statusCode = getStatusCode(request, name, message);
-    String contentType = getContentType(request);
-    String charEncoding = getCharacterEncoding(request);
-    
-XLogger.getInstance().log(Level.FINE, "Response status code: {0}, contentType: {1}, character encoding: {2}", 
-        getClass(), Integer.valueOf(statusCode), contentType, charEncoding);
-
-    response.setStatus(statusCode);
-    
-    response.setContentType(contentType);
-    
-    response.setCharacterEncoding(charEncoding);
-  }
-  
-  @Override
-  public int getStatusCode(HttpServletRequest request, String name, V value)
-  {
-    return 200;
-  }
-  
-  @Override
-  public int getStatusCode(HttpServletRequest request, String name, Throwable value)
-  {
-    if ((value instanceof ValidationException))
-      return 400;
-    if ((value instanceof FileNotFoundException)) {
-      return 404;
-    }
-    return 500;
+  public final ResponseContext<V> getContext() {
+    return context;
   }
 }

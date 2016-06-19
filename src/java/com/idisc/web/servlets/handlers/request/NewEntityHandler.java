@@ -3,52 +3,28 @@ package com.idisc.web.servlets.handlers.request;
 import com.bc.jpa.ControllerFactory;
 import com.bc.jpa.EntityController;
 import com.idisc.core.IdiscApp;
-import com.idisc.web.servlets.handlers.response.BooleanToJsonResponseHandler;
-import com.idisc.web.servlets.handlers.response.HtmlBooleanResponseHandler;
-import com.idisc.web.servlets.handlers.response.ResponseHandler;
+import com.idisc.web.servlets.handlers.response.CreationResponseContext;
+import com.idisc.web.servlets.handlers.response.ResponseContext;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 /**
  * @author poshjosh
  */
-public abstract class NewEntityHandler<E> extends AbstractRequestHandler<Boolean>
-{
+public abstract class NewEntityHandler<E> extends AbstractRequestHandler<Boolean> {
+    
   @Override
-  public boolean isProtected()
-  {
+  public boolean isProtected() {
     return false;
   }
   
   public abstract Class<E> getEntityType();
 
   @Override
-  public ResponseHandler<Boolean, Object> createResponseHandler(HttpServletRequest request) {
-    ResponseHandler<Boolean, Object> responseHandler;
-    if (this.isHtmlResponse(request)) {
-      responseHandler = new HtmlBooleanResponseHandler(){
-        @Override
-        public int getStatusCode(HttpServletRequest request, String name, Boolean success) {
-          return NewEntityHandler.this.getStatusCode(success);
-        }
-      };
-    } else {
-      responseHandler = new BooleanToJsonResponseHandler(){
-        @Override
-        public int getStatusCode(HttpServletRequest request, String name, Boolean success) {
-          return NewEntityHandler.this.getStatusCode(success);
-        }
-      };
-    }
-    return responseHandler;
+  protected ResponseContext<Boolean> createSuccessResponseContext(HttpServletRequest request) {
+    return new CreationResponseContext(request);  
   }
   
-  private int getStatusCode(Boolean success) {
-    return success ? HttpServletResponse.SC_CREATED : HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
-  }
-  
-  public EntityController<E, Object> getEntityController()
-  {
+  public EntityController<E, Object> getEntityController() {
     return this.getEntityController(this.getEntityType());
   }
 

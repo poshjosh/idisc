@@ -21,12 +21,43 @@ public class BotFilter extends com.bc.web.core.filters.BotFilter {
     
     private final long memoryFloor;
     
+    private final String cacheDir;
+    
+    private class BotCheckerImpl extends BotCheckerInMemoryCache {
+        public BotCheckerImpl(String trapFilename) {
+            super(trapFilename, memoryCeiling, memoryFloor, cacheDir);
+        }
+        public BotCheckerImpl(String trapFilename, boolean strict, int cacheSize) {
+            super(trapFilename, strict, memoryCeiling, memoryFloor, cacheDir, cacheSize);
+        }
+        @Override
+        protected boolean add(int botType, String value) {
+            boolean added = super.add(botType, value);
+            Level level = WebApp.getInstance().isDebug() ? Level.INFO : Level.FINER;
+XLogger.getInstance().log(level, "Added {0} = {1}", this.getClass(), this.getBotTypeName(botType), value);
+            return added;
+        }
+        @Override
+        public boolean acceptHostOrAddress(String value) {
+            if(WebApp.getInstance().isProductionMode()) {
+                return super.acceptHostOrAddress(value);
+            }else{
+                return this.acceptAllNonnullOrEmptyHostOrAddresses(value);
+            }
+        }
+        private boolean acceptAllNonnullOrEmptyHostOrAddresses(String value) {
+            // particularly suited for allowing localhost i.e 127.0.0.1
+            return value != null && value.length() > 0;
+        }
+    }
+    
     public BotFilter() {
         Configuration configuration = WebApp.getInstance().getConfiguration();
         this.memoryCeiling = configuration.getLong(ConfigNames.BOTFILTER_DISABLE_AT_MEMORY_ABOVE, -1L);
         this.memoryFloor = configuration.getLong(ConfigNames.BOTFILTER_ENABLE_AT_MEMORY_BELOW, -1L);
-XLogger.getInstance().log(Level.FINE, "BotFilter, memory ceiling: {0}, floor: {1}", 
-        this.getClass(), this.memoryCeiling, this.memoryFloor);
+        this.cacheDir = configuration.getString(ConfigNames.BOTFILTER_CACHEDIR, null);
+XLogger.getInstance().log(Level.FINE, "BotFilter, memory ceiling: {0}, floor: {1}, cache dir: {2}", 
+        this.getClass(), this.memoryCeiling, this.memoryFloor, this.cacheDir);
     }
 
     @Override
@@ -36,10 +67,19 @@ XLogger.getInstance().log(Level.FINE, "BotFilter, memory ceiling: {0}, floor: {1
         
         boolean proceed = super.doBeforeProcessing(request, response);
         
+        final String userAgent = request.getHeader("User-Agent");
         if(!proceed) {
-            String s = request.getHeader("User-Agent");
-            if(s != null && s.toLowerCase().contains("google")) {
+            if(userAgent != null && userAgent.toLowerCase().contains("google")) {
                 proceed = true;
+            }else{
+XLogger.getInstance().log(Level.FINER, "Denied: {0} to: {1}", 
+        this.getClass(), request.getRequestURI(), userAgent);
+            }
+        }else{
+            final String requestURI = request.getRequestURI();
+            if(requestURI.contains("/feed/") || requestURI.contains("/feeds")) {
+XLogger.getInstance().log(Level.FINER, "Allowed: {0} to: {1}", 
+        this.getClass(), requestURI, userAgent);
             }
         }
         
@@ -64,23 +104,6 @@ XLogger.getInstance().log(Level.FINE, "BotFilter, memory ceiling: {0}, floor: {1
             return null;
         }
         
-        if(!WebApp.getInstance().isProductionMode()) {
-        
-            return new BotCheckerInMemoryCache("/adminAdminPage", this.memoryCeiling, this.memoryFloor){
-                
-                @Override
-                public boolean acceptHostOrAddress(String value) {
-                    
-                    // Allows all hosts/addresses, 
-                    // particularly suited for allowing localhost i.e 127.0.0.1
-                    //
-                    return value != null && value.length() > 0;
-                }
-            }; 
-            
-        }else{
-            
-            return new BotCheckerInMemoryCache("/adminAdminPage", this.memoryCeiling, this.memoryFloor); 
-        }
+        return new BotCheckerImpl("/adminAdminPage");
     }
 }

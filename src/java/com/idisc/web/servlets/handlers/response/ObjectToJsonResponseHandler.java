@@ -1,134 +1,108 @@
 package com.idisc.web.servlets.handlers.response;
 
-import com.bc.util.JsonFormat;
 import com.bc.util.XLogger;
-import com.idisc.web.WebApp;
+import com.idisc.core.util.EntityJsonBuilder;
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.Collections;
 import java.util.Map;
 import java.util.logging.Level;
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import org.json.simple.JSONValue;
 
-public class ObjectToJsonResponseHandler<V> extends DirectResponseHandler<V, StringBuilder> {
+/**
+ * @author Josh
+ */
+public class ObjectToJsonResponseHandler<V> extends DirectResponseHandler<V, Map> {
     
-  @Override
-  protected String toString(StringBuilder jsonOutput) {
-    return jsonOutput.length() > 1000 ? new String(jsonOutput) : jsonOutput.toString();      
+  private final int bufferSize;
+  
+  public ObjectToJsonResponseHandler(HttpServletRequest request, ResponseContext context) {
+    this(request, context, 8192);
   }
-    
+  
+  public ObjectToJsonResponseHandler(HttpServletRequest request, ResponseContext context, int bufferSize) {
+    super(request, context);
+    this.bufferSize = bufferSize;
+  }
+
   @Override
-  public StringBuilder getOutput(HttpServletRequest request, String name, V value) {
+  public Map processResponse(
+      HttpServletRequest request, HttpServletResponse response, String name, V message)
+      throws ServletException, IOException {
+XLogger.getInstance().entering(this.getClass(), "#processResponse(HttpServletRequest, HttpServletRequest, String, V)", name);
     
-    Object msg = super.getDefaultOutput(request, name, value);
+    Object output = this.getContext().format(name, message);
     
-    XLogger.getInstance().log(Level.FINER, "{0}={1}", getClass(), name, msg);
-    
-    StringBuilder json = getJsonOutput(request, name, value, msg);
-    
-    return json;
+    return Collections.singletonMap(name, output);
   }
   
   @Override
-  public StringBuilder getOutput(HttpServletRequest request, String name, Throwable value) {
+  public void sendResponse(
+      HttpServletRequest request, HttpServletResponse response, String name, Map output)
+      throws ServletException, IOException {
+        
+XLogger.getInstance().entering(this.getClass(), "#sendResponse(HttpServletRequest, HttpServletRequest, String, Map)", name);
       
-    Object msg = super.getDefaultOutput(request, name, value);
+    final PrintWriter pw = response.getWriter();
     
-    XLogger.getInstance().log(Level.FINER, "{0}={1}", getClass(), name, msg);
-    
-    StringBuilder json = getJsonOutput(request, name, value, msg);
-    
-    return json;
-  }
+    final BufferedWriter bw = this.bufferSize < 1 ? new BufferedWriter(pw) : new BufferedWriter(pw, this.bufferSize);
+     
+    final Class cls = this.getClass();
+    final XLogger logger = XLogger.getInstance();
+    final Level level = Level.FINER;
+    try {
+        
+logger.log(level, "==================== Printing Output =====================\n{0}", cls, output);
 
-  public StringBuilder getJsonOutput(HttpServletRequest request, 
-          String key, V value, Object messageCreatedFromValue)
-  {
+      this.getJsonBuilder(request).appendJSONString(output, bw);
       
-    int buffLen = key.length() + this.getEstimatedLengthChars(value, messageCreatedFromValue);  
-    
-    return this.getJsonOutput(request, key, messageCreatedFromValue, buffLen);
+if(logger.isLoggable(level, cls)) {      
+      StringBuilder builder = new StringBuilder();
+      new EntityJsonBuilder(1000).appendJSONString(output, builder);
+      Object oval = JSONValue.parse(builder.toString());
+logger.log(level, "{0}\n{1}", cls, builder, oval); 
+}
+      bw.flush();
+         
+    }finally{
+      this.close(pw);
+      this.close(bw);
+    }
   }
   
-  public StringBuilder getJsonOutput(HttpServletRequest request, 
-          String key, Throwable value, Object messageCreatedFromThrowable)
-  {
-      
-    int buffLen = key.length() + this.getEstimatedLengthChars(value, messageCreatedFromThrowable);  
-    
-    return this.getJsonOutput(request, key, messageCreatedFromThrowable, buffLen);
+  private void close(AutoCloseable c) {
+    if(c == null) {
+      return;
+    }  
+    try { c.close(); } catch (Exception e) { 
+      XLogger.getInstance().log(Level.WARNING, "Failed to close", getClass(), e);
+    }     
   }
 
-  public StringBuilder getJsonOutput(HttpServletRequest request, String key, Object msg, int bufferLen) {
-    
-    if (key == null) {
-      throw new NullPointerException();
-    }
-
-XLogger.getInstance().log(Level.FINE, "Output name: {0}, buffer length: {1}", this.getClass(), key, bufferLen);
-
-    Map outputMap = Collections.singletonMap(key, msg);
-    
-    StringBuilder outputJson = this.getJsonOutputBuffer(request, key, msg, bufferLen);
-    
-    this.appendJsonOutput(request, outputMap, outputJson);
-    
-    return outputJson;
-  }
-
-  public StringBuilder getJsonOutputBuffer(HttpServletRequest request, String key, Object msg, int bufferLen) {
-      
-    if (key == null) {
-      throw new NullPointerException();
-    }
-    
-    StringBuilder outputJsonBuffer;
-    if(msg == null || msg.equals("")) {
-        
-        outputJsonBuffer = new StringBuilder(key.length() + 16);
-    
-    }else{
-        
-        if(bufferLen < 1) {
-            bufferLen = 16;
-        }
-        
-        if(this.isTidyOutput(request)) {
-            bufferLen += (bufferLen * 0.3);
-        }
-
-XLogger.getInstance().log(Level.FINER, "Creating json output buffer of length: {0}", this.getClass(), bufferLen);
-
-        outputJsonBuffer = new StringBuilder(bufferLen);
-    }
-    
-    return outputJsonBuffer;
-  }
-  
-  public void appendJsonOutput(
-          HttpServletRequest request, Map outputMap, StringBuilder appendTo) {
-      
-    JsonFormat jsonFormat = getJsonFormat(request);
-
-    XLogger.getInstance().log(Level.FINER, "JsonFormat type: {0}", getClass(), jsonFormat == null ? null : jsonFormat.getClass());
-    
-    if (jsonFormat == null) {
-      throw new NullPointerException();
-    }
-    
-    jsonFormat.setTidyOutput(this.isTidyOutput(request));
-    
-    jsonFormat.appendJSONString(outputMap, appendTo);
-    
-    XLogger.getInstance().log(Level.FINEST, "==================== PRINTING OUTPUT ==================\n{0}", this.getClass(), appendTo);
-  }
-
-  public boolean isTidyOutput(HttpServletRequest request) {
-    boolean tidy;
-    String tidyParam = request.getParameter("tidy");
-    if(tidyParam != null) {
-        tidy = "1".equals(tidyParam) || "true".equalsIgnoreCase(tidyParam);
-    }else{
-        tidy = !WebApp.getInstance().isProductionMode();
-    }
-    return tidy;
+  public final int getBufferSize() {
+    return bufferSize;
   }
 }
+/**
+ * 
+  @Override
+  public Map getOutput(HttpServletRequest paramHttpServletRequest, String name, Throwable value) {
+    return Collections.singletonMap(name, value);
+  }
+
+  @Override
+  public void sendResponse(
+      HttpServletRequest request, HttpServletResponse response, String name, Throwable message)
+      throws ValidationException, ServletException, IOException {
+      
+    Map output = getOutput(request, name, message);
+    
+    this.sendResponse(request, response, output);
+  }
+  
+ * 
+ */

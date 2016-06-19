@@ -9,24 +9,23 @@ import com.idisc.pu.entities.Feeduser;
 import com.idisc.pu.entities.Installation;
 import com.idisc.pu.entities.Site;
 import com.idisc.pu.entities.Sitetype;
+import com.idisc.web.servlets.request.RequestParameters;
 import java.io.IOException;
 import java.util.List;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 
-public class Valueexists extends AbstractRequestHandler<Boolean>
-{
-  public boolean isProtected()
-  {
+public class Valueexists extends AbstractRequestHandler<Boolean> {
+    
+  @Override
+  public boolean isProtected() {
     return false;
   }
   
-
-
-
+  @Override
   public Boolean execute(HttpServletRequest request)
-    throws ServletException, IOException
-  {
+    throws ServletException, IOException  {
+      
     RequestParameters params = new RequestParameters(request);
     
     String table = (String)params.remove("table");
@@ -35,11 +34,6 @@ public class Valueexists extends AbstractRequestHandler<Boolean>
       throw new ServletException("Missing value for required parameter: 'table'");
     }
     
-
-
-
-
-
     EntityController ec = getEntityController(table);
     
     if (ec == null) {

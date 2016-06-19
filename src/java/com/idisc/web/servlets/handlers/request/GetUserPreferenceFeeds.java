@@ -20,8 +20,12 @@ public abstract class GetUserPreferenceFeeds<K> extends Selectfeeds {
   public abstract Feed getFeed(K paramK);
   
   @Override
-  public boolean isProtected()
-  {
+  public boolean isOutputLarge(HttpServletRequest request) {
+    return false;
+  }
+  
+  @Override
+  public boolean isProtected() {
     return true;
   }
   

@@ -17,21 +17,20 @@ import javax.servlet.http.HttpServletRequest;
 import org.apache.commons.configuration.Configuration;
 
 public abstract class Select<T> extends AbstractRequestHandler<List<T>>{
+    
   private final long maxLimit;
   private final long defaultLimit;
   private final long minLimit;
   private transient EntityController ec_accessViaGetter;
   
-  public Select()
-  {
+  public Select(){
     Configuration config = WebApp.getInstance().getConfiguration();
     this.maxLimit = (config == null ? 200L : config.getLong("maxLimit", 200L));
     this.defaultLimit = (config == null ? 100L : config.getLong("defaultLimit", 100L));
     this.minLimit = (config == null ? 5L : config.getLong("maxLimit", 5L));
   }
   
-  public Select(long maxLimit, long defaultLimit, long minLimit)
-  {
+  public Select(long maxLimit, long defaultLimit, long minLimit) {
     this.maxLimit = maxLimit;
     this.defaultLimit = defaultLimit;
     this.minLimit = minLimit;
@@ -39,8 +38,7 @@ public abstract class Select<T> extends AbstractRequestHandler<List<T>>{
 
   protected abstract Class<T> getEntityClass();
   
-  public EntityController<T, Object> getEntityController()
-  {
+  public EntityController<T, Object> getEntityController(){
     if (this.ec_accessViaGetter == null) {
       ControllerFactory factory = IdiscApp.getInstance().getControllerFactory();
       this.ec_accessViaGetter = factory.getEntityController(getEntityClass());
@@ -67,7 +65,10 @@ XLogger.getInstance().entering(this.getClass(), "#execute(HttpServletRequest, Ht
     
     int limit = getLimit(request);
       
-    return getEntityController().select(searchParams, orderBy, offset, limit);
+    List<T> selected = getEntityController().select(searchParams, orderBy, offset, limit);
+    
+XLogger.getInstance().log(Level.FINE, "Selected: {0}", this.getClass(), selected==null?null:selected.size());
+    return selected;
   }
   
   protected Map<String, Object> getSearchParams(HttpServletRequest request)

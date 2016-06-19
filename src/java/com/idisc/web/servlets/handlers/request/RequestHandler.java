@@ -8,10 +8,12 @@ import javax.servlet.http.HttpServletRequest;
 public abstract interface RequestHandler<V, O> {
     
   public abstract ResponseHandler<V, O> getResponseHandler(HttpServletRequest request);
+  
+  public abstract ResponseHandler<Throwable, O> getErrorResponseHandler(HttpServletRequest request); 
+  
+  public abstract boolean isOutputLarge(HttpServletRequest request);
 
   public abstract boolean isProtected();
-  
-  public abstract boolean isOutputLarge();
   
   public abstract V processRequest(HttpServletRequest request)
           throws ServletException, IOException;

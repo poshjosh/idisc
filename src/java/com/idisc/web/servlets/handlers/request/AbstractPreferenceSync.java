@@ -185,7 +185,9 @@ public abstract class AbstractPreferenceSync<E> extends AbstractRequestHandler<M
       }
       finally
       {
-        if (!t.isActive()) {}
+        if (t.isActive()) {
+          t.rollback();
+        }
       }
     }
     finally
@@ -245,7 +247,9 @@ public abstract class AbstractPreferenceSync<E> extends AbstractRequestHandler<M
       }
       finally
       {
-        if (!t.isActive()) {}
+        if (t.isActive()) {
+          t.rollback();
+        }
       }
     }
     finally

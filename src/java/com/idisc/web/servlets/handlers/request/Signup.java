@@ -2,6 +2,7 @@ package com.idisc.web.servlets.handlers.request;
 
 import com.authsvc.client.AuthSvcSession;
 import com.idisc.web.WebApp;
+import com.idisc.web.servlets.request.RequestParameters;
 import java.io.IOException;
 import java.util.Map;
 import javax.servlet.ServletException;

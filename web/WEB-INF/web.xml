@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <web-app version="3.0" xmlns="http://java.sun.com/xml/ns/javaee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd">
-<!-- This is set in the app
+    <!-- This is set in the app
     <session-config>
         <session-timeout>
             1
         </session-timeout>
     </session-config>
--->    
+-->
     <context-param>
         <param-name>productionMode</param-name>
         <param-value>true</param-value>
@@ -24,6 +24,15 @@
         <param-value>/downloads/newsminutefree.apk</param-value>
     </context-param>
     <filter>
+        <description>Sets charset for post requests, charset for GET requests is set by adding URIEncoding=UTF-8 to connector in server.xml</description>
+        <filter-name>CharsetFilter</filter-name>
+        <filter-class>org.apache.catalina.filters.SetCharacterEncodingFilter</filter-class>
+        <init-param>  
+            <param-name>encoding</param-name>  
+            <param-value>UTF-8</param-value>  
+        </init-param>  
+    </filter>
+    <filter>
         <filter-name>BotFilter</filter-name>
         <filter-class>com.idisc.web.filters.BotFilter</filter-class>
         <async-supported>true</async-supported>
@@ -38,6 +47,14 @@
         <filter-class>com.idisc.web.filters.PageFilter</filter-class>
         <async-supported>true</async-supported>
     </filter>
+    <filter-mapping>
+        <filter-name>CharsetFilter</filter-name>
+        <url-pattern>/*</url-pattern>
+        <dispatcher>REQUEST</dispatcher>
+        <dispatcher>FORWARD</dispatcher>
+        <dispatcher>INCLUDE</dispatcher>
+        <dispatcher>ERROR</dispatcher>
+    </filter-mapping>
     <filter-mapping>
         <filter-name>BotFilter</filter-name>
         <url-pattern>/*</url-pattern>
@@ -81,10 +98,6 @@
     <listener>
         <description>ServletContextListener</description>
         <listener-class>com.idisc.web.listeners.ServletContextListener</listener-class>
-    </listener>
-    <listener>
-        <description>HttpSessionAttributeListener</description>
-        <listener-class>com.idisc.web.listeners.SessionAttributeListener</listener-class>
     </listener>
     <listener>
         <description>HttpSessionListener</description>

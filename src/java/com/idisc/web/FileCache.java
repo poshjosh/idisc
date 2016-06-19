@@ -14,20 +14,32 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
-import javax.servlet.http.HttpServletRequest;
 import org.apache.catalina.tribes.util.Arrays;
 
-public abstract class FileCache extends HashMap<String, Map> implements FilenameFilter
-{
-  public abstract String getDirPath();
+public class FileCache extends HashMap<String, Map> implements FilenameFilter {
+    
+  private final String dirPath;
   
-  public FileCache() {}
+  public FileCache(String dirPath) {
+    this(dirPath, true);
+  }
+
+  public FileCache(String dirPath, boolean load) {
+    this(dirPath, load, false);
+  }
   
-  public FileCache(HttpServletRequest request, boolean load)
-  {
-    if (load) {
-      load(request, false);
+  public FileCache(String dirPath, boolean load, boolean clearPrevious) {
+    if(dirPath == null) {
+      throw new NullPointerException();
     }
+    this.dirPath = dirPath;
+    if (load) {
+      load(false);
+    }
+  }
+  
+  public final String getDirPath() {
+    return dirPath;
   }
   
   public Date getDate() {
@@ -37,23 +49,23 @@ public abstract class FileCache extends HashMap<String, Map> implements Filename
     return cal.getTime();
   }
   
-  public Map remove(Object key)
-  {
+  @Override
+  public Map remove(Object key) {
     throw new UnsupportedOperationException();
   }
   
-  public void putAll(Map<? extends String, ? extends Map> m)
-  {
+  @Override
+  public void putAll(Map<? extends String, ? extends Map> m) {
     throw new UnsupportedOperationException();
   }
   
-  public Map put(String key, Map value)
-  {
+  @Override
+  public Map put(String key, Map value){
     throw new UnsupportedOperationException();
   }
   
-  public void load(HttpServletRequest request, boolean clearPrevious)
-  {
+  private void load(boolean clearPrevious) {
+      
     if ((!isEmpty()) && (clearPrevious)) {
       clear();
     }
@@ -64,7 +76,8 @@ public abstract class FileCache extends HashMap<String, Map> implements Filename
     
     String[] names = dirFile.list(this);
     
-    XLogger.getInstance().log(Level.FINE, "Dir: {0}, File names: {1}", getClass(), names == null ? null : Arrays.toString(names));
+    XLogger.getInstance().log(Level.FINE, "Dir: {0}, File names: {1}", 
+    getClass(), dirPath, names == null ? null : Arrays.toString(names));
     
     if ((names == null) || (names.length == 0)) {
       return;
@@ -80,12 +93,12 @@ public abstract class FileCache extends HashMap<String, Map> implements Filename
     
     int feedid = Integer.MAX_VALUE;
     
-    for (String name : names)
-    {
+    for (String name : names) {
+        
       String path = null;
       
-      try
-      {
+      try {
+          
         path = Paths.get(dirPath, new String[] { name }).toString();
         CharSequence cs = io.readChars(path);
         String contents = cs.toString();
@@ -93,8 +106,6 @@ public abstract class FileCache extends HashMap<String, Map> implements Filename
         
         Map data = toMap(date, title, contents, category, feedid--);
         
-
-
         XLogger.getInstance().log(Level.FINE, "Caching tip: {0}", getClass(), path);
         
         super.put(path, data);
@@ -108,7 +119,7 @@ public abstract class FileCache extends HashMap<String, Map> implements Filename
   public Map toMap(Date date, String title, String contents, Object category, int feedid) {
     if (contents != null) {
       Map output = new HashMap(11, 1.0F);
-      output.put("feedid", Integer.valueOf(feedid));
+      output.put("feedid", feedid);
       output.put("author", WebApp.getInstance().getAppName());
       output.put("categories", category);
       output.put("content", contents);
@@ -124,8 +135,7 @@ public abstract class FileCache extends HashMap<String, Map> implements Filename
     return null;
   }
   
-  public URL getUrl(String fname)
-  {
+  public URL getUrl(String fname) {
     if (!fname.startsWith("/")) {
       fname = "/" + fname;
     }
@@ -135,8 +145,7 @@ public abstract class FileCache extends HashMap<String, Map> implements Filename
     return null;
   }
   
-  public String getTitle(String fname, String contents)
-  {
+  public String getTitle(String fname, String contents) {
     int n = fname.lastIndexOf('.');
     if (n != -1) {
       fname = fname.substring(0, n);
@@ -144,8 +153,8 @@ public abstract class FileCache extends HashMap<String, Map> implements Filename
     return fname.replaceAll("\\p{Punct}", " ");
   }
   
-  public boolean accept(File dir, String name)
-  {
+  @Override
+  public boolean accept(File dir, String name) {
     String sLower = name.toLowerCase();
     return (sLower.endsWith(".html")) || (sLower.endsWith(".htm")) || (sLower.endsWith(".xhtml")) || (sLower.endsWith(".xml")) || (sLower.endsWith(".jsp")) || (sLower.endsWith(".jspf"));
   }

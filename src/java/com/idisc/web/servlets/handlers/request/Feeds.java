@@ -6,10 +6,8 @@ import com.idisc.pu.entities.Installation;
 import com.idisc.web.DefaultFeedCache;
 import com.idisc.web.DefaultFeedComparator;
 import com.idisc.web.exceptions.ValidationException;
-import com.idisc.web.servlets.handlers.response.FeedsJsonResponseHandler;
-import com.idisc.web.servlets.handlers.response.FeedsToReaderResponseHandler;
-import com.idisc.web.servlets.handlers.response.HtmlResponseHandler;
-import com.idisc.web.servlets.handlers.response.ResponseHandler;
+import com.idisc.web.servlets.handlers.response.FeedsResponseContext;
+import com.idisc.web.servlets.handlers.response.ResponseContext;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
@@ -22,29 +20,20 @@ public class Feeds extends Selectfeeds {
   private Installation installation;
 
   @Override
-  public boolean isOutputLarge() {
-    return true;
+  public boolean isOutputLarge(HttpServletRequest request) {
+    return !this.isHtmlResponse(request);
   }
- 
+
   @Override
-  public ResponseHandler<List<Feed>, Object> createResponseHandler(HttpServletRequest request) {
-    ResponseHandler<List<Feed>, Object> responseHandler;
-    if (this.isHtmlResponse(request)) {
-      responseHandler = new HtmlResponseHandler();
-    } else {
-      if(this.isOutputLarge() && this.isStreamLargeResponses()) {  
-        responseHandler = new FeedsToReaderResponseHandler(installation);
-      }else{
-        responseHandler = new FeedsJsonResponseHandler(installation);
-      }
-    }
-    
-    return responseHandler;
+  protected ResponseContext<List<Feed>> createSuccessResponseContext(HttpServletRequest request) {
+    return new FeedsResponseContext(request, installation);
   }
   
   @Override
   public List<Feed> execute(HttpServletRequest request) throws ServletException, IOException {
+      
     boolean create = true;
+    
     this.installation = getInstallation(request, create);
     
     List<Feed> output = super.execute(request);

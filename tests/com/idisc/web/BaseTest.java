@@ -4,7 +4,8 @@ import com.authsvc.client.AuthSvcSession;
 import com.bc.webapptest.HttpServletRequestImpl;
 import com.bc.webapptest.HttpServletResponseImpl;
 import com.bc.webapptest.WebappSetup;
-import com.idisc.web.servlets.ServiceController;
+import com.idisc.web.servlets.handlers.ServiceController;
+import com.idisc.web.servlets.handlers.ServiceControllerImpl;
 import com.idisc.web.servlets.handlers.request.RequestHandler;
 import com.idisc.web.servlets.handlers.request.RequestHandlerProvider;
 import com.idisc.web.servlets.handlers.response.ResponseHandler;
@@ -72,7 +73,7 @@ public class BaseTest extends WebappSetup {
     public static void tearDownClass() { }
     
     public RequestHandlerProvider createRequestHandlerProvider() {
-        return new ServiceController();        
+        return new ServiceControllerImpl();        
     }
     
     public synchronized AuthSvcSession waitForAuthSession(long maxWait, TimeUnit timeUnit) throws InterruptedException {
@@ -253,16 +254,50 @@ public class BaseTest extends WebappSetup {
     }
 
     public Object execute(
+            final String from, 
+            final String query, 
+            final String to) throws ServletException, IOException {
+        
+        return this.execute(this.requestHandlerProvider, from, query, to);
+    }
+    
+    public Object execute(
+            final RequestHandlerProvider provider, 
+            final String from, 
+            final String query, 
+            final String to) throws ServletException, IOException {
+        
+        final HttpServletRequestImpl request = createRequest(getSession(true));
+
+        request.from(from).with(query).to(to);
+        
+        return this.execute(provider, request);
+    }
+    
+    public Object execute(final String from, 
+            final Map<String, String> params, 
+            final String to) throws ServletException, IOException {
+        
+        return this.execute(this.requestHandlerProvider, from, params, to);
+    }
+    
+    public Object execute(
             final RequestHandlerProvider provider, 
             final String from, 
             final Map<String, String> params, 
             final String to) throws ServletException, IOException {
         
-                
         final HttpServletRequestImpl request = createRequest(getSession(true));
 
         request.from(from).with(params).to(to);
+        
+        return this.execute(provider, request);
+    }
 
+    public Object execute(
+            final RequestHandlerProvider provider, 
+            final HttpServletRequest request) throws ServletException, IOException {
+        
         HttpServletResponseImpl response = new HttpServletResponseImpl();
 
         RequestHandler rh = provider.getRequestHandler((HttpServletRequest)request);
@@ -271,7 +306,7 @@ public class BaseTest extends WebappSetup {
 
         try{
 
-            ((ServiceController)provider).process(request, response);
+            ((ServiceController)provider).process(request, response, true);
 
 //                    ((ServiceController)provider).process(rh, request, response, name, true);
 
@@ -282,9 +317,7 @@ public class BaseTest extends WebappSetup {
 log("\n\n INITIAL RESULTS: "+value); 
             ResponseHandler responseHandler = rh.getResponseHandler(request);
 
-            responseHandler.processResponse(request, response, name, value);
-
-            responseHandler.sendResponse(request, response, name, value);
+            responseHandler.processAndSendResponse(request, response, name, value);
         }
 
         StringBuffer output = response.getBuffer();

@@ -3,87 +3,83 @@ package com.idisc.web.filters;
 import com.bc.util.XLogger;
 import com.bc.web.core.util.ServletUtil;
 import com.bc.web.core.filters.BaseFilter;
+import com.idisc.web.Attributes;
 import com.idisc.web.WebApp;
-import com.idisc.web.servlets.handlers.request.Appproperties;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
-import com.idisc.web.ConfigNames;
+import javax.servlet.http.HttpServletResponse;
 
 /**
  * @author poshjosh
  */
 public class AppFilter extends BaseFilter {
-    
-  private static final int appSessionTimeoutSeconds;
-  static{
-    final Map appProps = WebApp.getInstance().getAppProperties();
-    final int connectTime = Integer.parseInt(appProps.get(Appproperties.CONNECT_TIMEOUT_MILLIS).toString());
-    final int readTime = Integer.parseInt(appProps.get(Appproperties.READ_TIMEOUT_MILLIS).toString());
-    final int threadPoolSize = WebApp.getInstance().getConfiguration().getInt(ConfigNames.REQUEST_EXECUTOR_SERVICE_THREAD_COUNT, 1);
-// poolSize.        factor
-//   > 2.            = 1
-//    2.      2/2    = 1
-//    1.      2/1    = 2
-    float f = 2/threadPoolSize;
-    if(f < 1.0f) {
-        f = 1.0f;
-    }
-    final int timeout = (int)(f * (connectTime + readTime));
-    appSessionTimeoutSeconds = (int)TimeUnit.MILLISECONDS.toSeconds(timeout);
-XLogger.getInstance().log(Level.INFO, "Session timeout for apps: {0} seconds", AppFilter.class, appSessionTimeoutSeconds);
-  }
   
-  public AppFilter() { }    
+    public AppFilter() { }    
 
-  @Override
-  protected HttpServletRequest wrapRequest(final HttpServletRequest request){
-      
-    final int sessionTimeoutSeconds;
-    
-    final HttpServletRequest output;
-    
-    if(this.isRequestFromOrToAWebPage(request)) {
+    @Override
+    protected boolean doBeforeProcessing(
+            HttpServletRequest request, HttpServletResponse response) 
+            throws IOException, ServletException {
         
-      sessionTimeoutSeconds = 30 * 60;
+        final long sessionTimeoutSeconds;
 
-XLogger.getInstance().log(Level.FINE, "Wrapped request to: {0}", this.getClass(), AppFilter.HtmlRequestWrapper.class.getName());
-      output = new AppFilter.HtmlRequestWrapper(request);
-      
-    }else{
-        
-      sessionTimeoutSeconds = appSessionTimeoutSeconds;
+        if(this.isRequestFromOrToAWebPage(request)) { 
 
-      output = super.wrapRequest(request);
+          sessionTimeoutSeconds = 30 * 60;
+
+          request.setAttribute(Attributes.REQUEST_FROM_OR_TO_WEBPAGE, Boolean.TRUE);
+
+        }else{
+
+          sessionTimeoutSeconds = TimeUnit.MILLISECONDS.toSeconds(
+                  WebApp.getInstance().getAppSessionTimeoutMillis());
+        }
+
+        request.getSession().setMaxInactiveInterval((int)sessionTimeoutSeconds);
+
+        return super.doBeforeProcessing(request, response);
     }
-    
-    request.getSession().setMaxInactiveInterval(sessionTimeoutSeconds);
-    
-    return output;
-  }
-  
-  private boolean isRequestFromOrToAWebPage(HttpServletRequest request) {
+
+  public boolean isRequestFromOrToAWebPage(HttpServletRequest request) {
     String referer = request.getHeader("referer");
-    String refererExt = this.getExtensionOrEmptyString(referer);
     String uri = request.getRequestURI();
-    String uriExt = this.getExtensionOrEmptyString(uri);
-    
-    boolean output = ((uriExt != null && !ServletUtil.isStaticResource(uriExt)) && 
-            (refererExt != null && ServletUtil.isJspPage(refererExt)) || 
-            (uriExt != null && ServletUtil.isJspPage(uriExt)) || 
-            (refererExt != null && ServletUtil.isStaticPage(refererExt)) || 
-            (uriExt != null && ServletUtil.isStaticPage(uriExt)));
-
-if(output) {    
-    XLogger.getInstance().log(Level.FINER, "Referer: {0}, Request URI: {1}", this.getClass(), referer, uri);
-}
-
+    boolean output = this.isRequestFromOrToAWebPage(referer, uri);
+XLogger.getInstance().log(Level.FINER, "Request is from or to web page: {0}, Referer: {1}, Request URI: {2}", 
+        this.getClass(), output, referer, uri);
     return output;
+  }  
+    
+  public boolean isRequestFromOrToAWebPage(String referer, String uri) {
+    referer = this.getExtensionOrEmptyString(referer);
+    uri = this.getExtensionOrEmptyString(uri);
+    boolean output = (isJspPage(referer) || isJspPage(uri) || isStaticPage(referer) || isStaticPage(uri));
+    return output;
+  }
+
+  public boolean isStaticResource(String str) {
+      boolean output = str != null && ServletUtil.isStaticResource(str);
+//System.out.println(this.getClass().getName()+". Static resource: "+output+", value: "+str);      
+      return output;
+  }
+  
+  public boolean isStaticPage(String str) {
+      boolean output = str != null && ServletUtil.isStaticPage(str);
+//System.out.println(this.getClass().getName()+". Static page: "+output+", value: "+str);      
+      return output;
+  }
+  
+  public boolean isJspPage(String str) {
+      boolean output = str != null && ServletUtil.isJspPage(str);
+//System.out.println(this.getClass().getName()+". Jsp page: "+output+", value: "+str);      
+      return output;
   }
   
   private String getExtensionOrEmptyString(String s) {
@@ -109,22 +105,33 @@ if(output) {
 
         @Override
         public String getParameter(String name) {
-            String output;
-            if("format".equals(name)) {
+            String output = super.getParameter(name);
+            if(output == null && "format".equals(name)) {
                 output = "text/html";
-            }else{
-                output = super.getParameter(name);
             }
-XLogger.getInstance().log(Level.FINER, "#getParameter. continue filter chain: {0}", this.getClass(), output);
+XLogger.getInstance().log(Level.FINEST, "#getParameter({0}) = {1}", this.getClass(), name, output);
             return output;
         }
 
         @Override
         public Enumeration getParameterNames() {
 
-            Enumeration<String> output = getRequest().getParameterNames();
+            Enumeration<String> parameterNames = getRequest().getParameterNames();
             
-            return this.getCompositeNames(output);
+            final String formatParamName = "format";
+            boolean hasFormatParam = false;
+            while(parameterNames.hasMoreElements()) {
+                String next = parameterNames.nextElement();
+                if(formatParamName.equals(next)) {
+                    hasFormatParam = true;
+                    break;
+                }
+            }
+            
+            // This enumeration has already be used and must not be returned
+            parameterNames = null; 
+            
+            return hasFormatParam ? getRequest().getParameterNames() : this.getCompositeNames(parameterNames);
         }
         
         private Enumeration getCompositeNames(Enumeration<String> enumeration) {
@@ -176,7 +183,12 @@ XLogger.getInstance().log(Level.FINER, "Composite names: {0}", this.getClass(), 
             
             if(output != null) {
                 
-                output.put("format", "text/html");
+                Object value = output.get("format");
+                
+                if(value == null) {
+                
+                    output.put("format", "text/html");
+                }
             }
             
             return output;

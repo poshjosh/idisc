@@ -1,8 +1,19 @@
+Restarted by 0700 and by 1450 the newest feeds had feeddate of about 1350
+
+Uploaded by 1455
+
+* http://www.looseboxes.com/idisc/feeds?installationid=2&installationkey=abdb33ee-a09e-4d7d-b861-311ee7061325&limit=20&format=text/json&tidy=true
+* http://localhost:8080/idisc/getmultipleresults?req=aliasesforcategories&req=aliasesforcontent&req=appproperties&tidy=true
+* Comments not displaying
+* http://www.javaadvent.com/2015/12/the-importance-of-tuning-your-thread-pools.html
+* http://niklasschlimm.blogspot.com.ng/2012/03/threading-stories-about-robust-thread.html
+* https://www.infoq.com/articles/Java-Thread-Pool-Performance-Tuning
+* http://stackoverflow.com/questions/2791851/can-you-dynamically-resize-a-java-util-concurrent-threadpoolexecutor-while-it-st
+* Maintain a Map of (sessionIds+requestUris) = (Future)
+When multiple requests with the same key comes in, only the last should suffice
+
 * Implements pagination for Comments as already done for Searchresults ???
 * Closing of paginated results
-
-* All getXXX(HttpServletREquest) in request handler should be initialized and
-made available via getXXX()
 
 * Getmultipleresults should take advantage of:
 1. multiple parameters of name 'req' e.g /idisc?req=feed&req=comments&feedid=455167

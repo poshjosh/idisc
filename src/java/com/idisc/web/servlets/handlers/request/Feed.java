@@ -4,6 +4,7 @@ import com.bc.jpa.ControllerFactory;
 import com.bc.jpa.EntityController;
 import com.bc.util.XLogger;
 import com.idisc.core.IdiscApp;
+import com.idisc.pu.entities.Comment;
 import com.idisc.web.DefaultFeedCache;
 import com.idisc.web.exceptions.ValidationException;
 import java.io.IOException;
@@ -11,53 +12,56 @@ import java.util.List;
 import java.util.logging.Level;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 public class Feed extends AbstractRequestHandler<com.idisc.pu.entities.Feed>{
 
   private com.idisc.pu.entities.Feed feed;
   
   @Override
-  public String getResponseFormat(HttpServletRequest request)
-  {
-    return "text/html";
+  public String getResponseFormat(HttpServletRequest request) {
+    String resFmt = super.getResponseFormat(request);
+    return resFmt == null ? "text/html" : resFmt;
   }
   
   @Override
-  public boolean isProtected()
-  {
+  public boolean isProtected() {
     return false;
   }
 
   @Override
   public com.idisc.pu.entities.Feed execute(HttpServletRequest request)
-    throws ServletException, IOException
-  {
+    throws ServletException, IOException {
     
     this.feed = this.select(request);
     
     if(feed != null) {
         
-      final Comments comments = new Comments();
+      if(this.isHtmlResponse(request)) {
+          
+        final Comments commentsRequestHandler = new Comments();
         
-      comments.execute(request);
+        List<Comment> comments = commentsRequestHandler.execute(request); 
+          
+        this.setAttributeForAsync(request, "comments", comments);
+      }
     }
     
     return feed;
   }
   
   public com.idisc.pu.entities.Feed select(HttpServletRequest request)
-    throws ServletException, IOException
-  {
-    int feedid = getId(request).intValue();
+    throws ServletException, IOException {
+      
+    Integer feedid = getId(request);
     
     com.idisc.pu.entities.Feed feed = null;
     
     List<com.idisc.pu.entities.Feed> lastFeeds = DefaultFeedCache.getCachedFeeds();
     
-    if ((lastFeeds != null) && (!lastFeeds.isEmpty()))
-    {
+    if ((lastFeeds != null) && (!lastFeeds.isEmpty())){
+        
       for (com.idisc.pu.entities.Feed lastFeed : lastFeeds) {
+          
         if (lastFeed.getFeedid().intValue() == feedid) {
           feed = lastFeed;
           break;
@@ -75,24 +79,21 @@ public class Feed extends AbstractRequestHandler<com.idisc.pu.entities.Feed>{
     return feed;
   }
 
-  public com.idisc.pu.entities.Feed select(int feedid)
-  {
+  public com.idisc.pu.entities.Feed select(Integer feedid) {
+      
     ControllerFactory factory = IdiscApp.getInstance().getControllerFactory();
     
     EntityController<com.idisc.pu.entities.Feed, Integer> ec = factory.getEntityController(com.idisc.pu.entities.Feed.class, Integer.class);
     
-    return (com.idisc.pu.entities.Feed)ec.find(Integer.valueOf(feedid));
+    return (com.idisc.pu.entities.Feed)ec.find(feedid);
   }
   
-  public Integer getId(HttpServletRequest request) throws ValidationException
-  {
+  public Integer getId(HttpServletRequest request) throws ValidationException {
     String sval = request.getParameter("feedid");
-    
     return getId(sval);
   }
   
-  public Integer getId(String sval) throws ValidationException
-  {
+  public Integer getId(String sval) throws ValidationException {
     if ((sval == null) || (sval.isEmpty())) {
       throw new ValidationException("Required parameter 'feedid' not found");
     }

@@ -7,35 +7,36 @@ import javax.servlet.http.HttpServletResponse;
 
 public interface ResponseHandler<V, O> {
     
-  void processResponse(
+  String getCharacterEncoding();
+  
+  String getContentType();
+  
+  ResponseContext<V> getContext();
+    
+  void processAndSendResponse(
           HttpServletRequest request, HttpServletResponse response, 
           String name, V value)
     throws ServletException, IOException;
 
-  void processResponse(
-          HttpServletRequest request, HttpServletResponse response, 
-          String name, Throwable value)
-    throws ServletException, IOException;
-
-  void sendResponse(
+  O processResponse(
           HttpServletRequest request, HttpServletResponse response, 
           String name, V value)
     throws ServletException, IOException;
   
   void sendResponse(
           HttpServletRequest request, HttpServletResponse response, 
-          String name, Throwable value)
+          String name, O value)
     throws ServletException, IOException;
-  
-  String getContentType(HttpServletRequest request);
-  
-  String getCharacterEncoding(HttpServletRequest request);
-  
-  int getStatusCode(HttpServletRequest paramHttpServletRequest, String name, V value);
-  
-  int getStatusCode(HttpServletRequest paramHttpServletRequest, String name, Throwable value);
-  
-  O getOutput(HttpServletRequest paramHttpServletRequest, String name, V value);
-  
-  O getOutput(HttpServletRequest paramHttpServletRequest, String name, Throwable value);
 }
+/**
+ * 
+    
+  boolean isHtmlResponse();
+  
+  String getResponseFormat();
+  
+  String getReferer();
+    
+  String getCharacterEncoding();
+ * 
+ */

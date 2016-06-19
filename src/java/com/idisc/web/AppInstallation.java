@@ -13,13 +13,12 @@ import java.util.logging.Level;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 
-public class AppInstallation
-{
+public class AppInstallation {
+    
   private static int count;
   private static final long timeOffsetMillis;
   
-  static
-  {
+  static {
     Calendar cal = Calendar.getInstance();
     cal.set(2016, 0, 22, 0, 0, 0);
     timeOffsetMillis = cal.getTimeInMillis();
@@ -43,8 +42,7 @@ XLogger.getInstance().log(Level.FINER, "For user, selected {0} installations", A
 
         user.setInstallationList(list);
       }
-      if ((list != null) && (!list.isEmpty()))
-      {
+      if ((list != null) && (!list.isEmpty()))      {
         return (Installation)list.get(list.size() - 1);
       }
     }

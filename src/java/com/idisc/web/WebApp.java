@@ -8,6 +8,8 @@ import com.idisc.core.FeedUpdateService;
 import com.idisc.core.FeedUpdateTask;
 import com.idisc.core.IdiscApp;
 import com.idisc.core.IdiscAuthSvcSession;
+import com.idisc.core.jpa.SearchHandlerFactory;
+import com.idisc.core.jpa.SearchHandlerFactoryImpl;
 import com.idisc.web.servlets.handlers.request.Appproperties;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -33,6 +35,8 @@ public class WebApp {
     
   private boolean debug;
     
+  private long appSessionTimeoutMillis;
+  
   private final boolean productionMode;
   
   private final long memoryAtStartup;
@@ -77,7 +81,7 @@ public class WebApp {
   
   public ExecutorService getGlobalExecutorService(boolean createIfNeed) {
     if(this.globalExecutor == null && createIfNeed) {
-        this.globalExecutor = this.createExecutorService(1);
+        this.globalExecutor = this.createFixedThreadPoolExecutorService(1);
     } 
     return this.globalExecutor;
   }
@@ -87,7 +91,7 @@ public class WebApp {
    * @param poolSize The thread pool size for the executor service
    * @return An executor service
    */
-  public ExecutorService createExecutorService(int poolSize) {
+  public ExecutorService createFixedThreadPoolExecutorService(int poolSize) {
     ExecutorService es;
     if(poolSize < 1) {
       es = new DirectExecutorService();
@@ -95,6 +99,14 @@ public class WebApp {
       es = Executors.newFixedThreadPool(poolSize);
     }
     return es;
+  }
+  
+  private SearchHandlerFactory _searchHandlerFactory;
+  public SearchHandlerFactory getSearchHandlerFactory(boolean create) {
+    if(_searchHandlerFactory == null && create) {
+      _searchHandlerFactory = new SearchHandlerFactoryImpl();
+    }
+    return _searchHandlerFactory;
   }
   
   private WeakReference<Map> _appProperties_weakReference;
@@ -171,8 +183,8 @@ public class WebApp {
         }
       };
 
-      int delay = config.getInt(ConfigNames.FEED_CYCLE_DELAY);
-      int interval = config.getInt(ConfigNames.FEED_CYCLE_INTERVAL);
+      final int delay = config.getInt(ConfigNames.FEED_CYCLE_DELAY);
+      final int interval = config.getInt(ConfigNames.FEED_CYCLE_INTERVAL);
         
       this.feedUpdateService.start(delay, interval, TimeUnit.MINUTES);
     }
@@ -185,6 +197,13 @@ public class WebApp {
     // supercede any previously loaded logging configuration file
     //
     this.initLogging2();
+    
+    final Map appProps = WebApp.getInstance().getAppProperties();
+    final long connectTime = Long.parseLong(appProps.get(Appproperties.CONNECT_TIMEOUT_MILLIS).toString());
+    final long readTime = Long.parseLong(appProps.get(Appproperties.READ_TIMEOUT_MILLIS).toString());
+    appSessionTimeoutMillis = (connectTime + readTime);
+XLogger.getInstance().log(Level.INFO, "Session timeout for apps: {0} seconds", 
+        this.getClass(), appSessionTimeoutMillis);
   }
   
   private void initLogging() {
@@ -289,8 +308,8 @@ public class WebApp {
     }
     
     Configuration output;
-    if (defaultFileLocation != null)
-    {
+    if (defaultFileLocation != null) {
+        
       CompositeConfiguration composite = new CompositeConfiguration();
       
       PropertiesConfiguration cfg = loadConfig(fileLocation, listDelimiter);
@@ -312,8 +331,7 @@ public class WebApp {
   }
   
   private PropertiesConfiguration loadConfig(URL fileLocation, char listDelimiter)
-    throws ConfigurationException
-  {
+    throws ConfigurationException {
     PropertiesConfiguration cfg = new PropertiesConfiguration();
     cfg.setListDelimiter(listDelimiter);
     cfg.setURL(fileLocation);
@@ -363,6 +381,10 @@ public class WebApp {
 
   public boolean isDebug() {
     return debug;
+  }
+
+  public long getAppSessionTimeoutMillis() {
+    return appSessionTimeoutMillis;
   }
 }
 /**

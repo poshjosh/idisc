@@ -2,6 +2,7 @@ package com.idisc.web.servlets.handlers.request;
 
 import com.idisc.core.jpa.Search;
 import com.idisc.web.exceptions.ValidationException;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import javax.servlet.ServletException;
@@ -24,15 +25,14 @@ public abstract class SearchHandler<T> extends Select<T> {
   protected abstract Search<T> getSearch();
 
   @Override
-  public boolean isProtected()
-  {
+  public boolean isProtected() {
     return false;
   }
   
   @Override
   protected List<T> select(HttpServletRequest request)
-    throws ServletException
-  {
+    throws ServletException {
+      
     String toFind = getSearchTerm(request);
 
     Date after = getAfter(request);
@@ -44,8 +44,7 @@ public abstract class SearchHandler<T> extends Select<T> {
     return select(request, toFind, after, offset, limit);
   }
 
-  public List<T> select(HttpServletRequest request, String toFind, Date after, int offset, int limit)
-  {
+  public List<T> select(HttpServletRequest request, String toFind, Date after, int offset, int limit) {
 
     List<T> selected = this.getSearch().select(toFind, after, offset, limit);
 
@@ -62,8 +61,13 @@ public abstract class SearchHandler<T> extends Select<T> {
     Date after;
     try {
       after = sval == null ? null : new Date(Long.parseLong(sval));
-    } catch (NumberFormatException e) {
-      throw new ValidationException("Invalid value for parameter 'after': " + sval);
+    } catch (NumberFormatException nfe) {
+      try{
+        final String javaDatePattern = "E MMM dd HH:mm:ss z yyyy";  
+        after = sval == null ? null : new SimpleDateFormat(javaDatePattern).parse(sval);
+      }catch(java.text.ParseException pe) {
+        throw new ValidationException("Invalid value for parameter 'after': " + sval);  
+      }
     }
     return after;
   }

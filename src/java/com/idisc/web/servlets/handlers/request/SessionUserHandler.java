@@ -16,7 +16,6 @@ public interface SessionUserHandler {
   
   public abstract boolean isLoggedIn(HttpServletRequest request);
   
-  
   public abstract void setLoggedIn(HttpServletRequest request, User paramUser);
   
   public abstract User setLoggedIn(HttpServletRequest request, Map paramMap, boolean paramBoolean)

@@ -1,0 +1,8 @@
+Jun 09, 2016 8:00:19 PM com.idisc.web.WebApp 
+INFO: Succesfully loaded logging.propertiesFile from: C:/Users/Josh/Documents/NetBeansProjects/idisc/web/META-INF/properties/logging_devmode.properties
+Jun 09, 2016 8:00:19 PM com.idisc.web.filters.AppFilter 
+INFO: Session timeout for apps: 90 seconds
+Jun 09, 2016 8:13:36 PM com.idisc.web.WebApp 
+INFO: Succesfully loaded logging.propertiesFile from: C:/Users/Josh/Documents/NetBeansProjects/idisc/web/META-INF/properties/logging_devmode.properties
+Jun 09, 2016 8:13:36 PM com.idisc.web.filters.AppFilter 
+INFO: Session timeout for apps: 90 seconds

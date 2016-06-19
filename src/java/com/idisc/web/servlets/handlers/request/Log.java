@@ -1,8 +1,9 @@
 package com.idisc.web.servlets.handlers.request;
 
 import com.bc.util.XLogger;
-import com.idisc.core.EntityJsonFormat;
+import com.idisc.core.util.EntityMapBuilder;
 import com.idisc.pu.entities.Installation;
+import com.idisc.web.servlets.request.RequestParameters;
 import java.io.IOException;
 import java.util.Map;
 import java.util.logging.Level;
@@ -37,7 +38,7 @@ public class Log
     throws ServletException
   {
     Installation installation = getInstallation(request, false);
-    Map map = installation == null ? null : new EntityJsonFormat().toMap(installation);
+    Map map = installation == null ? null : new EntityMapBuilder().toMap(installation);
     XLogger.getInstance().log(Level.WARNING, "x = x = x = " + getName(logTypeId) + " = x = x = x = on device with installation details::\n{0}", getClass(), map);
     return Boolean.TRUE;
   }

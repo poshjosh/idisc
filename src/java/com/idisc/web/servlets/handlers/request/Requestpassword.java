@@ -3,6 +3,7 @@ package com.idisc.web.servlets.handlers.request;
 import com.authsvc.client.AuthSvcSession;
 import com.bc.util.XLogger;
 import com.idisc.web.WebApp;
+import com.idisc.web.servlets.request.RequestParameters;
 import java.io.IOException;
 import java.util.Map;
 import java.util.logging.Level;
@@ -32,17 +33,13 @@ public class Requestpassword extends AbstractRequestHandler<Boolean>
       throw new ServletException("Authentication Service Unavailable");
     }
     
-    Map<String, String> params = new RequestParameters(request){
-        @Override
-        public boolean isCaseSensitive() {
-            //@todo remove eventually
-            // We had to do this because of a bug in the earlier versions
-            // of the newsminute android app... version deployed before
-            // 4 Apr 2015
-            //
-            return false;
-        }
-    };
+    //@todo remove eventually, change to default (i.e true)
+    // We had to do this because of a bug in the earlier versions
+    // of the newsminute android app... version deployed before
+    // 4 Apr 2015
+    //
+    final Boolean caseSensitive = Boolean.FALSE;
+    Map<String, String> params = new RequestParameters(request, caseSensitive);
 
     AuthSvcSession authSession = WebApp.getInstance().getAuthSvcSession();
     

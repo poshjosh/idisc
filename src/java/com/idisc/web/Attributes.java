@@ -7,7 +7,6 @@ public interface Attributes {
     String APP = "App";
     String WEBAPP_CONTEXT = "WebappContext";
     String TOP_FEEDS = "Topfeeds";
-    String REQUEST_QUEUE = "requestQueue";
-    String SERVICE_CONTROLLER = "serviceController";
-    String REQUEST_HANDLER = "requestHandler";
+    String ASYNCREQUEST_EXECUTOR_SERVICE = "asyncRequestExecutorService";
+    String REQUEST_FROM_OR_TO_WEBPAGE = "requestFromOrToAWebPage";
 }

@@ -78,6 +78,10 @@ XLogger.getInstance().log(Level.FINER, "Refreshing Topfeeds", this.getClass());
 
             FeedSelectionTask task = new FeedSelectionTask();
             
+            if(request.getSession() == null) {
+                return;
+            }
+            
             task.sessionId = request.getSession().getId();
             
             currentTask = task;
@@ -99,7 +103,7 @@ XLogger.getInstance().log(Level.FINER, "Refreshing Topfeeds", this.getClass());
         public void run() {
             List<Feed> selected = getList(maxAgeDays, maxSpread, batchSize);
             topfeeds = sort(selected, createComparator(), maxOutputSize);
-XLogger.getInstance().log(Level.FINER, "Session ID: {1}, Topfeeds: {0}", 
+XLogger.getInstance().log(Level.FINER, "Session ID: {0}, Topfeeds: {1}", 
 this.getClass(), sessionId, topfeeds == null ? null : topfeeds.size());
             lastUpdateTime = System.currentTimeMillis();
             currentTask = null;

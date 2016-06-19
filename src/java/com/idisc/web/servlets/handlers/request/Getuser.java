@@ -4,27 +4,14 @@ import com.authsvc.client.AuthSvcSession;
 import com.authsvc.client.parameters.Createuser;
 import com.idisc.core.User;
 import com.idisc.web.WebApp;
+import com.idisc.web.servlets.request.RequestParameters;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Map;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.ParseException;
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 public class Getuser
   extends AbstractRequestHandler<Map>
