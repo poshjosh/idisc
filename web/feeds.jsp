@@ -8,11 +8,10 @@
     pageDescription="Latest breaking news feeds from various nigerian sources">
     <jsp:attribute name="pageContent" trim="true">
         <c:if test="${feeds == null || empty feeds}">
-            <c:set var="feeds" value="${WebappContext.cachedFeeds}"/>
+            <c:set var="feeds" value="${AppContext.cachedFeeds}"/>
         </c:if>
         <c:choose>
             <c:when test="${feeds == null || empty feeds}">
-                
                 <h3>
                     No current feeds available, check back later
                 </h3>

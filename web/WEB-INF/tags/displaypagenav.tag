@@ -35,7 +35,7 @@
 <c:set var="end" value="${offset + pageSize}"/>
 <c:if test="${end > totalSize}"><c:set var="end" value="${totalSize}"/></c:if>
 
-<c:if test="${!App.productionMode}">
+<c:if test="${!AppContext.productionMode}">
   <p>Total size: ${totalSize}. Pages: ${pages}. Page: ${page}. Offset: ${offset}. End: ${end}</p>
 </c:if>
 

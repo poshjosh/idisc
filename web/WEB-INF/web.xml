@@ -6,6 +6,21 @@
             1
         </session-timeout>
     </session-config>
+    <filter>
+        <description>Prevents Cross-Site Request Forgery (CSRF)  by generating a nonce and storing it in the session. URLs are also encoded with the same nonce. When the next request is received the nonce in the request is compared to the nonce in the session and only if they are the same is the request allowed to continue.</description>
+        <filter-name>CsrfPreventionFilter</filter-name>
+        <filter-class>com.bc.web.core.filters.CsrfPreventionFilter</filter-class>
+        <async-supported>true</async-supported>
+        <init-param>
+            <param-name>entryPoints</param-name>
+            <param-value>,/,/index.jsp,/home.jsp,/oop.jsp</param-value>
+        </init-param>
+    </filter>
+    <filter-mapping>
+        <filter-name>CsrfPreventionFilter</filter-name>
+        <url-pattern>/*</url-pattern>
+        <dispatcher>REQUEST</dispatcher>
+    </filter-mapping>
 -->
     <context-param>
         <param-name>productionMode</param-name>
@@ -25,12 +40,13 @@
     </context-param>
     <filter>
         <description>Sets charset for post requests, charset for GET requests is set by adding URIEncoding=UTF-8 to connector in server.xml</description>
-        <filter-name>CharsetFilter</filter-name>
-        <filter-class>org.apache.catalina.filters.SetCharacterEncodingFilter</filter-class>
-        <init-param>  
-            <param-name>encoding</param-name>  
-            <param-value>UTF-8</param-value>  
-        </init-param>  
+        <filter-name>SetCharsetFilter</filter-name>
+        <filter-class>com.bc.web.core.filters.SetCharacterEncodingFilter</filter-class>
+        <async-supported>true</async-supported>
+        <init-param>
+            <param-name>encoding</param-name>
+            <param-value>UTF-8</param-value>
+        </init-param>
     </filter>
     <filter>
         <filter-name>BotFilter</filter-name>
@@ -48,7 +64,7 @@
         <async-supported>true</async-supported>
     </filter>
     <filter-mapping>
-        <filter-name>CharsetFilter</filter-name>
+        <filter-name>SetCharsetFilter</filter-name>
         <url-pattern>/*</url-pattern>
         <dispatcher>REQUEST</dispatcher>
         <dispatcher>FORWARD</dispatcher>
@@ -109,7 +125,7 @@
     </listener>
     <servlet>
         <servlet-name>Idisc</servlet-name>
-        <servlet-class>com.idisc.web.servlets.IdiscAsyncServlet</servlet-class>
+        <servlet-class>com.idisc.web.servlets.IdiscAsyncNonHtmlResponseServlet</servlet-class>
         <async-supported>true</async-supported>
     </servlet>
     <servlet>

@@ -22,7 +22,7 @@
         </p>
     </jsp:attribute>
     <jsp:attribute name="pageAfterBodyInclude" trim="true">
-        <c:if test="${App != null && !App.productionMode && 
+        <c:if test="${AppContext != null && !AppContext.productionMode && 
                       pageContext.errorData.throwable.stackTrace != null}">
             <h3>App is being run in <tt>DEVELOPMENT MODE</tt> hence printing Stacktrace:</h3>  
             <span>

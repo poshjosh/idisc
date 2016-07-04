@@ -15,17 +15,16 @@
             <a href="${pageContext.servletContext.contextPath}/login.jsp">Login</a>
         </c:when>
         <c:otherwise>
-            <a href="${pageContext.servletContext.contextPath}/logout">Logout 
-                <c:choose>
-                    <c:when test="${user.username != null}">
-                        <tt class="smallerLighter">${user.username}</tt>
-                    </c:when>
-                    <c:when test="${installation.screenname != null}">
-                        <tt class="smallerLighter">${installation.screenname}</tt>
-                    </c:when>
-                    <c:otherwise></c:otherwise>
-                </c:choose>
-            </a>
+            <a href="${pageContext.servletContext.contextPath}/logout">Logout</a>
+            <c:choose>
+                <c:when test="${user.username != null}">
+                    (<tt class="smallerLighter">${user.username}</tt>)
+                </c:when>
+                <c:when test="${installation.screenname != null}">
+                    (<tt class="smallerLighter">${installation.screenname}</tt>)
+                </c:when>
+                <c:otherwise></c:otherwise>
+            </c:choose>
         </c:otherwise>
     </c:choose>
 </span>
@@ -52,6 +51,13 @@
                 <input type="hidden" name="req" value="searchresults"/>
                 <input type="hidden" name="limit" value="20"/>
                 <input type="text" name="query"/>
+                <select name="siteid" size="1">
+<%-- We use empty string here as when we left out the value altogether it used the contents of the option tag --%>        
+                    <option value="" disabled selected>All Sites</option>  
+                    <c:forEach var="Site" items="${AppContext.sites}">
+                        <option value="${Site.siteid}">${Site.site}</option>
+                    </c:forEach>
+                </select>
                 <input type="submit" value="Search"/>
             </form>
         </td>    
