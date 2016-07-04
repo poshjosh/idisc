@@ -1,9 +1,11 @@
 package com.idisc.web.filters;
 
+import com.bc.util.JsonBuilder;
 import com.bc.util.XLogger;
 import com.bc.web.botchecker.BotChecker;
 import com.bc.web.botchecker.BotCheckerInMemoryCache;
-import com.idisc.web.WebApp;
+import com.idisc.web.AppContext;
+import com.idisc.web.Attributes;
 import java.io.IOException;
 import java.util.logging.Level;
 import javax.servlet.ServletException;
@@ -11,35 +13,91 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.configuration.Configuration;
 import com.idisc.web.ConfigNames;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import org.json.simple.parser.JSONParser;
 
 /**
  * @author poshjosh
  */
 public class BotFilter extends com.bc.web.core.filters.BotFilter {
     
-    private final long memoryCeiling;
-    
-    private final long memoryFloor;
-    
-    private final String cacheDir;
-    
     private class BotCheckerImpl extends BotCheckerInMemoryCache {
-        public BotCheckerImpl(String trapFilename) {
+        private final boolean debug;
+        private final boolean productionMode;
+        public BotCheckerImpl(
+                String trapFilename, long memoryCeiling, 
+                long memoryFloor, String cacheDir, 
+                boolean productionMode, boolean debug) {
             super(trapFilename, memoryCeiling, memoryFloor, cacheDir);
+            this.debug = debug;
+            this.productionMode = productionMode;
         }
-        public BotCheckerImpl(String trapFilename, boolean strict, int cacheSize) {
+        public BotCheckerImpl(
+                String trapFilename, boolean strict, 
+                long memoryCeiling, long memoryFloor, 
+                String cacheDir, int cacheSize,
+                boolean productionMode, boolean debug) {
             super(trapFilename, strict, memoryCeiling, memoryFloor, cacheDir, cacheSize);
+            this.debug = debug;
+            this.productionMode = productionMode;
+        }
+
+        @Override
+        public String getFilename(String key) {
+            return this.getCacheDir()+'/'+key+".json";
+        }
+
+        @Override
+        public List<String> load(File file) throws IOException, ClassNotFoundException {
+            
+            try(BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(file), "utf-8"))){
+                
+                try{
+                    
+                    JSONParser parser = new JSONParser();
+                    
+                    Map output = (Map)parser.parse(reader);
+                    
+                    return (List<String>)output.get(file.getName());
+                    
+                }catch(org.json.simple.parser.ParseException e) {
+                 
+                    throw new IOException(e);
+                }
+            }
+        }
+
+        @Override
+        public void save(List<String> toSave, File file) throws IOException {
+            
+            Map output = Collections.singletonMap(file.getName(), toSave);
+            
+            try(BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file), "utf-8"))) {
+             
+                new JsonBuilder(true).appendJSONString(output, writer);
+                
+                writer.flush();
+            }
         }
         @Override
         protected boolean add(int botType, String value) {
             boolean added = super.add(botType, value);
-            Level level = WebApp.getInstance().isDebug() ? Level.INFO : Level.FINER;
-XLogger.getInstance().log(level, "Added {0} = {1}", this.getClass(), this.getBotTypeName(botType), value);
+            Level level = debug ? Level.INFO : Level.FINER;
+if(added) XLogger.getInstance().log(level, "Added {0} = {1}", this.getClass(), this.getBotTypeName(botType), value);
             return added;
         }
         @Override
         public boolean acceptHostOrAddress(String value) {
-            if(WebApp.getInstance().isProductionMode()) {
+            if(productionMode) {
                 return super.acceptHostOrAddress(value);
             }else{
                 return this.acceptAllNonnullOrEmptyHostOrAddresses(value);
@@ -51,14 +109,7 @@ XLogger.getInstance().log(level, "Added {0} = {1}", this.getClass(), this.getBot
         }
     }
     
-    public BotFilter() {
-        Configuration configuration = WebApp.getInstance().getConfiguration();
-        this.memoryCeiling = configuration.getLong(ConfigNames.BOTFILTER_DISABLE_AT_MEMORY_ABOVE, -1L);
-        this.memoryFloor = configuration.getLong(ConfigNames.BOTFILTER_ENABLE_AT_MEMORY_BELOW, -1L);
-        this.cacheDir = configuration.getString(ConfigNames.BOTFILTER_CACHEDIR, null);
-XLogger.getInstance().log(Level.FINE, "BotFilter, memory ceiling: {0}, floor: {1}, cache dir: {2}", 
-        this.getClass(), this.memoryCeiling, this.memoryFloor, this.cacheDir);
-    }
+    public BotFilter() { }
 
     @Override
     protected boolean doBeforeProcessing(
@@ -94,16 +145,25 @@ XLogger.getInstance().log(Level.FINER, "Allowed: {0} to: {1}",
         return proceed;
     }
     @Override
-    protected BotChecker createBotChecker() {
+    protected BotChecker createBotChecker(HttpServletRequest request) {
         
-//        String dir = WebApp.getInstance().getConfiguration().getString(ConfigNames.BOTCONFIGS_DIR);
+        AppContext appContext = (AppContext)request.getServletContext().getAttribute(Attributes.APP_CONTEXT);
         
-//        if(dir == null || (this.memoryCeiling < 0 && this.memoryFloor < 0)) {
-        if(this.memoryCeiling < 0 && this.memoryFloor < 0) {
+        Configuration configuration = appContext.getConfiguration();
+        
+        final long memoryCeiling = configuration.getLong(ConfigNames.BOTFILTER_DISABLE_AT_MEMORY_ABOVE, -1L);
+        final long memoryFloor = configuration.getLong(ConfigNames.BOTFILTER_ENABLE_AT_MEMORY_BELOW, -1L);
+        final String cacheDir = configuration.getString(ConfigNames.BOTFILTER_CACHEDIR, null);
+XLogger.getInstance().log(Level.INFO, "BotFilter, memory ceiling: {0}, floor: {1}, cache dir: {2}", 
+        this.getClass(), memoryCeiling, memoryFloor, cacheDir);
+        
+        if(memoryCeiling < 0 && memoryFloor < 0) {
             
             return null;
         }
         
-        return new BotCheckerImpl("/adminAdminPage");
+        return new BotCheckerImpl(
+                "/adminAdminPage", memoryCeiling, memoryFloor, cacheDir,
+                appContext.isProductionMode(), appContext.isDebug());
     }
 }

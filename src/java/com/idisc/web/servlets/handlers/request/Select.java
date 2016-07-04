@@ -1,55 +1,41 @@
 package com.idisc.web.servlets.handlers.request;
 
-import com.bc.jpa.ControllerFactory;
 import com.bc.jpa.EntityController;
 import com.bc.util.XLogger;
 import com.idisc.core.IdiscApp;
-import com.idisc.web.WebApp;
+import com.idisc.web.Attributes;
+import com.idisc.web.AppContext;
+import com.idisc.web.ConfigNames;
 import com.idisc.web.exceptions.ValidationException;
 import java.io.IOException;
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
-import org.apache.commons.configuration.Configuration;
+import com.bc.jpa.JpaContext;
 
 public abstract class Select<T> extends AbstractRequestHandler<List<T>>{
     
-  private final long maxLimit;
-  private final long defaultLimit;
-  private final long minLimit;
   private transient EntityController ec_accessViaGetter;
   
-  public Select(){
-    Configuration config = WebApp.getInstance().getConfiguration();
-    this.maxLimit = (config == null ? 200L : config.getLong("maxLimit", 200L));
-    this.defaultLimit = (config == null ? 100L : config.getLong("defaultLimit", 100L));
-    this.minLimit = (config == null ? 5L : config.getLong("maxLimit", 5L));
-  }
-  
-  public Select(long maxLimit, long defaultLimit, long minLimit) {
-    this.maxLimit = maxLimit;
-    this.defaultLimit = defaultLimit;
-    this.minLimit = minLimit;
-  }
+  public Select(){ }
 
   protected abstract Class<T> getEntityClass();
   
   public EntityController<T, Object> getEntityController(){
     if (this.ec_accessViaGetter == null) {
-      ControllerFactory factory = IdiscApp.getInstance().getControllerFactory();
+      JpaContext factory = IdiscApp.getInstance().getJpaContext();
       this.ec_accessViaGetter = factory.getEntityController(getEntityClass());
     }
     return this.ec_accessViaGetter;
   }
   
   @Override
-  public List<T> execute(HttpServletRequest request)
-    throws ServletException, IOException{
+  public List<T> execute(HttpServletRequest request) throws ServletException, IOException{
+      
 XLogger.getInstance().entering(this.getClass(), "#execute(HttpServletRequest, HttpServletResponse)", "");
+
     List<T> entities = select(request);
     
     return entities;
@@ -82,40 +68,45 @@ XLogger.getInstance().log(Level.FINE, "Selected: {0}", this.getClass(), selected
   }
   
   protected int getOffset(HttpServletRequest request) throws ValidationException {
-    int offset = getInt(request, "offset", 0);
+    int offset = getIntRequestParam(request, "offset", 0);
     return offset;
   }
   
   public final int getLimit(HttpServletRequest request) throws ValidationException {
-    int limit = this.limit(request);
-    limit = this.formatLimitBasedOnAvailableMemory(limit);
-    if(limit < this.minLimit) {
-        limit = (int)this.minLimit;
+      
+    int limit = getIntRequestParam(request, "limit", this.getDefaultLimit(request));
+    
+    AppContext appContext = (AppContext)request.getServletContext().getAttribute(Attributes.APP_CONTEXT);
+    
+    if(appContext.getConfiguration().getBoolean(ConfigNames.ADJUST_LIMIT_BASED_ON_MEMORY_LEVEL, Boolean.FALSE)) {
+        
+      float memoryLevel = appContext.getMemoryLevel().floatValue();
+      
+      limit = this.formatLimitBasedOnAvailableMemory(memoryLevel, limit);  
     }
-    if(limit > this.maxLimit) {
-        limit = (int)this.maxLimit;
+    
+    final int minLimit = this.getMinLimit(request);
+    
+    if(limit < minLimit) {
+        
+        limit = minLimit;
+    }
+    
+    final int maxLimit = this.getMaxLimit(request);
+    
+    if(limit > maxLimit) {
+        
+        limit = maxLimit;
     }
     return limit;
   }
   
-  protected int limit(HttpServletRequest request) throws ValidationException {
-    int limit = getInt(request, "limit", (int)this.defaultLimit);
-    return limit;
-  }
-  
-  protected int formatLimitBasedOnAvailableMemory(int limit) {
-    long fm = Runtime.getRuntime().freeMemory();
-    long mas = WebApp.getInstance().getMemoryAtStartup();
+  protected int formatLimitBasedOnAvailableMemory(float memoryLevel, int limit) {
     int result;
-    if(fm >= mas) {
+    if(memoryLevel >= 1.0f) {
       result = limit;
     }else{
-      BigDecimal freeMemory = new BigDecimal(fm);
-      BigDecimal memoryAtStartup = new BigDecimal(mas);
-      float memoryLevel = freeMemory.divide(memoryAtStartup, 2, RoundingMode.HALF_UP).floatValue();
-      // We do this twice to make our memory saving pro-active
-      // 100 x 0.5 = 50. However 100 x 0.5 x 0.5 = 25
-      result = (int)(limit * memoryLevel * memoryLevel);
+      result = (int)(limit * memoryLevel);
 XLogger.getInstance().log(Level.FINER, 
         "Based on memory level: {0}, formatted limit from {1} to {2} ", 
         this.getClass(), memoryLevel, limit, result);
@@ -123,11 +114,25 @@ XLogger.getInstance().log(Level.FINER,
     return result;
   }
   
-  private int getInt(HttpServletRequest request, String key, int defaultValue) {
+  private int getIntRequestParam(HttpServletRequest request, String key, int defaultValue) {
     String val = request.getParameter(key);
     if ((val == null) || (val.isEmpty())) {
       return defaultValue;
     }
     return Integer.parseInt(val);
+  }
+
+  public int getMaxLimit(HttpServletRequest request) {
+    return getIntProperty(request, "maxLimit", 200);
+  }
+  public int getDefaultLimit(HttpServletRequest request) {
+    return getIntProperty(request, "defaultLimit", 100);
+  }
+  public int getMinLimit(HttpServletRequest request) {
+    return getIntProperty(request, "minLimit", 5);
+  }
+  private int getIntProperty(HttpServletRequest request, String name, int defaultValue) {
+    AppContext appContext = (AppContext)request.getServletContext().getAttribute(Attributes.APP_CONTEXT);
+    return appContext.getConfiguration().getInt(name, defaultValue);
   }
 }

@@ -1,8 +1,8 @@
 package com.idisc.web.servlets;
 
+import com.idisc.web.AppContext;
 import com.idisc.web.Attributes;
 import com.idisc.web.servlets.handlers.ServiceController;
-import com.idisc.web.servlets.handlers.ServiceControllerImpl;
 import com.idisc.web.servlets.request.AsyncRequestTask;
 import java.io.IOException;
 import java.util.concurrent.ExecutorService;
@@ -15,35 +15,33 @@ import javax.servlet.http.HttpServletResponse;
  * @author Josh
  */
 public class IdiscAsyncServlet extends AbstractIdiscServlet {
-    
-  private final ServiceController serviceController;
 
-  public IdiscAsyncServlet() {
-      
-    this(new ServiceControllerImpl());
-  }
-  
+  public IdiscAsyncServlet() { }
+
   public IdiscAsyncServlet(ServiceController sc) {
-    this.serviceController = sc;
+    super(sc);
   }
-  
+    
   @Override
   public void process(
       final HttpServletRequest request, final HttpServletResponse response)
       throws ServletException, IOException {
+      
+    final ServiceController serviceController = this.getServiceController();
 
-    if(!this.isProcessRequestAsync()) {
-
-        serviceController.process(request, response, true);
-        
-    }else{
+    AppContext appCtx = (AppContext)request.getServletContext().getAttribute(Attributes.APP_CONTEXT);
     
+    if(appCtx.isAsyncProcessingEnabled()) {
+
       AsyncContext asyncContext = request.startAsync(request, response);
     
-      ExecutorService svc = getRequestExecutorService(
-              request.getServletContext(), Attributes.ASYNCREQUEST_EXECUTOR_SERVICE, true);
-    
+      ExecutorService svc = appCtx.getGlobalExecutorService(true);
+
       svc.submit(new AsyncRequestTask(asyncContext, serviceController));
+      
+    }else{
+    
+        serviceController.process(request, response, true);
     }
   }
 }

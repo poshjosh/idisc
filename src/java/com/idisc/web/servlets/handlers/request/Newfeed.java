@@ -184,7 +184,7 @@ public class Newfeed extends NewEntityHandler<com.idisc.pu.entities.Feed> {
           return count;
       }
       
-      EntityManager em = IdiscApp.getInstance().getControllerFactory().getEntityManager(Feedhit.class);
+      EntityManager em = IdiscApp.getInstance().getJpaContext().getEntityManager(Feedhit.class);
       try{
           
         EntityTransaction t = em.getTransaction();

@@ -1,10 +1,11 @@
 package com.idisc.web.servlets.handlers.request;
 
-import com.idisc.core.jpa.Search;
+import com.bc.jpa.query.QueryBuilder;
 import com.idisc.web.exceptions.ValidationException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+import javax.persistence.TypedQuery;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 
@@ -15,14 +16,10 @@ public abstract class SearchHandler<T> extends Select<T> {
 
   public SearchHandler() { }
 
-  public SearchHandler(long maxLimit, long defaultLimit, long minLimit) {
-    super(maxLimit, defaultLimit, minLimit);
-  }
-  
   @Override
   protected abstract Class<T> getEntityClass();
   
-  protected abstract Search<T> getSearch();
+  protected abstract QueryBuilder getQueryBuilder(HttpServletRequest request, String query);
 
   @Override
   public boolean isProtected() {
@@ -46,11 +43,29 @@ public abstract class SearchHandler<T> extends Select<T> {
 
   public List<T> select(HttpServletRequest request, String toFind, Date after, int offset, int limit) {
 
-    List<T> selected = this.getSearch().select(toFind, after, offset, limit);
+    try(QueryBuilder qb = this.getQueryBuilder(request, toFind)) {
+    
+        if(after != null) {
 
-    return selected;
+            qb.where(Feed.class, "feeddate", QueryBuilder.GREATER_THAN, after);
+        }
+
+        final TypedQuery<T> tq = qb.build();
+
+        if(offset >= 0) {
+
+            tq.setFirstResult(offset);
+        }
+
+        if(limit > 0) {
+
+            tq.setMaxResults(limit);
+        }
+
+        return tq.getResultList();
+    }
   }
-
+  
   protected String getSearchTerm(HttpServletRequest request) throws ValidationException {
     String query =  request.getParameter("query");
     return query;

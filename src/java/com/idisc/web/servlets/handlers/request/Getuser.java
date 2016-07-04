@@ -3,7 +3,8 @@ package com.idisc.web.servlets.handlers.request;
 import com.authsvc.client.AuthSvcSession;
 import com.authsvc.client.parameters.Createuser;
 import com.idisc.core.User;
-import com.idisc.web.WebApp;
+import com.idisc.web.AppContext;
+import com.idisc.web.Attributes;
 import com.idisc.web.servlets.request.RequestParameters;
 import java.io.IOException;
 import java.util.Collections;
@@ -21,20 +22,21 @@ public class Getuser
     return false;
   }
   
-
-  public Map execute(HttpServletRequest request)
-    throws ServletException, IOException
-  {
+  @Override
+  public Map execute(HttpServletRequest request) throws ServletException, IOException {
+      
     Map output;
     
-    if (isLoggedIn(request))
-    {
+    if (isLoggedIn(request)) {
       User user = getUser(request);
       output = user.getDetails();
-    }
-    else
-    {
-      Map app = WebApp.getInstance().getAuthSvcSession().getAppDetails();
+    }else {
+       
+      AppContext appContext = (AppContext)request.getServletContext().getAttribute(Attributes.APP_CONTEXT);        
+      
+      AuthSvcSession authSession = appContext.getAuthSvcSession();
+      
+      Map app = authSession.getAppDetails();
       
       if (app == null) {
         throw new ServletException("Authentication Service Unavailable");
@@ -43,12 +45,8 @@ public class Getuser
       Map<String, String> params = new RequestParameters(request);
       params.put(Createuser.ParamName.sendregistrationmail.name(), Boolean.toString(false));
       
-      try
-      {
-        AuthSvcSession authSession = WebApp.getInstance().getAuthSvcSession();
-        
-
-
+      try {
+          
         JSONObject authuserdetails = authSession.getUser(params);
         if (authuserdetails != null) {
           if ((authSession.isError(authuserdetails)) || (authSession.getResponseCode() >= 300))

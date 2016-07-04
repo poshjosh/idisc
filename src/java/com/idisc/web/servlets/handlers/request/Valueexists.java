@@ -1,6 +1,5 @@
 package com.idisc.web.servlets.handlers.request;
 
-import com.bc.jpa.ControllerFactory;
 import com.bc.jpa.EntityController;
 import com.idisc.core.IdiscApp;
 import com.idisc.pu.entities.Archivedfeed;
@@ -14,6 +13,7 @@ import java.io.IOException;
 import java.util.List;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
+import com.bc.jpa.JpaContext;
 
 public class Valueexists extends AbstractRequestHandler<Boolean> {
     
@@ -56,7 +56,7 @@ public class Valueexists extends AbstractRequestHandler<Boolean> {
   }
   
   public EntityController getEntityController(String table) {
-    ControllerFactory cf = IdiscApp.getInstance().getControllerFactory();
+    JpaContext cf = IdiscApp.getInstance().getJpaContext();
     switch (table) {
     case "installation": 
       return cf.getEntityController(Installation.class);

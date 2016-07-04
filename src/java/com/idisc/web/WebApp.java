@@ -3,158 +3,78 @@ package com.idisc.web;
 import com.authsvc.client.AuthSvcSession;
 import com.authsvc.client.SessionLoader;
 import com.bc.util.XLogger;
+import com.bc.util.concurrent.BoundedExecutorService;
 import com.bc.util.concurrent.DirectExecutorService;
-import com.idisc.core.FeedUpdateService;
-import com.idisc.core.FeedUpdateTask;
+import com.bc.util.concurrent.NamedThreadFactory;
 import com.idisc.core.IdiscApp;
 import com.idisc.core.IdiscAuthSvcSession;
-import com.idisc.core.jpa.SearchHandlerFactory;
-import com.idisc.core.jpa.SearchHandlerFactoryImpl;
+import com.idisc.pu.SearchHandlerFactory;
+import com.idisc.pu.SearchHandlerFactoryImpl;
+import com.idisc.pu.entities.Feed;
+import com.idisc.pu.entities.Site;
 import com.idisc.web.servlets.handlers.request.Appproperties;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.ref.WeakReference;
-import java.lang.reflect.InvocationTargetException;
-import java.net.URL;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
 import javax.servlet.ServletContext;
-import javax.servlet.ServletException;
-import org.apache.commons.configuration.CompositeConfiguration;
 import org.apache.commons.configuration.Configuration;
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.PropertiesConfiguration;
 
-public class WebApp {
+public class WebApp implements AppContext, ThreadPoolData {
     
-  private boolean debug;
-    
-  private long appSessionTimeoutMillis;
+  private final boolean debug;
   
-  private final boolean productionMode;
+  private final boolean asyncProcessingEnabled;
+  
+  private final long appSessionTimeoutMillis;
   
   private final long memoryAtStartup;
   
-  private final String propertiesFileName;
+  private List<Site> sites;
   
-  private final String defaultPropertiesFileName;
+  private ThreadPoolExecutor threadPoolExecutor;
   
-  private ExecutorService globalExecutor;
-  
-  private FeedUpdateService feedUpdateService;
-  
-  private Configuration config;
+  private final Configuration config;
   
   private AuthSvcSession authSvcSession;
   
-  private ServletContext servletContext;
+  private final ServletContext context;
   
-  private static WebApp instance;
-  
-  private WebApp(boolean productionMode){
-    this.productionMode = productionMode;
+  public WebApp(ServletContext context, Configuration config){
+      
     this.memoryAtStartup = Runtime.getRuntime().freeMemory();
-    XLogger.getInstance().log(Level.INFO, "Memory at startup: {0}, available processors: {1}", 
-            this.getClass(), this.memoryAtStartup, Runtime.getRuntime().availableProcessors());
-    this.defaultPropertiesFileName = "META-INF/properties/idiscwebdefaults.properties";
-    this.propertiesFileName = this.productionMode ?
-            "META-INF/properties/idiscweb.properties" :
-            "META-INF/properties/idiscweb_devmode.properties";
-  }
-  
-  public static WebApp getInstance() {
-    return getInstance(false);
-  }
+XLogger.getInstance().log(Level.INFO, "Memory at startup: {0}, available processors: {1}", 
+        this.getClass(), this.memoryAtStartup, Runtime.getRuntime().availableProcessors());
 
-  public static WebApp getInstance(boolean productionMode) {
-    if (instance == null) {
-      instance = new WebApp(productionMode);
-    }
-    return instance;
-  }
-  
-  public ExecutorService getGlobalExecutorService(boolean createIfNeed) {
-    if(this.globalExecutor == null && createIfNeed) {
-        this.globalExecutor = this.createFixedThreadPoolExecutorService(1);
-    } 
-    return this.globalExecutor;
-  }
-  
-  /**
-   * A poolSize < 1 will result in a {@link com.bc.util.concurrent.DirectExecutorService}
-   * @param poolSize The thread pool size for the executor service
-   * @return An executor service
-   */
-  public ExecutorService createFixedThreadPoolExecutorService(int poolSize) {
-    ExecutorService es;
-    if(poolSize < 1) {
-      es = new DirectExecutorService();
-    }else{
-      es = Executors.newFixedThreadPool(poolSize);
-    }
-    return es;
-  }
-  
-  private SearchHandlerFactory _searchHandlerFactory;
-  public SearchHandlerFactory getSearchHandlerFactory(boolean create) {
-    if(_searchHandlerFactory == null && create) {
-      _searchHandlerFactory = new SearchHandlerFactoryImpl();
-    }
-    return _searchHandlerFactory;
-  }
-  
-  private WeakReference<Map> _appProperties_weakReference;
-  public Map getAppProperties() {
-    Map appProps;
-    if(_appProperties_weakReference == null || _appProperties_weakReference.get() ==  null) {
-      if(_appProperties_weakReference != null) {
-        _appProperties_weakReference.clear();
-      }
-      Appproperties loader = new Appproperties();
-      try{
-        appProps = Collections.unmodifiableMap(loader.load());
-      }catch(IOException e) {
-        XLogger.getInstance().log(Level.WARNING, "Error loading: "+loader.getFilename(), this.getClass(), e);
-        appProps = Collections.EMPTY_MAP;  
-      }
-      _appProperties_weakReference = new WeakReference<>(appProps);
-    }else{
-      appProps = _appProperties_weakReference.get();
-    } 
-    return appProps;
-  }
-  
-  public void init(ServletContext context)
-    throws ServletException, IOException, ConfigurationException, 
-          IllegalAccessException, InterruptedException, InvocationTargetException
-  {
+    this.context = context;
+    this.config = config;
     
-    URL defaultFileLoc = context.getResource(this.defaultPropertiesFileName);
-    
-    URL fileLoc = context.getResource(this.propertiesFileName);
-    
-    init(context, defaultFileLoc, fileLoc);
-  }
-  
-  public void init(ServletContext context, URL defaultFileLocation, URL fileLocation)
-    throws ServletException, IOException, ConfigurationException, 
-          IllegalAccessException, InterruptedException, InvocationTargetException
-  {
-    XLogger.getInstance().log(Level.INFO, "Initializing: {0}", getClass(), getClass().getName());
-    this.servletContext = context;
-    
-    this.config = loadConfig(defaultFileLocation, fileLocation, ',');
+    final Map appProps = WebApp.this.getAppProperties();
+    final long connectTime = Long.parseLong(appProps.get(Appproperties.CONNECT_TIMEOUT_MILLIS).toString());
+    final long readTime = Long.parseLong(appProps.get(Appproperties.READ_TIMEOUT_MILLIS).toString());
+    appSessionTimeoutMillis = (connectTime + readTime);
+XLogger.getInstance().log(Level.INFO, "Session timeout for apps: {0} seconds", 
+        this.getClass(), appSessionTimeoutMillis);
     
     debug = this.config.getBoolean("debug", false);
     
+    asyncProcessingEnabled = config.getBoolean(ConfigNames.PROCESS_REQUEST_ASYNC, true);
+XLogger.getInstance().log(Level.INFO, "Async processing enabled: {0}", this.getClass(), asyncProcessingEnabled);
+    
     String authsvc_url = this.config.getString("authsvc.url");
-    String app_name = this.getAppName();
+    String app_name = WebApp.this.getAppName();
     String app_email = this.config.getString("authsvc.emailaddress");
     String app_pass = this.config.getString("authsvc.password");
     
@@ -174,36 +94,20 @@ public class WebApp {
 
     sessLoader.loadAfter(30L, TimeUnit.SECONDS, authsvc_url, app_name, app_email, app_pass);
 
-    boolean startFeedUpdateService = config.getBoolean(ConfigNames.START_FEED_UPDATE_SERVICE, true);
+    final boolean startFeedUpdateService = config.getBoolean(ConfigNames.START_FEED_UPDATE_SERVICE, true);
     if (startFeedUpdateService) {
-      this.feedUpdateService = new FeedUpdateService(){
-        @Override
-        public FeedUpdateTask newTask() {
-          return new IdiscUpdateTask();
-        }
-      };
-
-      final int delay = config.getInt(ConfigNames.FEED_CYCLE_DELAY);
-      final int interval = config.getInt(ConfigNames.FEED_CYCLE_INTERVAL);
         
-      this.feedUpdateService.start(delay, interval, TimeUnit.MINUTES);
+      final int initialDelay = config.getInt(ConfigNames.FEED_CYCLE_DELAY);
+      final int interval = config.getInt(ConfigNames.FEED_CYCLE_INTERVAL);
+      
+      ScheduledExecutorService svc = WebApp.this.getGlobalScheduledExecutorService(true);
+      svc.scheduleWithFixedDelay(new IdiscUpdateTask(this.config), initialDelay, interval, TimeUnit.MINUTES);
     }
-    
-    this.initIdiscApp();
-    
-    this.servletContext.setAttribute(Attributes.APP, this);
     
     // We call this after initializing the IdiscApp so that its properties will
     // supercede any previously loaded logging configuration file
     //
     this.initLogging2();
-    
-    final Map appProps = WebApp.getInstance().getAppProperties();
-    final long connectTime = Long.parseLong(appProps.get(Appproperties.CONNECT_TIMEOUT_MILLIS).toString());
-    final long readTime = Long.parseLong(appProps.get(Appproperties.READ_TIMEOUT_MILLIS).toString());
-    appSessionTimeoutMillis = (connectTime + readTime);
-XLogger.getInstance().log(Level.INFO, "Session timeout for apps: {0} seconds", 
-        this.getClass(), appSessionTimeoutMillis);
   }
   
   private void initLogging() {
@@ -241,151 +145,248 @@ XLogger.getInstance().log(Level.INFO, "Session timeout for apps: {0} seconds",
     }
   }  
   
-  private IdiscApp initIdiscApp()
-    throws ConfigurationException, IOException, IllegalAccessException, 
-          InterruptedException, InvocationTargetException
-  {
-    IdiscApp idiscApp = IdiscApp.getInstance();
-    
-    String scrapperPropsFile = this.config.getString("scrapperPropertiesFile");
-    XLogger.getInstance().log(Level.INFO, "Scrapper properties file: {0}", getClass(), scrapperPropsFile);
-    if (scrapperPropsFile != null) {
-      idiscApp.setScrapperPropertiesFilename(scrapperPropsFile);
+  @Override
+  public List<Site> getSites() {
+    if(sites == null) {
+      sites = IdiscApp.getInstance().getJpaContext().getEntityController(Site.class, Integer.class).find();
     }
-    
-    String persistenceFile = this.config.getString("persistenceFile");
-    XLogger.getInstance().log(Level.INFO, "Persistence file: {0}", getClass(), persistenceFile);
-    if (persistenceFile != null) {
-      idiscApp.setPersistenceFilename(persistenceFile);
-    }
-    
-    String corePropertiesFile = this.config.getString("idisccorePropertiesFile");
-    XLogger.getInstance().log(Level.INFO, "Idisc core properties file: {0}", getClass(), corePropertiesFile);
-    if (corePropertiesFile != null) {
-      URL fileLoc = this.servletContext.getResource(corePropertiesFile);
-      idiscApp.init(fileLoc);
-    } else {
-      idiscApp.init();
-    }
-    
-    IdiscApp.setInstance(idiscApp);
-    
-    return idiscApp;
+    return sites;
   }
   
-  public boolean saveConfiguration() throws ConfigurationException
-  {
-    return saveConfiguration(this.config);
+  @Override
+  public List<Feed> getCachedFeeds() {
+    return new DefaultFeedCache(config).getCachedFeeds();
   }
   
-  public boolean saveConfiguration(Configuration cfg) throws ConfigurationException {
-    if ((cfg instanceof CompositeConfiguration)) {
-      CompositeConfiguration cc = (CompositeConfiguration)cfg;
-      Configuration imc = cc.getInMemoryConfiguration();
-      if ((imc instanceof PropertiesConfiguration)) {
-        ((PropertiesConfiguration)imc).save();
-        return true;
-      }
-    } else { if ((cfg instanceof PropertiesConfiguration)) {
-        ((PropertiesConfiguration)cfg).save();
-        return true;
-      }
-      throw new UnsupportedOperationException("Unexpected configuration type: " + cfg.getClass().getName());
-    }
-    return false;
-  }
-  
-
-  public Configuration loadConfig(URL defaultFileLocation, URL fileLocation, char listDelimiter)
-    throws ConfigurationException
-  {
-    XLogger.getInstance().log(Level.INFO, 
-            "Loading properties configuration. List delimiter: {0}\nDefault file: {1}\nFile: {2}", 
-            this.getClass(), Character.valueOf(listDelimiter), defaultFileLocation, fileLocation);
-
-    if (fileLocation == null) {
-      throw new NullPointerException();
-    }
-    
-    Configuration output;
-    if (defaultFileLocation != null) {
-        
-      CompositeConfiguration composite = new CompositeConfiguration();
-      
-      PropertiesConfiguration cfg = loadConfig(fileLocation, listDelimiter);
-      
-      composite.addConfiguration(cfg, true);
-      
-      PropertiesConfiguration defaults = loadConfig(defaultFileLocation, listDelimiter);
-      
-      composite.addConfiguration(defaults);
-      
-      output = composite;
-    }
-    else
-    {
-      output = loadConfig(fileLocation, listDelimiter);
-    }
-    
-    return output;
-  }
-  
-  private PropertiesConfiguration loadConfig(URL fileLocation, char listDelimiter)
-    throws ConfigurationException {
-    PropertiesConfiguration cfg = new PropertiesConfiguration();
-    cfg.setListDelimiter(listDelimiter);
-    cfg.setURL(fileLocation);
-    cfg.load();
-    return cfg;
-  }
-  
+  @Override
   public AuthSvcSession getAuthSvcSession() {
     return this.authSvcSession;
   }
   
+  @Override
   public String getAppName() {
-    return this.servletContext.getInitParameter("appName");
+    return this.context.getInitParameter("appName");
   }
   
+  @Override
   public String getAppUrl() {
-    return this.servletContext.getInitParameter("appUrl");
+    return this.context.getInitParameter("appUrl");
   }
   
-  public ServletContext getServletContext() {
-    return this.servletContext;
+  public ServletContext getContext() {
+    return this.context;
   }
   
+  @Override
   public Configuration getConfiguration() {
     return this.config;
   }
   
-  public String getPropertiesFileName() {
-    return this.propertiesFileName;
-  }
-  
-  public String getDefaultPropertiesFileName() {
-    return this.defaultPropertiesFileName;
-  }
-
+  @Override
   public boolean isProductionMode() {
-    return this.productionMode;
+    return true;
   }
   
-  public FeedUpdateService getFeedUpdateService() {
-    return feedUpdateService;
-  }
-
-  public long getMemoryAtStartup() {
-    return memoryAtStartup;
-  }
-
+  @Override
   public boolean isDebug() {
     return debug;
   }
 
+  @Override
+  public boolean isAsyncProcessingEnabled() {
+    return this.asyncProcessingEnabled;
+  }
+
+  @Override
   public long getAppSessionTimeoutMillis() {
     return appSessionTimeoutMillis;
   }
+
+  @Override
+  public BigDecimal getMemoryLevel() {
+    BigDecimal freeMemoryObj = new BigDecimal(Runtime.getRuntime().freeMemory());
+    BigDecimal memoryAtStartupObj = new BigDecimal(this.memoryAtStartup);
+    return freeMemoryObj.divide(memoryAtStartupObj, 2, RoundingMode.HALF_UP);
+  }
+
+  @Override
+  public long getMemoryAtStartup() {
+    return this.memoryAtStartup;
+  }
+
+  @Override
+  public Map getAppProperties() {
+    final String name = "AppProperties";
+    Map appProps;
+    WeakReference<Map> _apwr = (WeakReference<Map>)context.getAttribute(name);
+    if(_apwr == null || _apwr.get() ==  null) {
+      if(_apwr != null) {
+        _apwr.clear();
+      }
+      Appproperties loader = new Appproperties();
+      try{
+        appProps = Collections.unmodifiableMap(loader.load(context));
+        _apwr = new WeakReference<>(appProps);
+        context.setAttribute(name, _apwr);
+      }catch(IOException e) {
+        XLogger.getInstance().log(Level.WARNING, "Error loading: "+loader.getFilename(), this.getClass(), e);
+        appProps = Collections.EMPTY_MAP;  
+      }
+    }else{
+      appProps = _apwr.get();
+    } 
+    return appProps;
+  }
+  
+  @Override
+  public SearchHandlerFactory getSearchHandlerFactory() {
+    return this.getSearchHandlerFactory(false);
+  }
+  
+  @Override
+  public SearchHandlerFactory getSearchHandlerFactory(boolean createIfNone) {
+    final String name = "SearchHandlerFactory";
+    SearchHandlerFactory shf = (SearchHandlerFactory)context.getAttribute(name);
+    if(shf == null && createIfNone) {
+      shf = new SearchHandlerFactoryImpl(IdiscApp.getInstance().getJpaContext());
+      context.setAttribute(name, shf);
+    }
+    return shf;
+  }
+  
+  @Override
+  public ExecutorService getGlobalExecutorService() {
+   return this.getGlobalExecutorService(false);
+  }
+
+  /**
+   * A poolSize < 1 will result in a {@link com.bc.util.concurrent.DirectExecutorService}
+   * @param createIfNone
+   * @return 
+   */
+  @Override
+  public ExecutorService getGlobalExecutorService(boolean createIfNone) {
+      
+     final String executorServiceName = "GlobalExecutorService";
+     
+     ExecutorService es = (ExecutorService)context.getAttribute(executorServiceName);
+     
+     if(es == null && createIfNone) {
+         
+         final int avail = Runtime.getRuntime().availableProcessors();
+         
+         final int poolSize = this.config.getInt(ConfigNames.REQUEST_EXECUTOR_SERVICE_POOL_SIZE, avail);
+         
+         if(poolSize < 1) {
+             
+             es = new DirectExecutorService();
+             
+         }else{
+             
+            final int queueCapacity = this.config.getInt(ConfigNames.REQUEST_EXECUTOR_SERVICE_QUEUE_CAPACITY, avail);
+            
+            threadPoolExecutor = new BoundedExecutorService(
+                    executorServiceName+"_ThreadPool", poolSize, queueCapacity, true);
+            
+            es = threadPoolExecutor;
+            
+            final int poolSizeAdjustmentIntervalMinutes = this.config.getInt(
+                    ConfigNames.REQUEST_EXECUTOR_SERVICE_POOLSIZE_ADJUSTMENT_INTERVAL_MINUTES, 15);
+            
+            if(poolSizeAdjustmentIntervalMinutes > 0) {
+                
+              final String sizeAdjustingServiceName = "AdjustPoolSizeBasedOnMemoryLevelExecutorService";
+              
+              ScheduledExecutorService ses = this.getScheduledThreadPoolExecutor(
+                      sizeAdjustingServiceName, 1, true, true);
+              
+              AppContext appContext = (AppContext)context.getAttribute(Attributes.APP_CONTEXT);
+              
+              ses.scheduleAtFixedRate(new AdjustPoolSizeBasedOnMemoryLevelTask(appContext, threadPoolExecutor), 
+                      poolSizeAdjustmentIntervalMinutes, poolSizeAdjustmentIntervalMinutes, TimeUnit.MINUTES);
+            }
+         }
+
+        context.setAttribute(executorServiceName, es);
+     }
+     return es;
+  }
+
+  @Override
+  public ScheduledExecutorService getGlobalScheduledExecutorService() {
+    return this.getGlobalScheduledExecutorService(false);
+  }
+
+  @Override
+  public ScheduledExecutorService getGlobalScheduledExecutorService(boolean createIfNone) {
+    final String name = "GlobalScheduledExecutorSevice";
+    return this.getScheduledThreadPoolExecutor(name, 1, true, createIfNone);
+  }
+  
+  protected ScheduledExecutorService getScheduledThreadPoolExecutor(
+          String attributeName, int poolSize, boolean daemonThreads, boolean createIfNone) {
+    ScheduledExecutorService ses = (ScheduledExecutorService)context.getAttribute(attributeName);
+    if(ses == null && createIfNone) {
+        ses = new ScheduledThreadPoolExecutor(
+                poolSize, new NamedThreadFactory(attributeName+"_ThreadPool", daemonThreads));
+        context.setAttribute(attributeName, ses);
+    } 
+    return ses;
+  }
+  
+  @Override
+  public ThreadPoolData getGlobalExecutorServiceThreadPoolData() {
+    return this.threadPoolExecutor == null ? null : this;
+  }
+  
+//////////////////////////Begin ThreadPoolData methods ///////////////////////
+  
+  @Override
+  public int getQueueSize() {
+    return this.threadPoolExecutor == null || this.threadPoolExecutor.getQueue() == null ? 
+            -1 : this.threadPoolExecutor.getQueue().size();
+  }
+  
+  @Override
+  public int getCorePoolSize() {
+    return threadPoolExecutor.getCorePoolSize();
+  }
+
+  @Override
+  public int getMaximumPoolSize() {
+    return threadPoolExecutor.getMaximumPoolSize();
+  }
+
+  @Override
+  public long getKeepAliveTime(TimeUnit unit) {
+    return threadPoolExecutor.getKeepAliveTime(unit);
+  }
+
+  @Override
+  public int getPoolSize() {
+    return threadPoolExecutor.getPoolSize();
+  }
+
+  @Override
+  public int getActiveCount() {
+    return threadPoolExecutor.getActiveCount();
+  }
+
+  @Override
+  public int getLargestPoolSize() {
+    return threadPoolExecutor.getLargestPoolSize();
+  }
+
+  @Override
+  public long getTaskCount() {
+    return threadPoolExecutor.getTaskCount();
+  }
+
+  @Override
+  public long getCompletedTaskCount() {
+    return threadPoolExecutor.getCompletedTaskCount();
+  }
+////////////////////////// End ThreadPoolData methods ////////////////////////
 }
 /**
  * 

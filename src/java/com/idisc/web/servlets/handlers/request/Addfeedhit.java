@@ -1,6 +1,5 @@
 package com.idisc.web.servlets.handlers.request;
 
-import com.bc.jpa.ControllerFactory;
 import com.bc.jpa.EntityController;
 import com.idisc.core.IdiscApp;
 import com.idisc.pu.entities.Feed;
@@ -11,10 +10,11 @@ import java.util.Date;
 import java.util.Map;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
+import com.bc.jpa.JpaContext;
 
 public class Addfeedhit extends AbstractRequestHandler<Long> {
     
-  private ControllerFactory _cf;
+  private JpaContext _cf;
   private EntityController<Feedhit, Integer> _fhc;
   private EntityController<Feed, Integer> _fc;
   
@@ -86,10 +86,10 @@ public class Addfeedhit extends AbstractRequestHandler<Long> {
     return output;
   }
   
-  private ControllerFactory getControllerFactory()
+  private JpaContext getControllerFactory()
   {
     if (this._cf == null) {
-      this._cf = IdiscApp.getInstance().getControllerFactory();
+      this._cf = IdiscApp.getInstance().getJpaContext();
     }
     return this._cf;
   }
@@ -97,7 +97,7 @@ public class Addfeedhit extends AbstractRequestHandler<Long> {
   private EntityController<Feedhit, Integer> getFeedhitController()
   {
     if (this._fhc == null) {
-      ControllerFactory factory = getControllerFactory();
+      JpaContext factory = getControllerFactory();
       this._fhc = factory.getEntityController(Feedhit.class, Integer.class);
     }
     return this._fhc;
@@ -106,7 +106,7 @@ public class Addfeedhit extends AbstractRequestHandler<Long> {
   private EntityController<Feed, Integer> getFeedController()
   {
     if (this._fc == null) {
-      ControllerFactory factory = getControllerFactory();
+      JpaContext factory = getControllerFactory();
       this._fc = factory.getEntityController(Feed.class, Integer.class);
     }
     return this._fc;

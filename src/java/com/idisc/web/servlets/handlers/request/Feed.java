@@ -1,17 +1,18 @@
 package com.idisc.web.servlets.handlers.request;
 
-import com.bc.jpa.ControllerFactory;
 import com.bc.jpa.EntityController;
 import com.bc.util.XLogger;
 import com.idisc.core.IdiscApp;
 import com.idisc.pu.entities.Comment;
-import com.idisc.web.DefaultFeedCache;
+import com.idisc.web.AppContext;
+import com.idisc.web.Attributes;
 import com.idisc.web.exceptions.ValidationException;
 import java.io.IOException;
 import java.util.List;
 import java.util.logging.Level;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
+import com.bc.jpa.JpaContext;
 
 public class Feed extends AbstractRequestHandler<com.idisc.pu.entities.Feed>{
 
@@ -42,7 +43,10 @@ public class Feed extends AbstractRequestHandler<com.idisc.pu.entities.Feed>{
         
         List<Comment> comments = commentsRequestHandler.execute(request); 
           
-        this.setAttributeForAsync(request, "comments", comments);
+        if(comments != null && !comments.isEmpty()) {
+            
+          this.setAttributeForAsync(request, "comments", comments);
+        }
       }
     }
     
@@ -56,7 +60,9 @@ public class Feed extends AbstractRequestHandler<com.idisc.pu.entities.Feed>{
     
     com.idisc.pu.entities.Feed feed = null;
     
-    List<com.idisc.pu.entities.Feed> lastFeeds = DefaultFeedCache.getCachedFeeds();
+    AppContext appContext = (AppContext)request.getServletContext().getAttribute(Attributes.APP_CONTEXT);
+    
+    List<com.idisc.pu.entities.Feed> lastFeeds = appContext.getCachedFeeds();
     
     if ((lastFeeds != null) && (!lastFeeds.isEmpty())){
         
@@ -81,7 +87,7 @@ public class Feed extends AbstractRequestHandler<com.idisc.pu.entities.Feed>{
 
   public com.idisc.pu.entities.Feed select(Integer feedid) {
       
-    ControllerFactory factory = IdiscApp.getInstance().getControllerFactory();
+    JpaContext factory = IdiscApp.getInstance().getJpaContext();
     
     EntityController<com.idisc.pu.entities.Feed, Integer> ec = factory.getEntityController(com.idisc.pu.entities.Feed.class, Integer.class);
     

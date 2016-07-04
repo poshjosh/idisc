@@ -3,8 +3,9 @@ package com.idisc.web.servlets.handlers.response;
 import com.bc.util.JsonBuilder;
 import com.bc.util.XLogger;
 import com.idisc.core.util.EntityJsonBuilder;
+import com.idisc.web.AppContext;
+import com.idisc.web.Attributes;
 import com.idisc.web.ConfigNames;
-import com.idisc.web.WebApp;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.logging.Level;
@@ -114,14 +115,16 @@ public abstract class DirectResponseHandler<V, O> extends AbstractResponseHandle
     if(tidyParam != null) {
         tidy = "1".equals(tidyParam) || "true".equalsIgnoreCase(tidyParam);
     }else{
-        tidy = !WebApp.getInstance().isProductionMode();
+        AppContext appContext = (AppContext)request.getServletContext().getAttribute(Attributes.APP_CONTEXT);
+        tidy = !appContext.isProductionMode();
     }
     return tidy;
   }
   
   public int getMaxTextLengthPerItem(HttpServletRequest request) {
-      Configuration config = WebApp.getInstance().getConfiguration();
-      int defaultLen = config == null ? 1000 : config.getInt(ConfigNames.DEFAULT_CONTENT_LENGTH, 1000);
+      AppContext appContext = (AppContext)request.getServletContext().getAttribute(Attributes.APP_CONTEXT);
+      Configuration config = appContext.getConfiguration();
+      final int defaultLen = config.getInt(ConfigNames.DEFAULT_CONTENT_LENGTH, 1000);
       return getInt(request, "maxlen", defaultLen);
   }
   

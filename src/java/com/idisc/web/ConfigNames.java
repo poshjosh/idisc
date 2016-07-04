@@ -4,7 +4,9 @@ public abstract interface ConfigNames {
     
   public static final String START_FEED_UPDATE_SERVICE = "startFeedUpdateService";
   public static final String PROCESS_REQUEST_ASYNC = "processRequestAsync";
-  public static final String REQUEST_EXECUTOR_SERVICE_THREAD_COUNT = "requestExecutorService.threadCount";
+  public static final String REQUEST_EXECUTOR_SERVICE_POOL_SIZE = "requestExecutorService.poolSize";
+  public static final String REQUEST_EXECUTOR_SERVICE_QUEUE_CAPACITY = "requestExecutorService.queueCapacity";
+  public static final String REQUEST_EXECUTOR_SERVICE_POOLSIZE_ADJUSTMENT_INTERVAL_MINUTES = "requestExecutorService.poolSizeAdjustmentIntervalMinutes";
   public static final String BOTFILTER_ENABLED = "botfilter.enabled";
   public static final String BOTFILTER_ENABLE_AT_MEMORY_BELOW = "botfilter.enableAtMemoryBelow";
   public static final String BOTFILTER_DISABLE_AT_MEMORY_ABOVE = "botfilter.disableAtMemoryAbove";
@@ -27,6 +29,7 @@ public abstract interface ConfigNames {
   public static final String MIN_LIMIT  = "minLimit";
   public static final String DEFAULT_LIMIT = "defaultLimit";
   public static final String CACHE_LIMIT = "cacheLimit";
+  public static final String ADJUST_LIMIT_BASED_ON_MEMORY_LEVEL = "adjustLimitBaseOnMemoryLevel";
   public static final String DEFAULT_CONTENT_LENGTH = "defaultContentLength";
   public static final String FEED_CYCLE_DELAY = "feedCycleDelay";
   public static final String FEED_CYCLE_INTERVAL = "feedCycleInterval";

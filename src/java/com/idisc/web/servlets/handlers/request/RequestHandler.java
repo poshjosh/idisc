@@ -11,6 +11,8 @@ public abstract interface RequestHandler<V, O> {
   
   public abstract ResponseHandler<Throwable, O> getErrorResponseHandler(HttpServletRequest request); 
   
+  public abstract boolean isHtmlResponse(HttpServletRequest request);
+  
   public abstract boolean isOutputLarge(HttpServletRequest request);
 
   public abstract boolean isProtected();

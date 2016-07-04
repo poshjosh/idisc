@@ -1,12 +1,14 @@
 package com.idisc.web;
 
+import javax.servlet.ServletContext;
+
 public class Notices extends FileCache {
     
-  public Notices(){
-    this(true);
+  public Notices(ServletContext context){
+    this(context, true);
   }
 
-  public Notices(boolean load) {
-    super(WebApp.getInstance().getServletContext().getRealPath("/notices"), load);
+  public Notices(ServletContext context, boolean load) {
+    super(context, context.getRealPath("/notices"), load);
   }
 }

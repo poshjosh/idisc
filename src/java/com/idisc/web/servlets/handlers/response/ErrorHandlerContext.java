@@ -5,7 +5,6 @@ import com.idisc.web.exceptions.InstallationException;
 import com.idisc.web.exceptions.LoginException;
 import com.idisc.web.exceptions.ValidationException;
 import java.io.FileNotFoundException;
-import java.io.Serializable;
 import java.util.logging.Level;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -13,9 +12,11 @@ import javax.servlet.http.HttpServletRequest;
 /**
  * @author Josh
  */
-public class ErrorHandlerContext implements ResponseContext<Throwable>, Serializable {
+public class ErrorHandlerContext extends AbstractResponseContext<Throwable> {
 
-  public ErrorHandlerContext(HttpServletRequest request) { }
+  public ErrorHandlerContext(HttpServletRequest request) {
+    super(request);
+  }
     
   @Override
   public Object format(String name, Throwable value) {

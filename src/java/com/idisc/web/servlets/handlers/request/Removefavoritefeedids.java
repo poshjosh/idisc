@@ -1,6 +1,5 @@
 package com.idisc.web.servlets.handlers.request;
 
-import com.bc.jpa.ControllerFactory;
 import com.bc.util.XLogger;
 import com.idisc.core.IdiscApp;
 import com.idisc.pu.entities.Favoritefeed;
@@ -11,6 +10,7 @@ import java.util.List;
 import java.util.logging.Level;
 import javax.persistence.EntityManager;
 import org.json.simple.JSONArray;
+import com.bc.jpa.JpaContext;
 
 public class Removefavoritefeedids extends UpdateUserPreferenceFeedids
 {
@@ -22,7 +22,7 @@ public class Removefavoritefeedids extends UpdateUserPreferenceFeedids
   protected List execute(String name, JSONArray feedids, Installation installation)
     throws Exception
   {
-    ControllerFactory factory = IdiscApp.getInstance().getControllerFactory();
+    JpaContext factory = IdiscApp.getInstance().getJpaContext();
     
     EntityManager em = factory.getEntityManager(Favoritefeed.class);
     

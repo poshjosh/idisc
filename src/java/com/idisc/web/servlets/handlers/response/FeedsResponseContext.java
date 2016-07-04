@@ -8,7 +8,6 @@ import com.idisc.pu.entities.Installation;
 import com.idisc.pu.entities.one.Feed_;
 import com.idisc.web.ConfigNames;
 import com.idisc.web.Notices;
-import com.idisc.web.WebApp;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -83,7 +82,7 @@ XLogger.getInstance().log(Level.FINER, "Installation: {0}, number of commentNoti
   public Map getCommentNotices(Installation installation, List<E> feeds) {
       
 XLogger.getInstance().log(Level.FINER, "Installation: {0}, number of feeds: {1}", 
-        this.getClass(), feeds==null?null:feeds.size());
+        this.getClass(), installation, feeds==null?null:feeds.size());
 
     if (installation == null || feeds==null || feeds.isEmpty()) {
       return Collections.EMPTY_MAP;
@@ -91,7 +90,7 @@ XLogger.getInstance().log(Level.FINER, "Installation: {0}, number of feeds: {1}"
     
     try {
         
-      Configuration config = WebApp.getInstance().getConfiguration();
+      Configuration config = this.getAppContext().getConfiguration();
       
       final boolean directRepliesOnly = config.getBoolean(ConfigNames.COMMENTS_NOTIFICATIONS_DIRECTREPLIESONLY, false);
       final int maxAgeDays = config.getInt(ConfigNames.COMMENTS_NOTIFICATIONS_MAXAGE_DAYS, 30);
@@ -115,7 +114,7 @@ XLogger.getInstance().log(Level.FINER, "Installation: {0}, number of feeds: {1}"
     try {
       if (_ns == null) {
         XLogger.getInstance().log(Level.INFO, "Creating tips cache", getClass());
-        _ns = new Notices(true).values();
+        _ns = new Notices(this.getServletContext(), true).values();
       }
       
       if ((_ns != null) && (!_ns.isEmpty())) {

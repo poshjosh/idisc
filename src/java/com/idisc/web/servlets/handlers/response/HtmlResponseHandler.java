@@ -34,6 +34,10 @@ XLogger.getInstance().entering(this.getClass(), "#processResponse(HttpServletReq
     //
     Object output = this.getContext().format(name, message);
     
+    if(output == null) {
+        throw new NullPointerException();
+    }
+    
     this.setAttributeForAsync(request, name, output);
     
 XLogger.getInstance().log(Level.FINER, "{0} = {1}", getClass(), name, output);
@@ -44,7 +48,9 @@ XLogger.getInstance().log(Level.FINER, "{0} = {1}", getClass(), name, output);
     //
     String userMessage = this.getContext().getResponseMessage(name, message);
     
-    this.setAttributeForAsync(request, "userMessage", userMessage);
+    if(userMessage != null) {
+      this.setAttributeForAsync(request, "userMessage", userMessage);
+    }
     
 XLogger.getInstance().log(Level.FINE, "Request param name: {0}, {1} = {2}", 
         getClass(), name, "userMessage", userMessage);

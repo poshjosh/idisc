@@ -1,13 +1,13 @@
 package com.idisc.web.servlets;
 
 import com.bc.util.XLogger;
+import com.idisc.web.AppContext;
+import com.idisc.web.Attributes;
 import com.idisc.web.SendNewsAsEmailTask;
 import com.idisc.web.ServletUtil;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Collection;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.logging.Level;
 import javax.servlet.ServletException;
@@ -15,27 +15,8 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-public class tempmailer
-  extends HttpServlet
-{
+public class tempmailer extends HttpServlet {
+    
   private static Future<?> previousFuture;
   private static SendNewsAsEmailTask previousTask;
   
@@ -129,7 +110,7 @@ public class tempmailer
     String senderemail = request.getParameter("senderemail");
     String senderpassword = request.getParameter("senderpassword");
     
-    return sendMail(feedCount <= 0 ? 3 : feedCount, offset, batchSize, sendInterval, senderemail, senderpassword);
+    return sendMail(request, feedCount <= 0 ? 3 : feedCount, offset, batchSize, sendInterval, senderemail, senderpassword);
   }
   
   private int getIntParameter(HttpServletRequest request, String name) {
@@ -137,7 +118,7 @@ public class tempmailer
     return value == null ? -1 : Integer.parseInt(value);
   }
 
-  private boolean sendMail(
+  private boolean sendMail(final HttpServletRequest request,
           final int feedCount, final int offset, final int batchSize, 
           final int sendInterval, final String senderemail, final String senderpassword)
   {
@@ -160,7 +141,11 @@ public class tempmailer
       XLogger.getInstance().log(Level.FINER, "#sendMail, previous: {0}", getClass(), previousFuture);
     }
     
-    previousTask = new SendNewsAsEmailTask(feedCount){
+    AppContext appCtx = (AppContext)request.getServletContext().getAttribute(Attributes.APP_CONTEXT);
+    
+    String path = request.getServletContext().getRealPath("/WEB-INF/jspf/whynewsminute.jspf");
+    
+    previousTask = new SendNewsAsEmailTask(appCtx, feedCount, path){
         @Override
         public char[] getSenderPassword() {
             return senderpassword == null ? super.getSenderPassword() : senderpassword.toCharArray();
@@ -183,14 +168,14 @@ public class tempmailer
         }
     };
 
-    ExecutorService svc = Executors.newSingleThreadExecutor();
-    
     XLogger.getInstance().log(Level.FINE, "#sendMail, submitting task", getClass());
     
-    previousFuture = svc.submit(previousTask);
-
-    svc.shutdown();
+    Thread thread = new Thread(previousTask);
     
+    thread.setName(this.getClass().getSimpleName()+"."+previousTask.getClass().getSimpleName());
+    
+    thread.start();
+
     return true;
   }
   

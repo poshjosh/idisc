@@ -1,6 +1,5 @@
 package com.idisc.web;
 
-import com.bc.jpa.ControllerFactory;
 import com.bc.jpa.EntityController;
 import com.bc.util.XLogger;
 import com.idisc.core.IdiscApp;
@@ -12,6 +11,7 @@ import java.util.List;
 import java.util.logging.Level;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
+import com.bc.jpa.JpaContext;
 
 public class AppInstallation {
     
@@ -34,7 +34,7 @@ XLogger.getInstance().log(Level.FINER, "Available user: {0}", AppInstallation.cl
 XLogger.getInstance().log(Level.FINER, "User has {0} installations", AppInstallation.class, (list==null?null:list.size()));
       if(list == null) {
         EntityController<Installation, Integer> ec = 
-                IdiscApp.getInstance().getControllerFactory().getEntityController(
+                IdiscApp.getInstance().getJpaContext().getEntityController(
                         Installation.class, Integer.class);
         list = ec.select("feeduserid", user.getFeeduserid(), 0, -1);
         
@@ -59,7 +59,7 @@ XLogger.getInstance().log(Level.FINER, "For user, selected {0} installations", A
     {
       output = getEntity(col, sval);
        
-XLogger.getInstance().log(Level.FINER, "{0} = {1}, found: ", AppInstallation.class, col, sval, output);
+XLogger.getInstance().log(Level.FINER, "{0} = {1}, found: {2}", AppInstallation.class, col, sval, output);
       if ((output == null) && (create)) {
           
         Date date = new Date();
@@ -169,7 +169,7 @@ XLogger.getInstance().log(Level.FINER, "{0} = {1}, created: ", AppInstallation.c
   }
   
   public static EntityController<Installation, Integer> getEntityController() {
-    ControllerFactory factory = IdiscApp.getInstance().getControllerFactory();
+    JpaContext factory = IdiscApp.getInstance().getJpaContext();
     EntityController<Installation, Integer> ec = factory.getEntityController(Installation.class, Integer.class);
     return ec;
   }

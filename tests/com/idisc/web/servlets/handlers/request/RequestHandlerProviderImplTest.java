@@ -2,12 +2,11 @@ package com.idisc.web.servlets.handlers.request;
 
 import com.bc.webapptest.HttpServletRequestImpl;
 import com.idisc.web.LoginBase;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import org.junit.After;
 import org.junit.AfterClass;
-import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -25,14 +24,6 @@ public class RequestHandlerProviderImplTest extends LoginBase {
     @AfterClass
     public static void tearDownClass() { }
     
-    @Before
-    @Override
-    public void setUp() { }
-    
-    @After
-    @Override
-    public void tearDown() { }
-
     /**
      * Test of getRequestHandlerParamName method, of class RequestHandlerProviderImpl.
      */
@@ -84,7 +75,9 @@ public class RequestHandlerProviderImplTest extends LoginBase {
         request.from("/index.jsp").with("?req=aliasesforcategories&req=aliasesforcontent&req=appproperties&tidy=true").to("/getmultipleresults");
         RequestHandlerProviderImpl instance = new RequestHandlerProviderImpl();
         String[] expResult = {"aliasesforcategories", "aliasesforcontent", "appproperties"};
+this.log("Expected: %s", Arrays.toString(expResult));
         String[] result = instance.getRequestHandlerParamNames(request);
+this.log("   Found: %s", result==null?null:Arrays.toString(result));        
         assertArrayEquals(expResult, result);
     }
     

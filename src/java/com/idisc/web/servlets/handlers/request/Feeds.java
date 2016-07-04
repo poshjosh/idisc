@@ -1,10 +1,12 @@
 package com.idisc.web.servlets.handlers.request;
 
 import com.bc.util.XLogger;
+import com.idisc.core.comparator.BaseFeedComparator;
 import com.idisc.pu.entities.Feed;
 import com.idisc.pu.entities.Installation;
+import com.idisc.web.AppContext;
+import com.idisc.web.Attributes;
 import com.idisc.web.DefaultFeedCache;
-import com.idisc.web.DefaultFeedComparator;
 import com.idisc.web.exceptions.ValidationException;
 import com.idisc.web.servlets.handlers.response.FeedsResponseContext;
 import com.idisc.web.servlets.handlers.response.ResponseContext;
@@ -47,23 +49,31 @@ public class Feeds extends Selectfeeds {
       
 XLogger.getInstance().entering(this.getClass(), "#select(HttpServletRequest)", "");
       
-    if (!DefaultFeedCache.isCachedFeedsAvailable()) {
+    AppContext appContext = (AppContext)request.getServletContext().getAttribute(Attributes.APP_CONTEXT);
+
+    DefaultFeedCache fc = new DefaultFeedCache(appContext.getConfiguration());
+
+    List<Feed> output;
+    if (!fc.isCachedFeedsAvailable()) {
         
-      DefaultFeedCache fc = new DefaultFeedCache();
-      
-      fc.updateCache();
+      output = fc.updateCache();
+    }else{
+      output = fc.getCachedFeeds(getLimit(request));
     }
-    
-    int userLimit = getLimit(request);
-    
-    List<Feed> output = DefaultFeedCache.getCachedFeeds(userLimit);
     
 long tb4 = System.currentTimeMillis();
 long mb4 = Runtime.getRuntime().freeMemory();
-    try (DefaultFeedComparator autoCloseableFeedComparator = new DefaultFeedComparator(installation)) {
+
+    final boolean reverseOrder = true;
+
+//    try (DefaultFeedComparator autoCloseableFeedComparator = 
+//            new DefaultFeedComparator(appContext, installation, reverseOrder)) {
           
-      Collections.sort(output, autoCloseableFeedComparator);
-    }
+//      Collections.sort(output, autoCloseableFeedComparator);
+//    }
+    
+    Collections.sort(output, new BaseFeedComparator(reverseOrder));
+    
 XLogger.getInstance().log(Level.FINE, "Sorted {0} feeds. Consumed time: {1}, memory: {2}", 
 this.getClass(), output.size(), (System.currentTimeMillis()-tb4), (mb4-Runtime.getRuntime().freeMemory()));
 

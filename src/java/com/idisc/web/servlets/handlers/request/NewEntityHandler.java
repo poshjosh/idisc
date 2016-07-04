@@ -1,11 +1,11 @@
 package com.idisc.web.servlets.handlers.request;
 
-import com.bc.jpa.ControllerFactory;
 import com.bc.jpa.EntityController;
 import com.idisc.core.IdiscApp;
 import com.idisc.web.servlets.handlers.response.CreationResponseContext;
 import com.idisc.web.servlets.handlers.response.ResponseContext;
 import javax.servlet.http.HttpServletRequest;
+import com.bc.jpa.JpaContext;
 
 /**
  * @author poshjosh
@@ -29,7 +29,7 @@ public abstract class NewEntityHandler<E> extends AbstractRequestHandler<Boolean
   }
 
   public <T> EntityController<T, Object> getEntityController(Class<T> entityType) {
-    ControllerFactory factory = IdiscApp.getInstance().getControllerFactory();
+    JpaContext factory = IdiscApp.getInstance().getJpaContext();
     return factory.getEntityController(entityType);
   }
 }

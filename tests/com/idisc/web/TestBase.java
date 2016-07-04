@@ -1,6 +1,7 @@
 package com.idisc.web;
 
 import com.authsvc.client.AuthSvcSession;
+import com.bc.util.concurrent.NamedThreadFactory;
 import com.bc.webapptest.HttpServletRequestImpl;
 import com.bc.webapptest.HttpServletResponseImpl;
 import com.bc.webapptest.WebappSetup;
@@ -40,19 +41,19 @@ import org.junit.BeforeClass;
  * @version  2.0
  * @since    2.0
  */
-public class BaseTest extends WebappSetup {
+public class TestBase extends WebappSetup {
     
     private static volatile int taskCount;
     
     private final RequestHandlerProvider requestHandlerProvider;
     
-    protected BaseTest() {
+    protected TestBase() {
         super(
                 new com.idisc.web.listeners.ServletContextListener(),
                 "http://www.looseboxes.com",
                 System.getProperty("user.home")+"/Documents/NetBeansProjects/idisc/web",
                 "/idisc");
-        requestHandlerProvider = BaseTest.this.createRequestHandlerProvider();
+        requestHandlerProvider = TestBase.this.createRequestHandlerProvider();
     }
 
     @BeforeClass
@@ -76,14 +77,14 @@ public class BaseTest extends WebappSetup {
         return new ServiceControllerImpl();        
     }
     
-    public synchronized AuthSvcSession waitForAuthSession(long maxWait, TimeUnit timeUnit) throws InterruptedException {
+    public synchronized AuthSvcSession waitForAuthSession(AppContext appContext, long maxWait, TimeUnit timeUnit) throws InterruptedException {
         AuthSvcSession authSess;
         final long maxWaitMillis = timeUnit.toMillis(maxWait); 
         final int interval = 1000;
         int sleepTime = 0;
         try{
             do{
-                authSess = WebApp.getInstance().getAuthSvcSession();
+                authSess = appContext.getAuthSvcSession();
                 this.wait(interval);
                 sleepTime += interval;
             }while(authSess == null && sleepTime < maxWaitMillis);
@@ -123,7 +124,8 @@ public class BaseTest extends WebappSetup {
         final List<Callable> callables = new ArrayList<>(numberOfRequests);
         final List<Future> futures = new ArrayList<>(numberOfRequests);
         
-        ExecutorService executorService = Executors.newCachedThreadPool();
+        ExecutorService executorService = Executors.newCachedThreadPool(
+                new NamedThreadFactory("TestBase_ThreadPool"));
         
         for(int i=0; i<numberOfRequests; i++) {
             
@@ -191,7 +193,7 @@ public class BaseTest extends WebappSetup {
             public Object call() throws Exception {
                 log("====================================== Started "+this);
                 try{
-                    return BaseTest.this.execute(provider, from, params, to);
+                    return TestBase.this.execute(provider, from, params, to);
                 }finally{
                     log("====================================== Completed "+this);
                 }
@@ -235,7 +237,7 @@ public class BaseTest extends WebappSetup {
             public void run() {
                 log("====================================== Started "+this);
                 try{
-                    BaseTest.this.execute(provider, from, params, to);
+                    TestBase.this.execute(provider, from, params, to);
                 }catch(ServletException | IOException | RuntimeException e) {
                     log("====================================== Error executing "+this, e);
                 }finally{

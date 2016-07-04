@@ -6,23 +6,27 @@ import org.apache.commons.configuration.Configuration;
 
 public class DefaultFeedCache extends FeedCache {
   
-  public DefaultFeedCache() { }
+  private final Configuration config;
+  
+  public DefaultFeedCache(Configuration config) { 
+      this.config = config;
+      if(config == null) {
+          throw new NullPointerException();
+      }
+  }
 
   @Override
   public boolean isRearrangeOutput() {
-    Configuration config = WebApp.getInstance().getConfiguration();
     return config.getBoolean("rearrangeOutput", super.isRearrangeOutput());
   }
   
   @Override
   public long getFeedCycleIntervalMillis() {
-    Configuration config = WebApp.getInstance().getConfiguration();
     return TimeUnit.MINUTES.toMillis(config.getInt("feedCycleInterval"));
   }
   
   @Override
   public int getCacheLimit() {
-    Configuration config = WebApp.getInstance().getConfiguration();
     return config.getInt("cacheLimit", super.getCacheLimit());
   }
 }

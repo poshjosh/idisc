@@ -2,9 +2,7 @@ package com.idisc.web.servlets.handlers.response;
 
 import com.bc.util.XLogger;
 import com.bc.web.core.util.ServletUtil;
-import com.idisc.web.WebApp;
 import com.idisc.web.exceptions.ValidationException;
-import java.io.Serializable;
 import java.util.logging.Level;
 import javax.servlet.http.HttpServletRequest;
 
@@ -12,12 +10,10 @@ import javax.servlet.http.HttpServletRequest;
  * @author Josh
  * @param <V>
  */
-public class SuccessHandlerContext<V> implements ResponseContext<V>, Serializable {
-  
-  private final String referer;
+public class SuccessHandlerContext<V> extends AbstractResponseContext<V> {
   
   public SuccessHandlerContext(HttpServletRequest request) {
-    this.referer = request.getHeader("referer");
+    super(request);
   }
 
   @Override
@@ -65,12 +61,9 @@ XLogger.getInstance().log(Level.FINE, "Request for {0} resulted in target page: 
   }
 
   private String getRefererRelativePath() {
+    String referer = this.getReferer();
     String output = referer == null ? null : ServletUtil.getRelativePath(
-            WebApp.getInstance().getServletContext(), referer, "baseURL");
+            this.getServletContext(), referer, "baseURL");
     return output;
-  }
-
-  public final String getReferer() {
-    return referer;
   }
 }

@@ -1,11 +1,15 @@
 package com.idisc.web.listeners;
 
+import com.bc.util.Util;
 import com.bc.util.XLogger;
-import com.idisc.core.FeedUpdateService;
-import com.idisc.core.jpa.SearchHandlerFactory;
+import com.idisc.core.IdiscApp;
 import com.idisc.web.Attributes;
+import com.idisc.web.ConfigurationLoader;
+import com.idisc.web.ConfigurationLoaderDevMode;
 import com.idisc.web.WebApp;
-import com.idisc.web.beans.WebappContext;
+import com.idisc.web.IdiscAppImpl;
+import com.idisc.web.WebAppDevMode;
+import com.idisc.web.servlets.handlers.CloseAutoCloseable;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Enumeration;
@@ -15,7 +19,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
-import javax.servlet.ServletException;
+import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 
 public class ServletContextListener implements javax.servlet.ServletContextListener {
@@ -36,13 +40,19 @@ XLogger.getInstance().log(Level.INFO, "Production mode: {0}", this.getClass(), s
 
       final boolean productionMode = sval == null ? false : Boolean.parseBoolean(sval);
       
-      WebApp webApp = WebApp.getInstance(productionMode);
+      ConfigurationLoader configLoader = productionMode ? new ConfigurationLoader(sc) : new ConfigurationLoaderDevMode(sc);
       
-      webApp.init(sc);
+      Configuration config = configLoader.load();
       
-      sc.setAttribute(Attributes.WEBAPP_CONTEXT, new WebappContext());
+      WebApp webApp = productionMode ? new WebApp(sc, config) : new WebAppDevMode(sc, config);
       
-    }catch (ServletException|IOException|ConfigurationException|IllegalAccessException|InterruptedException|InvocationTargetException e) {
+      sc.setAttribute(Attributes.APP_CONTEXT, webApp);
+      
+      IdiscApp idiscApp = new IdiscAppImpl(sc, config);
+
+      IdiscApp.setInstance(idiscApp);
+      
+    }catch (ConfigurationException | IOException | IllegalAccessException | InterruptedException | InvocationTargetException e) {
       Logger.getLogger(getClass().getName()).log(Level.SEVERE, null, e);
       throw new RuntimeException("This program has to exit due to the following problem:", e);
     }
@@ -66,39 +76,23 @@ XLogger.getInstance().log(Level.INFO, "Production mode: {0}", this.getClass(), s
       
     final ServletContext context = sce.getServletContext();
     
-    final ExecutorService svc = (ExecutorService)context.getAttribute(Attributes.ASYNCREQUEST_EXECUTOR_SERVICE);
+    CloseAutoCloseable cac = new CloseAutoCloseable();
     
-    if(svc != null) {
+    Enumeration<String> en = context.getAttributeNames();
+    
+    while(en.hasMoreElements()) {
         
-        com.bc.web.core.util.ServletUtil.shutdownAndAwaitTermination(svc, 500L, TimeUnit.MILLISECONDS);    
-    }
-      
-//    if(this.asyncTaskWorker != null) {
+        String elemName = en.nextElement();
         
-//        this.asyncTaskWorker.shutdown(500L, TimeUnit.MILLISECONDS);
-//    }
-      
-    ExecutorService globalSvc = WebApp.getInstance().getGlobalExecutorService(false);
-    
-    if(globalSvc != null) {
+        Object elemValue = context.getAttribute(elemName);
         
-      com.bc.web.core.util.ServletUtil.shutdownAndAwaitTermination(globalSvc, 500L, TimeUnit.MILLISECONDS);    
-    }
-    
-    WebApp webApp = WebApp.getInstance();
-      
-    FeedUpdateService feedUpdateService = webApp.getFeedUpdateService();
-    
-    if(feedUpdateService != null) {
+        try{
+            cac.execute(elemName, (AutoCloseable)elemValue);
+        }catch(Exception ignored) {}
         
-      feedUpdateService.shutdownAndAwaitTermination(500L, TimeUnit.MILLISECONDS);
-    }
-    
-    SearchHandlerFactory shf = WebApp.getInstance().getSearchHandlerFactory(false);
-    
-    if(shf != null) {
-        
-        shf.removeAll(true);
+        try{
+            Util.shutdownAndAwaitTermination((ExecutorService)elemValue, 500L, TimeUnit.MILLISECONDS);
+        }catch(Exception ignored) {}
     }
   }
 }

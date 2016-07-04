@@ -3,19 +3,17 @@ package com.idisc.web.filters;
 import com.bc.util.XLogger;
 import com.bc.web.core.util.ServletUtil;
 import com.bc.web.core.filters.BaseFilter;
+import com.idisc.web.AppContext;
 import com.idisc.web.Attributes;
-import com.idisc.web.WebApp;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.List;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletRequestWrapper;
 import javax.servlet.http.HttpServletResponse;
+import com.idisc.web.ThreadPoolData;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * @author poshjosh
@@ -39,11 +37,14 @@ public class AppFilter extends BaseFilter {
 
         }else{
 
+          AppContext appContext = (AppContext)request.getServletContext().getAttribute(Attributes.APP_CONTEXT);
           sessionTimeoutSeconds = TimeUnit.MILLISECONDS.toSeconds(
-                  WebApp.getInstance().getAppSessionTimeoutMillis());
+                  appContext.getAppSessionTimeoutMillis());
         }
 
         request.getSession().setMaxInactiveInterval((int)sessionTimeoutSeconds);
+        
+        logMetrics(request);
 
         return super.doBeforeProcessing(request, response);
     }
@@ -92,106 +93,47 @@ XLogger.getInstance().log(Level.FINER, "Request is from or to web page: {0}, Ref
       return output;
   }
   
-    /**
-     * This request wrapper class extends the support class
-     * HttpServletRequestWrapper, which implements all the methods in the
-     * HttpServletRequest interface, as delegations to the wrapped request. 
-     */
-    private static final class HtmlRequestWrapper extends HttpServletRequestWrapper {
-        
-        public HtmlRequestWrapper(HttpServletRequest request) {
-            super(request);
-        }
-
-        @Override
-        public String getParameter(String name) {
-            String output = super.getParameter(name);
-            if(output == null && "format".equals(name)) {
-                output = "text/html";
+  
+   private static final Lock lock = new ReentrantLock();
+    private void logMetrics(HttpServletRequest request) {
+      try{
+          lock.lock();
+          $lm(request);
+      }catch(Exception ignored) {} 
+      finally{
+          lock.unlock();
+      }
+    }
+  
+    private static final int BATCH_SIZE = 100;
+    private static int $posInBatch;
+    private static int $numBatches;
+    private void $lm(HttpServletRequest request) {
+        if(++$posInBatch >= BATCH_SIZE) {
+            ++$numBatches;
+            $posInBatch = 0;
+            AppContext appContext = (AppContext)request.getServletContext().getAttribute(Attributes.APP_CONTEXT);
+            final int total = $numBatches * BATCH_SIZE + $posInBatch;
+            StringBuilder builder = new StringBuilder();
+            builder.append("\n===============================     METRICS     ==============================");
+            builder.append("\nAfter ").append(total).append(
+            " requests, memory level: ").append(appContext.getMemoryLevel());
+            builder.append(", async enabled: ").append(appContext.isAsyncProcessingEnabled());
+            ThreadPoolData tpd = appContext.getGlobalExecutorServiceThreadPoolData();
+            if(tpd != null) {
+                builder.append("\n----------------------------- Thread Pool Data ----------------------------");
+                builder.append("\nTasks:: ").append(tpd.getTaskCount());
+                builder.append(", completed: ").append(tpd.getCompletedTaskCount());
+                builder.append(", active: ").append(tpd.getActiveCount());
+                builder.append(", queued: ").append(tpd.getQueueSize());
+//          builder.append(", ").append(tpd.getKeepAliveTime(TimeUnit.SECONDS));
+                builder.append("\nPool size:: max: ").append(tpd.getMaximumPoolSize());
+                builder.append(", largest: ").append(tpd.getLargestPoolSize());
+                builder.append(", core: ").append(tpd.getCorePoolSize());
+                builder.append(", current: ").append(tpd.getPoolSize());
             }
-XLogger.getInstance().log(Level.FINEST, "#getParameter({0}) = {1}", this.getClass(), name, output);
-            return output;
-        }
-
-        @Override
-        public Enumeration getParameterNames() {
-
-            Enumeration<String> parameterNames = getRequest().getParameterNames();
-            
-            final String formatParamName = "format";
-            boolean hasFormatParam = false;
-            while(parameterNames.hasMoreElements()) {
-                String next = parameterNames.nextElement();
-                if(formatParamName.equals(next)) {
-                    hasFormatParam = true;
-                    break;
-                }
-            }
-            
-            // This enumeration has already be used and must not be returned
-            parameterNames = null; 
-            
-            return hasFormatParam ? getRequest().getParameterNames() : this.getCompositeNames(parameterNames);
-        }
-        
-        private Enumeration getCompositeNames(Enumeration<String> enumeration) {
-            
-            if(enumeration != null) {
-
-                // Add both names and their long versions
-                //
-                final List<String> names = new ArrayList<>();
-                
-                while(enumeration.hasMoreElements()) {
-                    
-                    String name = enumeration.nextElement();
-                    
-                    names.add(name);
-                }
-                
-                names.add("format");
-
-XLogger.getInstance().log(Level.FINER, "Composite names: {0}", this.getClass(), names);
-                
-                if(!names.isEmpty()) {
-                    
-                    enumeration = new Enumeration<String>() {
-                        int off;
-                        @Override
-                        public boolean hasMoreElements() {
-                            return off < names.size();
-                        }
-                        @Override
-                        public String nextElement() {
-                            try{
-                                return names.get(off);
-                            }finally{
-                                ++off;
-                            }
-                        }
-                    };
-                }
-            }
-            
-            return enumeration;
-        }        
-        
-        @Override
-        public Map getParameterMap() {
-
-            Map output = getRequest().getParameterMap();
-            
-            if(output != null) {
-                
-                Object value = output.get("format");
-                
-                if(value == null) {
-                
-                    output.put("format", "text/html");
-                }
-            }
-            
-            return output;
+            builder.append("\n==============================================================================");
+            XLogger.getInstance().log(Level.INFO, "{0}", this.getClass(), builder);
         }
     }
 }

@@ -5,6 +5,7 @@ import com.bc.jpa.fk.EnumReferences;
 import com.bc.util.XLogger;
 import com.idisc.core.AbstractSendNewsAsEmailTask;
 import com.idisc.core.IdiscApp;
+import com.idisc.core.comparator.BaseFeedComparator;
 import com.idisc.pu.References;
 import com.idisc.pu.entities.Emailstatus;
 import com.idisc.pu.entities.Extractedemail;
@@ -12,6 +13,7 @@ import com.idisc.pu.entities.Feed;
 import com.idisc.pu.entities.external.UnofficialEmails;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -23,53 +25,53 @@ import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
-public class SendNewsAsEmailTask
-  extends AbstractSendNewsAsEmailTask
-{
+public class SendNewsAsEmailTask extends AbstractSendNewsAsEmailTask {
+    
   private final int numberOfFeeds;
   
   private String subject;
   
   private String message;
   
-  public SendNewsAsEmailTask()
-  {
-    this(3);
+  private final AppContext appContext;
+  
+  private final String path;
+  
+  public SendNewsAsEmailTask(AppContext appCtx, String path) {
+    this(appCtx, 12, path);
   }
   
-  public SendNewsAsEmailTask(int numberOfFeeds) {
+  public SendNewsAsEmailTask(AppContext appCtx, int numberOfFeeds, String path) {
+    this.appContext = appCtx;
     this.numberOfFeeds = numberOfFeeds;
+    this.path = path;
     this.createMessage();
   }
   
-  public void reset()
-  {
+  @Override
+  public void reset() {
     super.reset();
     this.loadOwn = true;
   }
   
-  public Map getOrderBy()
-  {
+  @Override
+  public Map getOrderBy() {
     throw new UnsupportedOperationException();
   }
   
-  public Map getParameters()
-  {
+  @Override
+  public Map getParameters() {
     throw new UnsupportedOperationException();
   }
   
-  
-  protected void createMessage()
-  {
-    List<Feed> feeds = DefaultFeedCache.getCachedFeeds();
+  protected void createMessage() {
+    List<Feed> feeds = appContext.getCachedFeeds();
     if ((feeds == null) || (feeds.isEmpty())) {
-      new DefaultFeedCache().updateCache();
-      List<Feed> update = DefaultFeedCache.getCachedFeeds();
+      List<Feed> update = new DefaultFeedCache(appContext.getConfiguration()).updateCache();
       if (update != null) {
         feeds = new ArrayList(update);
       }
-    }
-    else {
+    }else {
       feeds = new ArrayList(feeds);
     }
     
@@ -82,18 +84,19 @@ public class SendNewsAsEmailTask
     
     String firstHeading = null;
 
-    if ((feeds != null) && (!feeds.isEmpty()))
-    {
-      int size = feeds.size() < this.numberOfFeeds ? feeds.size() : this.numberOfFeeds;
+    if ((feeds != null) && (!feeds.isEmpty())) {
+        
+      Collections.sort(feeds, new BaseFeedComparator(true));
+        
+      final int size = feeds.size() < this.numberOfFeeds ? feeds.size() : this.numberOfFeeds;
       
-      for (int i = 0; i < size; i++)
-      {
+      for (int i = 0; i < size; i++) {
+          
         Feed feed = (Feed)feeds.get(i);
         
         String heading = getHeading(feed, null, 200);
         
-        if ((heading != null) && (!heading.isEmpty()))
-        {
+        if ((heading != null) && (!heading.isEmpty())) {
 
           if (firstHeading == null) {
             builder.append("<p><b>Here's latest news from NewsMinute</b></p>");
@@ -110,22 +113,23 @@ public class SendNewsAsEmailTask
       builder.append("</ul>");
     }
     
-    String appUrl = WebApp.getInstance().getAppUrl();
+    String appUrl = appContext.getAppUrl();
     if (appUrl == null) {
       throw new NullPointerException();
     }
     builder.append("<p>I love the NewsMinute app. you should try it. <a href=\"");
     builder.append(appUrl).append("\">Download it here</a></p>");
 
-    String path = WebApp.getInstance().getServletContext().getRealPath("/WEB-INF/jspf/whynewsminute.jspf");
-    try {
-      CharSequence cs = new CharFileIO().readChars(path);
-      if (cs != null) {
-        cs = cs.toString().replaceFirst("(<%).+?(%>)", "");
-        builder.append(cs);
-      }
-    } catch (IOException e) {
-      XLogger.getInstance().log(Level.WARNING, null, getClass(), e);
+    if(path != null) {
+        try {
+          CharSequence cs = new CharFileIO().readChars(path);
+          if (cs != null) {
+            cs = cs.toString().replaceFirst("(<%).+?(%>)", "");
+            builder.append(cs);
+          }
+        } catch (IOException e) {
+          XLogger.getInstance().log(Level.WARNING, null, getClass(), e);
+        }
     }
     
     builder.append("</div>");
@@ -139,11 +143,10 @@ public class SendNewsAsEmailTask
   }
   
   private boolean loadOwn = true;
-  private Short[] as_accessViaGetter;
-  private Emailstatus[] ase;
   
   @Override
   protected List<Extractedemail> loadNextBatch() { 
+      
     List<Extractedemail> output;
     if (this.loadOwn) {
       output = loadFromOwnDatabase();
@@ -159,12 +162,13 @@ public class SendNewsAsEmailTask
     return output;
   }
 
-  private List<Extractedemail> loadFromOwnDatabase()
-  {
-    EntityManager em = IdiscApp.getInstance().getControllerFactory().getEntityManager(Extractedemail.class);
+  private List<Extractedemail> loadFromOwnDatabase(){
+      
+    EntityManager em = IdiscApp.getInstance().getJpaContext().getEntityManager(Extractedemail.class);
+    
     List<Extractedemail> extractedemails;
-    try
-    {
+    try {
+        
       CriteriaBuilder cb = em.getCriteriaBuilder();
       
       CriteriaQuery<Extractedemail> query = cb.createQuery(Extractedemail.class);
@@ -182,8 +186,8 @@ public class SendNewsAsEmailTask
         predicates = null;
       }
       
-      if ((predicates != null) && (predicates.length != 0))
-      {
+      if ((predicates != null) && (predicates.length != 0)) {
+          
         if (predicates.length == 1) {
           query.where(predicates[0]);
         } else {
@@ -197,21 +201,19 @@ public class SendNewsAsEmailTask
       typedQuery.setHint("eclipselink.read-only", "true");
       
       extractedemails = typedQuery.getResultList();
-    }
-    finally
-    {
+    }finally {
       em.close();
     }
     
     return extractedemails;
   }
   
-  private List<Extractedemail> loadFromLooseboxDatabase()
-  {
-    EntityManager em = IdiscApp.getInstance().getControllerFactory().getEntityManager(UnofficialEmails.class);
+  private List<Extractedemail> loadFromLooseboxDatabase() {
+      
+    EntityManager em = IdiscApp.getInstance().getJpaContext().getEntityManager(UnofficialEmails.class);
     List<UnofficialEmails> extractedemails;
-    try
-    {
+    try {
+        
       CriteriaBuilder cb = em.getCriteriaBuilder();
       
       CriteriaQuery<UnofficialEmails> query = cb.createQuery(UnofficialEmails.class);
@@ -229,8 +231,7 @@ public class SendNewsAsEmailTask
         predicates = null;
       }
       
-      if ((predicates != null) && (predicates.length != 0))
-      {
+      if ((predicates != null) && (predicates.length != 0)) {
         if (predicates.length == 1) {
           query.where(predicates[0]);
         } else {
@@ -244,24 +245,22 @@ public class SendNewsAsEmailTask
       typedQuery.setHint("eclipselink.read-only", "true");
       
       extractedemails = typedQuery.getResultList();
-    }
-    finally
-    {
+    } finally {
       em.close();
     }
     
     List<Extractedemail> output = null;
     List statuses;
-    if ((extractedemails != null) && (!extractedemails.isEmpty()))
-    {
+    if ((extractedemails != null) && (!extractedemails.isEmpty())) {
+        
       output = new ArrayList(extractedemails.size());
       
-      EnumReferences refs = IdiscApp.getInstance().getControllerFactory().getEnumReferences();
+      EnumReferences refs = IdiscApp.getInstance().getJpaContext().getEnumReferences();
       
       statuses = refs.getEntities(References.emailstatus.unverified);
       
-      for (UnofficialEmails ue : extractedemails)
-      {
+      for (UnofficialEmails ue : extractedemails) {
+          
         Extractedemail ee = new Extractedemail();
         
         Emailstatus es = null;
@@ -285,13 +284,18 @@ public class SendNewsAsEmailTask
   }
   
   public References.emailstatus[] getAcceptedEnums() {
-    return new References.emailstatus[] { References.emailstatus.unverified, References.emailstatus.verified };
+    return new References.emailstatus[] { 
+        References.emailstatus.registered_user,
+        References.emailstatus.verified, 
+        References.emailstatus.verification_attempted_but_status_unknown,
+        References.emailstatus.unverified 
+    };
   }
   
-  public Short[] getAcceptedStatuses()
-  {
+  private Short[] as_accessViaGetter;
+  public Short[] getAcceptedStatuses() {
     if (this.as_accessViaGetter == null) {
-      EnumReferences refs = IdiscApp.getInstance().getControllerFactory().getEnumReferences();
+      EnumReferences refs = IdiscApp.getInstance().getJpaContext().getEnumReferences();
       References.emailstatus[] enums = getAcceptedEnums();
       if ((enums != null) && (enums.length > 0)) {
         this.as_accessViaGetter = new Short[enums.length];
@@ -303,10 +307,10 @@ public class SendNewsAsEmailTask
     return this.as_accessViaGetter;
   }
   
-  public Emailstatus[] getAcceptedStatusEntities()
-  {
+  private Emailstatus[] ase;
+  public Emailstatus[] getAcceptedStatusEntities() {
     if (this.ase == null) {
-      EnumReferences refs = IdiscApp.getInstance().getControllerFactory().getEnumReferences();
+      EnumReferences refs = IdiscApp.getInstance().getJpaContext().getEnumReferences();
       References.emailstatus[] enums = getAcceptedEnums();
       if ((enums != null) && (enums.length > 0)) {
         this.ase = new Emailstatus[enums.length];
@@ -331,8 +335,8 @@ public class SendNewsAsEmailTask
     return shval;
   }
   
-  private String getHeading(Feed feed, String defaultValue, int maxLength)
-  {
+  private String getHeading(Feed feed, String defaultValue, int maxLength) {
+      
     String text = getHeading(feed, defaultValue);
     
     if ((text != null) && (maxLength != -1) && (text.length() > maxLength)) {
@@ -358,32 +362,33 @@ public class SendNewsAsEmailTask
     return defaultValue;
   }
   
-
-  public int getBatchSize()
-  {
-    return WebApp.getInstance().getConfiguration().getInt("mailBatchSize", 100);
+  @Override
+  public int getBatchSize() {
+    return appContext.getConfiguration().getInt("mailBatchSize", 100);
   }
   
-  public int getSendInterval()
-  {
-    int sendIntervalMinutes = WebApp.getInstance().getConfiguration().getInt("mailSendInterval", 4);
+  @Override
+  public int getSendInterval() {
+    int sendIntervalMinutes = appContext.getConfiguration().getInt("mailSendInterval", 4);
     return (int)TimeUnit.MINUTES.toMillis(sendIntervalMinutes);
   }
   
-  public String getSenderEmail()
-  {
-    return WebApp.getInstance().getConfiguration().getString("emailaddress");
+  @Override
+  public String getSenderEmail() {
+    return appContext.getConfiguration().getString("emailaddress");
   }
   
-  public char[] getSenderPassword()
-  {
-    return WebApp.getInstance().getConfiguration().getString("password").toCharArray();
+  @Override
+  public char[] getSenderPassword() {
+    return appContext.getConfiguration().getString("password").toCharArray();
   }
 
+  @Override
   public String getSubject() {
     return subject;
   }
 
+  @Override
   public String getMessage() {
     return message;
   }

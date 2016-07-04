@@ -14,7 +14,7 @@ import javax.servlet.http.HttpSession;
 /**
  * @author Josh
  */
-public class LoginBase extends BaseTest {
+public class LoginBase extends TestBase {
     
     private Boolean loggedIn = Boolean.FALSE;
 
@@ -52,8 +52,9 @@ public class LoginBase extends BaseTest {
         final long maxWait = 120;
         final TimeUnit timeUnit = TimeUnit.SECONDS;
         
+        AppContext appContext = (AppContext)request.getServletContext().getAttribute(Attributes.APP_CONTEXT);
 log("... ... ... ... ... ... ...Waiting for "+AuthSvcSession.class.getName());        
-        AuthSvcSession authSess = this.waitForAuthSession(maxWait, timeUnit);
+        AuthSvcSession authSess = this.waitForAuthSession(appContext, maxWait, timeUnit);
 log("... ... ... ... ... ..Done waiting for "+AuthSvcSession.class.getName()+", session: "+authSess);
 
         if(authSess == null) {

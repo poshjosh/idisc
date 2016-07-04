@@ -1,10 +1,11 @@
 package com.idisc.web.beans;
 
 import com.bc.util.XLogger;
-import com.idisc.core.FeedHitcountComparator;
+import com.idisc.core.comparator.BaseFeedComparator;
 import com.idisc.pu.entities.Feed;
 import com.idisc.pu.entities.Installation;
-import com.idisc.web.WebApp;
+import com.idisc.web.AppContext;
+import com.idisc.web.Attributes;
 import com.idisc.web.servlets.handlers.request.SessionUserHandlerImpl;
 import java.io.Serializable;
 import java.util.Comparator;
@@ -62,7 +63,7 @@ XLogger.getInstance().log(Level.FINE, "<init>", this.getClass());
     }
     
     protected Comparator<Feed> createComparator() {
-        return new FeedHitcountComparator(true);
+        return new BaseFeedComparator(true);
     }
     
     public void setRequest(HttpServletRequest request) {
@@ -87,9 +88,10 @@ XLogger.getInstance().log(Level.FINER, "Refreshing Topfeeds", this.getClass());
             currentTask = task;
             
             if(async) {
-                ExecutorService globalSvc = WebApp.getInstance().getGlobalExecutorService(true);
-                if(globalSvc != null) {
-                    globalSvc.submit(task);
+                AppContext appCtx = (AppContext)request.getServletContext().getAttribute(Attributes.APP_CONTEXT);
+                ExecutorService es = appCtx.getGlobalExecutorService(false);
+                if(es != null) {
+                    es.submit(task);
                 }
             }else{
                 task.run();
@@ -101,12 +103,16 @@ XLogger.getInstance().log(Level.FINER, "Refreshing Topfeeds", this.getClass());
         String sessionId;
         @Override
         public void run() {
-            List<Feed> selected = getList(maxAgeDays, maxSpread, batchSize);
-            topfeeds = sort(selected, createComparator(), maxOutputSize);
+            try{
+                List<Feed> selected = getList(maxAgeDays, maxSpread, batchSize);
+                topfeeds = sort(selected, createComparator(), maxOutputSize);
 XLogger.getInstance().log(Level.FINER, "Session ID: {0}, Topfeeds: {1}", 
 this.getClass(), sessionId, topfeeds == null ? null : topfeeds.size());
-            lastUpdateTime = System.currentTimeMillis();
-            currentTask = null;
+                lastUpdateTime = System.currentTimeMillis();
+                currentTask = null;
+            }catch(RuntimeException e) {
+                XLogger.getInstance().log(Level.WARNING, "Thread: "+Thread.currentThread().getName(), this.getClass(), e);
+            }
         }
     }
 

@@ -3,6 +3,7 @@ package com.idisc.web;
 import com.bc.io.CharFileIO;
 import com.bc.net.ConnectionManager;
 import com.bc.util.Util;
+import com.bc.util.concurrent.NamedThreadFactory;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
@@ -27,7 +28,8 @@ public class ThroughputTest {
             "http://localhost:8080/idisc/feed/455167.jsp"
         };
         
-        ExecutorService svc = Executors.newCachedThreadPool();
+        ExecutorService svc = Executors.newCachedThreadPool(
+                new NamedThreadFactory("ThroughputTest_ThreadPool"));
         
         int id = 0;
         
@@ -75,7 +77,7 @@ System.out.println("Task("+id+")("+i+"), time spent: "+(System.currentTimeMillis
 System.err.println("Task("+id+")("+i+"), INTERRUPTED: "+e);                          
                     }
                 }
-            }catch(IOException e) {
+            }catch(IOException | RuntimeException e) {
                 System.err.println(e.toString());
             }
         }

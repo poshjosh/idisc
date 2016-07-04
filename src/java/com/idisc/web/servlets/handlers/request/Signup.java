@@ -1,7 +1,8 @@
 package com.idisc.web.servlets.handlers.request;
 
 import com.authsvc.client.AuthSvcSession;
-import com.idisc.web.WebApp;
+import com.idisc.web.AppContext;
+import com.idisc.web.Attributes;
 import com.idisc.web.servlets.request.RequestParameters;
 import java.io.IOException;
 import java.util.Map;
@@ -26,7 +27,11 @@ public class Signup extends AbstractRequestHandler<Boolean>
       return Boolean.TRUE;
     }
     
-    Map app = WebApp.getInstance().getAuthSvcSession().getAppDetails();
+    AppContext appContext = (AppContext)request.getServletContext().getAttribute(Attributes.APP_CONTEXT);
+
+    AuthSvcSession authSession = appContext.getAuthSvcSession();
+    
+    Map app = authSession.getAppDetails();
     
     if (app == null) {
       throw new ServletException("Authentication Service Unavailable");
@@ -34,16 +39,14 @@ public class Signup extends AbstractRequestHandler<Boolean>
     
     Map<String, String> params = new RequestParameters(request);
     
-    AuthSvcSession authSession = WebApp.getInstance().getAuthSvcSession();
-    
     Boolean output;
     
-    try
-    {
+    try{
+        
       JSONObject authuserdetails = authSession.createUser(params);
       
-
       output = Boolean.valueOf(authuserdetails != null);
+      
     } catch (ParseException e) {
       throw new ServletException("Invalid response from server", e);
     }

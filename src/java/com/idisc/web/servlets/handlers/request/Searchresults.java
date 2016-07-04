@@ -13,21 +13,32 @@ public class Searchresults extends Selectfeeds {
     
   private boolean htmlResponse;
 
-  public Searchresults() {
-    super(20, 20, 10);
-  }
-    
   @Override
   public boolean isOutputLarge(HttpServletRequest request) {
     return !(htmlResponse = this.isHtmlResponse(request)); 
   }
+
+  @Override
+  public int getMinLimit(HttpServletRequest request) {
+    return htmlResponse ? 10 : super.getMinLimit(request);
+  }
+
+  @Override
+  public int getDefaultLimit(HttpServletRequest request) {
+    return htmlResponse ? 20 : super.getDefaultLimit(request);
+  }
+
+  @Override
+  public int getMaxLimit(HttpServletRequest request) {
+    return htmlResponse ? 10 : super.getMaxLimit(request);
+  }
   
   @Override
-  protected int formatLimitBasedOnAvailableMemory(int limit) {
+  protected int formatLimitBasedOnAvailableMemory(float memoryLevel, int limit) {
       if(htmlResponse) {
           return limit;
       }else{
-          return super.formatLimitBasedOnAvailableMemory(limit);
+          return super.formatLimitBasedOnAvailableMemory(memoryLevel, limit);
       }
   }  
   
@@ -40,7 +51,7 @@ public class Searchresults extends Selectfeeds {
     if(htmlResponse = this.isHtmlResponse(request)) {
         
         SearchResults<com.idisc.pu.entities.Feed> searchresults = 
-                this.getSearchResults(request.getSession().getId(), 
+                this.getSearchResults(request.getSession(), 
                         com.idisc.pu.entities.Feed.class, toFind, after, limit);
 
         feeds = searchresults.getAllResults();

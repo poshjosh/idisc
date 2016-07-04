@@ -3,7 +3,8 @@ package com.idisc.web.servlets.handlers.request;
 import com.authsvc.client.AuthSvcSession;
 import com.bc.util.XLogger;
 import com.idisc.core.User;
-import com.idisc.web.WebApp;
+import com.idisc.web.AppContext;
+import com.idisc.web.Attributes;
 import com.idisc.web.servlets.request.RequestParameters;
 import java.io.IOException;
 import java.util.Map;
@@ -26,7 +27,11 @@ public class Login extends AbstractRequestHandler<Boolean> {
       return Boolean.TRUE;
     }
     
-    Map app = WebApp.getInstance().getAuthSvcSession().getAppDetails();
+    AppContext appCtx = (AppContext)request.getServletContext().getAttribute(Attributes.APP_CONTEXT);
+    
+    AuthSvcSession authSession = appCtx.getAuthSvcSession();
+    
+    Map app = authSession.getAppDetails();
     
     if (app == null) {
       throw new ServletException("Authentication Service Unavailable");
@@ -35,8 +40,6 @@ public class Login extends AbstractRequestHandler<Boolean> {
     Map<String, String> params = new RequestParameters(request);
     
 XLogger.getInstance().log(Level.FINE, "Request parameters: {0}", this.getClass(), params);
-    
-    AuthSvcSession authSession = WebApp.getInstance().getAuthSvcSession();
     
     Boolean output;
     

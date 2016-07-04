@@ -1,6 +1,5 @@
 package com.idisc.web.servlets.handlers.request;
 
-import com.bc.jpa.ControllerFactory;
 import com.bc.jpa.EntityController;
 import com.bc.util.XLogger;
 import com.idisc.core.IdiscApp;
@@ -12,6 +11,7 @@ import java.util.Date;
 import java.util.logging.Level;
 import javax.persistence.EntityManager;
 import org.json.simple.JSONObject;
+import com.bc.jpa.JpaContext;
 
 public class Addextractedemails extends AbstractUpdateValues {
     
@@ -27,7 +27,7 @@ public class Addextractedemails extends AbstractUpdateValues {
   {
     JSONObject emailsAndUsernames = (JSONObject)values;
     
-    ControllerFactory factory = IdiscApp.getInstance().getControllerFactory();
+    JpaContext factory = IdiscApp.getInstance().getJpaContext();
     
     EntityController<Extractedemail, Integer> ec = factory.getEntityController(Extractedemail.class, Integer.class);
     

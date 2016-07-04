@@ -1,7 +1,7 @@
 package com.idisc.web.servlets.handlers;
 
 import com.idisc.web.servlets.handlers.request.RequestHandler;
-import com.idisc.web.servlets.handlers.response.ResponseHandler;
+import com.idisc.web.servlets.handlers.request.RequestHandlerProvider;
 import java.io.IOException;
 import javax.servlet.AsyncContext;
 import javax.servlet.ServletException;
@@ -11,7 +11,7 @@ import javax.servlet.http.HttpServletResponse;
 /**
  * @author Josh
  */
-public interface ServiceController {
+public interface ServiceController extends RequestHandlerProvider{
     
     void process(final HttpServletRequest request, final HttpServletResponse response, boolean sendResponse) throws ServletException, IOException;
 

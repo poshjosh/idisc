@@ -14,24 +14,31 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
+import javax.servlet.ServletContext;
 import org.apache.catalina.tribes.util.Arrays;
 
 public class FileCache extends HashMap<String, Map> implements FilenameFilter {
     
   private final String dirPath;
   
-  public FileCache(String dirPath) {
-    this(dirPath, true);
+  private final AppContext appCtx;
+  
+  private final ServletContext context;
+  
+  public FileCache(ServletContext context, String dirPath) {
+    this(context, dirPath, true);
   }
 
-  public FileCache(String dirPath, boolean load) {
-    this(dirPath, load, false);
+  public FileCache(ServletContext context, String dirPath, boolean load) {
+    this(context, dirPath, load, false);
   }
   
-  public FileCache(String dirPath, boolean load, boolean clearPrevious) {
+  public FileCache(ServletContext context, String dirPath, boolean load, boolean clearPrevious) {
     if(dirPath == null) {
       throw new NullPointerException();
     }
+    this.context = context;
+    this.appCtx = (AppContext)context.getAttribute(Attributes.APP_CONTEXT);
     this.dirPath = dirPath;
     if (load) {
       load(false);
@@ -84,7 +91,7 @@ public class FileCache extends HashMap<String, Map> implements FilenameFilter {
     }
     
     CharFileIO io = new CharFileIO();
-    Object category = WebApp.getInstance().getAppProperties().get(Appproperties.ADVERT_CATEGORY_NAME);
+    Object category = appCtx.getAppProperties().get(Appproperties.ADVERT_CATEGORY_NAME);
     if(category == null) {
       return;
     }
@@ -111,7 +118,7 @@ public class FileCache extends HashMap<String, Map> implements FilenameFilter {
         super.put(path, data);
       }
       catch (IOException e) {
-        XLogger.getInstance().log(Level.WARNING, "Error reading: " + path, Notices.class, e);
+        XLogger.getInstance().log(Level.WARNING, "Error reading: " + path, this.getClass(), e);
       }
     }
   }
@@ -120,7 +127,7 @@ public class FileCache extends HashMap<String, Map> implements FilenameFilter {
     if (contents != null) {
       Map output = new HashMap(11, 1.0F);
       output.put("feedid", feedid);
-      output.put("author", WebApp.getInstance().getAppName());
+      output.put("author", appCtx.getAppName());
       output.put("categories", category);
       output.put("content", contents);
       output.put("datecreated", date);
@@ -140,7 +147,7 @@ public class FileCache extends HashMap<String, Map> implements FilenameFilter {
       fname = "/" + fname;
     }
     try {
-      return WebApp.getInstance().getServletContext().getResource(fname);
+      return context.getResource(fname);
     } catch (MalformedURLException e) {}
     return null;
   }

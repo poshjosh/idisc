@@ -1,8 +1,9 @@
 package com.idisc.web.listeners;
 
 import com.idisc.web.servlets.handlers.CloseAutoCloseable;
-import com.idisc.core.jpa.SearchHandlerFactory;
-import com.idisc.web.WebApp;
+import com.idisc.pu.SearchHandlerFactory;
+import com.idisc.web.Attributes;
+import com.idisc.web.AppContext;
 import java.util.Enumeration;
 import javax.servlet.http.HttpSession;
 import javax.servlet.http.HttpSessionEvent;
@@ -33,7 +34,9 @@ public class SessionListener implements HttpSessionListener {
             }
         }
         
-        SearchHandlerFactory shf = WebApp.getInstance().getSearchHandlerFactory(false);
+        AppContext appCtx = (AppContext)session.getServletContext().getAttribute(Attributes.APP_CONTEXT);
+        
+        SearchHandlerFactory shf = appCtx.getSearchHandlerFactory(false);
         
         if(shf != null) {
             

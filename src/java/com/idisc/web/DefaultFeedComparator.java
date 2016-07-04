@@ -1,6 +1,6 @@
 package com.idisc.web;
 
-import com.idisc.core.FeedComparator;
+import com.idisc.core.comparator.FeedComparatorUserSiteHitcount;
 import com.idisc.pu.entities.Installation;
 import com.idisc.web.servlets.handlers.request.Appproperties;
 import java.util.Collections;
@@ -12,36 +12,41 @@ import org.apache.commons.configuration.Configuration;
  * <b>Implements {@link java.lang.AutoCloseable} hence must be closed after use</b>
  * @author poshjosh
  */
-public class DefaultFeedComparator extends FeedComparator {
+public class DefaultFeedComparator extends FeedComparatorUserSiteHitcount {
     
   private final long addValuePerHit;
   private final long addedValueMax;
   
-  public DefaultFeedComparator() { 
-      this(null);
+  public DefaultFeedComparator(AppContext appContext) { 
+      this(appContext, null);
   }
   
-  public DefaultFeedComparator(Installation installation) {
+  public DefaultFeedComparator(AppContext appContext, Installation installation) { 
+    this(appContext, installation, false);
+  }  
+  
+  public DefaultFeedComparator(AppContext appContext, Installation installation, boolean reverseOrder) {
       
-    super(installation);
-    
-    Configuration config = WebApp.getInstance().getConfiguration();
-    this.addValuePerHit = TimeUnit.MINUTES.toMillis(config.getInt("feedCycleInterval"));
-    this.addedValueMax = TimeUnit.MINUTES.toMillis(config.getInt("addedValueLimit"));
-    String sval = (String)WebApp.getInstance().getAppProperties().get(Appproperties.HEADLINE_PATTERN);
-    if (sval != null) {
-      Pattern headlinePattern = Pattern.compile(sval);
-      DefaultFeedComparator.this.setElite(Collections.singletonMap(headlinePattern, 2));
-    }
+    super(
+      installation, 
+      (
+        (String)appContext.getAppProperties().get(Appproperties.HEADLINE_PATTERN) == null ? null :
+        Collections.singletonMap(Pattern.compile((String)appContext.getAppProperties().get(Appproperties.HEADLINE_PATTERN)), 2)
+      ),
+      reverseOrder
+    );
+    Configuration config = appContext.getConfiguration();
+    this.addValuePerHit = TimeUnit.MINUTES.toMillis(config.getLong(ConfigNames.FEED_CYCLE_INTERVAL, super.getAddValuePerHit()));
+    this.addedValueMax = TimeUnit.MINUTES.toMillis(config.getLong(ConfigNames.ADDED_VALUE_LIMIT, super.getAddedValueMax()));
   }
   
   @Override
-  public long getAddValuePerHit() {
+  public final long getAddValuePerHit() {
     return this.addValuePerHit;
   }
   
   @Override
-  public long getAddedValueMax() {
+  public final long getAddedValueMax() {
     return this.addedValueMax;
   }
 }

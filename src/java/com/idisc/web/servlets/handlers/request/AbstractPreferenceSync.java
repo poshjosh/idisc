@@ -383,10 +383,10 @@ public abstract class AbstractPreferenceSync<E> extends AbstractRequestHandler<M
   
   public EntityManager getEntityManager(Class entityClass)
   {
-    return IdiscApp.getInstance().getControllerFactory().getEntityManager(entityClass);
+    return IdiscApp.getInstance().getJpaContext().getEntityManager(entityClass);
   }
   
   public <X, I> EntityController<X, I> getEntityController(Class<X> ec, Class<I> ic) {
-    return IdiscApp.getInstance().getControllerFactory().getEntityController(ec, ic);
+    return IdiscApp.getInstance().getJpaContext().getEntityController(ec, ic);
   }
 }

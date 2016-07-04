@@ -1,7 +1,6 @@
 package com.idisc.web.servlets.handlers.request;
 
 import com.bc.util.XLogger;
-import com.idisc.web.WebApp;
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -10,6 +9,7 @@ import java.io.Reader;
 import java.util.Collections;
 import java.util.Map;
 import java.util.logging.Level;
+import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import org.json.simple.parser.JSONParser;
@@ -40,15 +40,20 @@ public class ReadLocalJson extends AbstractRequestHandler<Map> {
   @Override
   public Map execute(HttpServletRequest request) throws ServletException, IOException {
       
-    Map output = load();
+    Map output = load(request.getServletContext());
     
     return output == null ? Collections.emptyMap() : output;
   }
   
 
-  public Map load() throws IOException {
-      
-    String realPath = WebApp.getInstance().getServletContext().getRealPath(filename);
+  public Map load(ServletContext context) throws IOException {
+    
+XLogger.getInstance().log(Level.FINE, "Filename: {0}", this.getClass(), filename);
+
+    String realPath = context.getRealPath(filename);
+    
+XLogger.getInstance().log(Level.FINE, "File path: {0}", this.getClass(), realPath);    
+
     Map output;
     try { Reader r = new BufferedReader(new InputStreamReader(new FileInputStream(realPath), "utf-8"));Throwable localThrowable2 = null;
       

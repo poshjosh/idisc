@@ -5,7 +5,7 @@ import com.idisc.web.servlets.handlers.response.HtmlResponseHandler;
 import com.idisc.web.servlets.handlers.response.ResponseHandler;
 import com.bc.util.XLogger;
 import com.idisc.web.Attributes;
-import com.idisc.web.WebApp;
+import com.idisc.web.AppContext;
 import com.idisc.web.exceptions.LoginException;
 import com.idisc.web.servlets.handlers.response.ErrorHandlerContext;
 import com.idisc.web.servlets.handlers.response.ObjectToJsonResponseHandler;
@@ -18,6 +18,7 @@ import java.util.Map;
 import java.util.logging.Level;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
 
 public abstract class AbstractRequestHandler<V> 
         extends SessionUserHandlerImpl 
@@ -40,13 +41,14 @@ public abstract class AbstractRequestHandler<V>
   }
   
   public <X> SearchResults<X> getSearchResults(
-          String sessionId, Class<X> enityType, String query, Date after, int limit) {
+          HttpSession session, Class<X> enityType, String query, Date after, int limit) {
     Map<String, Object> parameters = new HashMap<>();
     parameters.put("query", query);
     parameters.put("after", after);
     parameters.put("limit", limit);
-    SearchResults<X> searchResults = WebApp.getInstance().getSearchHandlerFactory(true).get(
-            sessionId, enityType, parameters, true);
+    AppContext appCtx = (AppContext)session.getServletContext().getAttribute(Attributes.APP_CONTEXT);
+    SearchResults<X> searchResults = appCtx.getSearchHandlerFactory(true).get(
+            session.getId(), enityType, parameters, true);
     return searchResults;
   }
   
@@ -97,6 +99,7 @@ XLogger.getInstance().log(Level.FINER, "Response handler type: {0}",
     return new SuccessHandlerContext(request);  
   }
   
+  @Override
   public boolean isHtmlResponse(HttpServletRequest request) {
     return this.isHtmlResponse(this.getResponseFormat(request));
   }

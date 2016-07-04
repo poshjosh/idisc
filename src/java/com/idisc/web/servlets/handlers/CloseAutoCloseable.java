@@ -14,8 +14,7 @@ public class CloseAutoCloseable {
     public boolean execute(String name, AutoCloseable current) {
         boolean output = false;
         try{
-            final Level level = WebApp.getInstance().isDebug() ? Level.INFO : Level.FINE;
-            XLogger.getInstance().log(level, "Closing atrribute named: {0}", this.getClass(), name);
+            XLogger.getInstance().log(Level.FINE, "Closing atrribute named: {0}", this.getClass(), name);
             current.close();
             output = true;
         }catch(Exception e) {

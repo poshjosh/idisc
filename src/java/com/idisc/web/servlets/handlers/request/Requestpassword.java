@@ -2,7 +2,8 @@ package com.idisc.web.servlets.handlers.request;
 
 import com.authsvc.client.AuthSvcSession;
 import com.bc.util.XLogger;
-import com.idisc.web.WebApp;
+import com.idisc.web.AppContext;
+import com.idisc.web.Attributes;
 import com.idisc.web.servlets.request.RequestParameters;
 import java.io.IOException;
 import java.util.Map;
@@ -21,13 +22,17 @@ public class Requestpassword extends AbstractRequestHandler<Boolean>
   
   @Override
   public Boolean execute(HttpServletRequest request)
-    throws ServletException, IOException
-  {
+    throws ServletException, IOException {
+      
     if (isLoggedIn(request)) {
       throw new ServletException("You are already logged in");
     }
     
-    Map app = WebApp.getInstance().getAuthSvcSession().getAppDetails();
+    AppContext appContext = (AppContext)request.getServletContext().getAttribute(Attributes.APP_CONTEXT);
+
+    AuthSvcSession authSession = appContext.getAuthSvcSession();
+    
+    Map app = authSession.getAppDetails();
     
     if (app == null) {
       throw new ServletException("Authentication Service Unavailable");
@@ -40,21 +45,16 @@ public class Requestpassword extends AbstractRequestHandler<Boolean>
     //
     final Boolean caseSensitive = Boolean.FALSE;
     Map<String, String> params = new RequestParameters(request, caseSensitive);
-
-    AuthSvcSession authSession = WebApp.getInstance().getAuthSvcSession();
     
     Boolean output;
-    try
-    {
+    try {
       XLogger.getInstance().log(Level.FINE, "Parameters: {0}", getClass(), params);
       
-
-
       JSONObject json = authSession.requestUserPassword(app, params);
       
-      output = Boolean.valueOf(!authSession.isError(json) ? true : json == null ? Boolean.FALSE.booleanValue() : false);
-    }
-    catch (ParseException e) {
+      output = !authSession.isError(json) ? Boolean.TRUE : json == null ? Boolean.FALSE : Boolean.FALSE;
+      
+    } catch (ParseException e) {
       throw new ServletException("Invalid response from server", e);
     }
     
