@@ -1,0 +1,16 @@
+{
+    "targetNode0":{
+        "attributes":{
+            "id":"ms-countries-medal-count"
+        },
+        "columns":["content"],
+        "value":"DIV",
+        "append":false,
+        "transverse":["<HTML>","<BODY>","<div class=\"wrapper\">","<div class=\"event__main-right\">","<div data-component=\"table-medal-countries\" class=\"cp-table-medal-countries\">","<div class=\"filter\"> <div class=\"table-count\" id=\"ms-countries-medal-count\">"]
+    },
+    "updateIntervalMinutes":15,
+    "url":{
+        "start":"https:\/\/www.rio2016.com\/en\/medal-count-country",
+        "value":"https:\/\/www.rio2016.com\/en\/medal-count-country"
+    }
+}

@@ -56,10 +56,10 @@
             <jsp:setProperty name="Topfeeds" property="request" value="<%=request%>"/>
         </jsp:useBean>
         
-        <c:if test="${Topfeeds != null && Topfeeds.list != null && not empty Topfeeds.list}">
+        <c:if test="${Topfeeds != null && Topfeeds.resultList != null && not empty Topfeeds.resultList}">
             <div><b>More News</b></div>
             <idisc:displayfeeds displayPageNav="false" displayPageLinks="false" 
-                                feeds="${Topfeeds.list}" nextPage="/feeds.jsp"/> 
+                                feeds="${Topfeeds.resultList}" nextPage="/feeds.jsp"/> 
         </c:if>
     </jsp:attribute>
 </idisc:page_with_slider>

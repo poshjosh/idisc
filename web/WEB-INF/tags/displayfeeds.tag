@@ -33,8 +33,10 @@
             
             <tr class="content_sub" style="margin:0.5em; padding:0.5em; vertical-align:top;">
                 <td style="margin:0.5em; padding:0.5em;">
-                    <c:set var="appIconUrl" value="${pageContext.servletContext.contextPath}/images/appicon.png"/>
-                    <c:set var="iconUrl" value="${feed.imageurl != null && feed.imageurl != '' ? feed.imageurl : appIconUrl}"/>
+                    <c:set var="placeholderUrl" value="${pageContext.servletContext.contextPath}/images/placeholder.png"/>
+                    <c:set var="siteiconUrl" value="${feed.siteid.iconurl}"/>
+                    <c:set var="alternateIconUrl" value="${siteiconUrl != null || siteiconUrl != '' ? siteiconUrl : placeholderUrl}"/>
+                    <c:set var="iconUrl" value="${feed.imageurl != null && feed.imageurl != '' ? feed.imageurl : alternateIconUrl}"/>
                     <img style="width:64px; height:64px" width="64" height="64" src="${iconUrl}"/>    
                 </td>    
                 <td style="margin:0.5em; padding:0.5em;">

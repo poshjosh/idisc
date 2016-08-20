@@ -12,9 +12,9 @@
         </c:if>
         <c:choose>
             <c:when test="${feeds == null || empty feeds}">
-                <h3>
+                <h4>
                     No current feeds available, check back later
-                </h3>
+                </h4>
             </c:when>    
             <c:otherwise>
                 <idisc:displayfeeds displayPageNav="true" displayPageLinks="true" 

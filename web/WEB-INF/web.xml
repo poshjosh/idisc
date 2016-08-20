@@ -128,13 +128,9 @@
         <servlet-class>com.idisc.web.servlets.IdiscAsyncNonHtmlResponseServlet</servlet-class>
         <async-supported>true</async-supported>
     </servlet>
-    <servlet>
-        <servlet-name>tempmailer</servlet-name>
-        <servlet-class>com.idisc.web.servlets.tempmailer</servlet-class>
-        <async-supported>true</async-supported>
-    </servlet>
     <servlet-mapping>
         <servlet-name>Idisc</servlet-name>
+        <url-pattern></url-pattern>
         <url-pattern>/activateuser</url-pattern>
         <url-pattern>/addbookmarkfeedids</url-pattern>
         <url-pattern>/addextractedemails</url-pattern>
@@ -164,10 +160,7 @@
         <url-pattern>/signup</url-pattern>
         <url-pattern>/syncbookmarks</url-pattern>
         <url-pattern>/syncfavorites</url-pattern>
-    </servlet-mapping>
-    <servlet-mapping>
-        <servlet-name>tempmailer</servlet-name>
-        <url-pattern>/tempmailer</url-pattern>
+        <url-pattern>/updatereadcomments</url-pattern>
     </servlet-mapping>
     <welcome-file-list>
         <welcome-file>feeds.jsp</welcome-file>

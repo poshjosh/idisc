@@ -14,7 +14,7 @@
     <jsp:attribute name="pageContent" trim="true">
         <p>The following error occurred while processing the request:</p>
         <p>
-            Requested resource: ${ pageContext.errorData.requestURI}
+            Requested resource: ${pageContext.errorData.requestURI}
             <br/><br/>
             Response status code: ${ pageContext.errorData.statusCode}
             <br/><br/>

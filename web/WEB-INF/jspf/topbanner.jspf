@@ -9,6 +9,13 @@
 <span style="float:left;">
     <span class="justified"><%@include file="/WEB-INF/jspf/socialbox.jspf"%></span>
 </span>
+
+<small>
+    <a style="color:#bd5a35;" href="${pageContext.servletContext.contextPath}/rio2016/medalsTable.jsp" target="_blank">
+        Rio 2016 Olympics Medals Table
+    </a>
+</small>
+
 <span style="float:right;">
     <c:choose>
         <c:when test="${user == null}">

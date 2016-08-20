@@ -5,6 +5,8 @@
 
 <meta name=viewport content="width=device-width, initial-scale=1"/>
 
+<%@include file="/WEB-INF/jspf/detectMobileBrowserAndSetMobileAttribute.jspf"%>  
+
 <c:set var="reqURL">${pageContext.request.requestURL}</c:set>
 <c:if test="${baseURL == null}">
     <c:set var="baseURL" value="${fn:substring(reqURL, 0, fn:length(reqURL) - fn:length(pageContext.request.requestURI))}" scope="application"/>
