@@ -186,7 +186,11 @@ XLogger.getInstance().log(Level.FINER, "HTML response: {0}, URI: {1}", getClass(
 
           responseHandler.sendResponse(request, response, paramName, output);
           
-          asyncContext.complete();
+          try{
+            asyncContext.complete();
+          }catch(IllegalStateException thrownIfAlreadyCompleted) {
+            XLogger.getInstance().log(Level.FINE, "{0}", this.getClass(), thrownIfAlreadyCompleted.toString());
+          }
         }
       }
     }
@@ -222,7 +226,7 @@ XLogger.getInstance().log(Level.FINER, "Response already committed for session I
   
   public String getFirstParameterName(final HttpServletRequest request) {
     
-    String [] paramNames = this.getRequestHandlerParamNames(request);
+    String [] paramNames = this.getRequestHandlerNames(request);
     
     return paramNames == null || paramNames.length == 0 ? null : paramNames[0];
   }
@@ -230,7 +234,7 @@ XLogger.getInstance().log(Level.FINER, "Response already committed for session I
   @Override
   public RequestHandler getRequestHandler(final HttpServletRequest request) {
       
-    String [] paramNames = this.getRequestHandlerParamNames(request);
+    String [] paramNames = this.getRequestHandlerNames(request);
 
     RequestHandler output;
     if(paramNames == null || paramNames.length == 0) {

@@ -20,8 +20,14 @@ public class RequestHandlerProviderImpl implements RequestHandlerProvider{
   }  
   
   @Override
-  public String getRequestHandlerParamName(HttpServletRequest request) {
-    String token = request.getParameter(this.getRequestParamName(request));
+  public String getRequestHandlerName(HttpServletRequest request) {
+      
+    final String paramName = this.getRequestParamName(request);
+
+    String token = request.getParameter(paramName);
+    
+XLogger.getInstance().log(Level.FINE, "{0} = {1}", this.getClass(), paramName, token);
+
     if (token == null) {
       String servletPath = request.getServletPath();
       if (servletPath != null) {
@@ -31,18 +37,22 @@ public class RequestHandlerProviderImpl implements RequestHandlerProvider{
         }
       }
     }
+    
+XLogger.getInstance().log(Level.FINE, "Request handler name = {0}", this.getClass(), token);    
     return token;
   }
   
   @Override
-  public String [] getRequestHandlerParamNames(HttpServletRequest request) {
+  public String [] getRequestHandlerNames(HttpServletRequest request) {
       
+final Level level = Level.FINER;
+
     final String paramName = this.getRequestParamName(request);
     
     String[] tokens = request.getParameterValues(paramName);
     
-if(logger.isLoggable(Level.FINER, cls))    
-logger.log(Level.FINER, "Parameter names: {0}", cls, tokens==null?null:Arrays.toString(tokens));    
+if(logger.isLoggable(level, cls))    
+logger.log(level, "{0} = {1}", cls, paramName, tokens==null?null:Arrays.toString(tokens));    
 
     boolean parseServletPath = false;
     
@@ -75,8 +85,8 @@ logger.log(Level.FINER, "Parameter names: {0}", cls, tokens==null?null:Arrays.to
         }
       }
     }
-if(logger.isLoggable(Level.FINER, cls))    
-logger.log(Level.FINER, "Parameter names: {0}", cls, tokens==null?null:Arrays.toString(tokens));
+if(logger.isLoggable(level, cls))    
+logger.log(level, "Request handler names: {0}", cls, tokens==null?null:Arrays.toString(tokens));
 
     return tokens == null ? new String[0] : tokens;
   }
@@ -84,7 +94,7 @@ logger.log(Level.FINER, "Parameter names: {0}", cls, tokens==null?null:Arrays.to
   @Override
   public RequestHandler getRequestHandler(HttpServletRequest request) {
       
-    String paramName = getRequestHandlerParamName(request);
+    String paramName = getRequestHandlerName(request);
     
     RequestHandler handler = getRequestHandler(paramName);
     

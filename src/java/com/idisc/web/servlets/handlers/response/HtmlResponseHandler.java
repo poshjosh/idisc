@@ -12,7 +12,7 @@ public class HtmlResponseHandler<V> extends AbstractResponseHandler<V, Object> {
 
   private String targetPage;  
   
-  public HtmlResponseHandler(HttpServletRequest request, ResponseContext context) {
+  public HtmlResponseHandler(ResponseContext context) {
     super(context);
   }
 

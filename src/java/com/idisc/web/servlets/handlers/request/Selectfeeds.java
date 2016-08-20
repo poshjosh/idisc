@@ -1,10 +1,9 @@
 package com.idisc.web.servlets.handlers.request;
 
-import com.bc.jpa.query.QueryBuilder;
-import com.idisc.core.IdiscApp;
 import com.idisc.pu.FeedQuery;
 import com.idisc.pu.entities.Feed;
 import javax.servlet.http.HttpServletRequest;
+import com.bc.jpa.dao.BuilderForSelect;
 
 public class Selectfeeds extends SearchHandler<Feed> {
 
@@ -18,13 +17,13 @@ public class Selectfeeds extends SearchHandler<Feed> {
   
   @Override
   protected Class<Feed> getEntityClass() {
-      
+
     return Feed.class;
   }
 
   @Override
-  protected QueryBuilder getQueryBuilder(HttpServletRequest request, String query){
+  protected BuilderForSelect getSelect(HttpServletRequest request, String query){
       
-    return new FeedQuery(IdiscApp.getInstance().getJpaContext(), query);
+    return new FeedQuery(this.getJpaContext(request), query);
   }
 }

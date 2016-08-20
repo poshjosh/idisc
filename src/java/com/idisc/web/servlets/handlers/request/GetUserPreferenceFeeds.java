@@ -1,6 +1,6 @@
 package com.idisc.web.servlets.handlers.request;
 
-import com.idisc.core.User;
+import com.idisc.pu.User;
 import com.idisc.pu.entities.Feed;
 import com.idisc.pu.entities.Installation;
 import java.io.IOException;
@@ -26,13 +26,12 @@ public abstract class GetUserPreferenceFeeds<K> extends Selectfeeds {
   
   @Override
   public boolean isProtected() {
-    return true;
+    return false;
   }
   
   @Override
-  public List<Feed> execute(HttpServletRequest request)
-    throws ServletException, IOException
-  {
+  public List<Feed> execute(HttpServletRequest request) throws ServletException, IOException {
+      
     this.user = findUser(request);
     
     return super.execute(request);
@@ -41,10 +40,7 @@ public abstract class GetUserPreferenceFeeds<K> extends Selectfeeds {
   @Override
   protected List<Feed> select(HttpServletRequest request) throws ServletException {
       
-    Installation installation = getInstallation(request, true);
-    if(installation == null) {
-        throw new ServletException("You are not authorized to perform the requested operation");
-    }
+    Installation installation = getInstallationOrException(request);
 
     List<K> prefs = getPreferenceFeedList(installation);
     List<Feed> feeds = toFeedList(prefs);
@@ -63,13 +59,13 @@ public abstract class GetUserPreferenceFeeds<K> extends Selectfeeds {
     return feeds;
   }
   
-
-  protected List<Feed> ensureEquality(List<Feed> feeds, int outputSize)
-  {
+  protected List<Feed> ensureEquality(List<Feed> feeds, int outputSize) {
+      
     List<Feed> output;
     
     if (feeds == null) {
-      output = null; } else { 
+      output = null; 
+    } else { 
       if (feeds.size() > outputSize) {
         output = feeds.subList(0, outputSize);
       } else

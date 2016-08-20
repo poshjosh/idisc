@@ -1,6 +1,7 @@
 package com.idisc.web.servlets;
 
 import com.idisc.web.servlets.handlers.ServiceController;
+import com.idisc.web.servlets.handlers.request.RequestHandler;
 import javax.servlet.http.HttpServletRequest;
 
 /**
@@ -15,9 +16,9 @@ public class IdiscAsyncLargeOutputResponseServlet extends IdiscSelectiveAsyncSer
     }
 
     @Override
-    public boolean isProcessRequestAsync(HttpServletRequest request) {
-        
-        return this.getServiceController().getRequestHandler(request).isOutputLarge(request);
+    public boolean isProcessRequestAsync(HttpServletRequest request, boolean defaultValue) {
+        RequestHandler rh = this.getServiceController().getRequestHandler(request);
+        return rh == null ? defaultValue : rh.isOutputLarge(request);
     }
 }
 

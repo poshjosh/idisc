@@ -12,13 +12,13 @@ public abstract class UpdateUserPreferenceFeedids extends AbstractRequestHandler
     
   public abstract String getRequestParameterName();
   
-  protected abstract List execute(String paramString, JSONArray paramJSONArray, Installation paramInstallation)
-    throws Exception;
+  protected abstract List execute(HttpServletRequest request, String paramString, 
+          JSONArray paramJSONArray, Installation paramInstallation)
+      throws Exception;
   
   @Override
-  public boolean isProtected()
-  {
-    return true;
+  public boolean isProtected() {
+    return false;
   }
   
   protected JSONArray getValues(String name, HttpServletRequest request) throws ServletException {
@@ -36,25 +36,20 @@ public abstract class UpdateUserPreferenceFeedids extends AbstractRequestHandler
   }
   
   @Override
-  public List execute(HttpServletRequest request)
-    throws ServletException
-  {
-    boolean create = true;
-    Installation installation = getInstallation(request, create);
-    if(installation == null) {
-        throw new ServletException("You are not authorized to perform the requested operation");
-    }
+  public List execute(HttpServletRequest request) throws ServletException {
+      
+    Installation installation = getInstallationOrException(request);
+    
     String name = getRequestParameterName();
     
     List output;
-    try
-    {
+    try {
+        
       JSONArray values = getValues(name, request);
       
-      output = execute(name, values, installation);
-    }
-    catch (Exception e)
-    {
+      output = execute(request, name, values, installation);
+    }catch (Exception e) {
+        
       output = null;
       
       throw new ServletException("Error updating user preference feedids", e);

@@ -1,8 +1,6 @@
 package com.idisc.web.servlets.handlers.request;
 
-import com.bc.jpa.EntityController;
 import com.bc.util.XLogger;
-import com.idisc.core.IdiscApp;
 import com.idisc.pu.entities.Favoritefeed;
 import com.idisc.pu.entities.Feed;
 import com.idisc.pu.entities.Installation;
@@ -12,48 +10,42 @@ import java.util.logging.Level;
 import javax.persistence.EntityManager;
 import org.json.simple.JSONArray;
 import com.bc.jpa.JpaContext;
+import javax.servlet.http.HttpServletRequest;
 
 public class Addfavoritefeedids extends UpdateUserPreferenceFeedids {
     
   @Override
-  public String getRequestParameterName()
-  {
+  public String getRequestParameterName() {
     return "com.looseboxes.idisc.addfavoritefeedids.feedids";
   }
   
   @Override
-  protected List execute(String name, JSONArray feedids, Installation installation)
-    throws Exception
-  {
-    JpaContext factory = IdiscApp.getInstance().getJpaContext();
+  protected List execute(HttpServletRequest request, String name, JSONArray feedids, Installation installation)
+    throws Exception {
+      
+    JpaContext factory = getJpaContext(request);
     
     EntityManager em = factory.getEntityManager(Favoritefeed.class);
     
-    try
-    {
+    try {
+        
       em.getTransaction().begin();
       
-      XLogger.getInstance().log(Level.FINE, "Adding {0} favorites for user: {1}", getClass(), Integer.valueOf(feedids.size()), installation.getFeeduserid() == null ? null : installation.getFeeduserid().getEmailAddress());
+      final Object userId = installation.getFeeduserid() == null ? installation.getInstallationid() : installation.getFeeduserid().getEmailAddress();
       
-
+      XLogger.getInstance().log(Level.FINE, "Adding for user: {0} favorite feedids: {1}", getClass(), userId, feedids);
+      
       List<Favoritefeed> valuesFromDatabase = installation.getFavoritefeedList();
       
-      EntityController<Feed, Integer> feedCtrl = factory.getEntityController(Feed.class, Integer.class);
+      for (Object feedid : feedids) {
+          
+        if (feedid != null) {
 
-      outer:
-      for (Object feedid : feedids)
-      {
-        if (feedid != null)
-        {
-
-          for(Favoritefeed favorite:valuesFromDatabase) {
-            if(feedid.equals(favorite.getFeedid().getFeedid())) {
-              // bookmark alread exists
-              continue outer;
-            }
+          if(this.isExistingFavoritefeed(valuesFromDatabase, feedid)) {
+              continue;
           }
 
-          Feed feed = (Feed)feedCtrl.find(Integer.valueOf(feedid.toString()));
+          Feed feed = (Feed)em.find(Feed.class, Integer.valueOf(feedid.toString()));
           
           Favoritefeed favorite = new Favoritefeed();
           favorite.setDatecreated(new Date());
@@ -61,21 +53,30 @@ public class Addfavoritefeedids extends UpdateUserPreferenceFeedids {
           favorite.setInstallationid(installation);
           
           em.persist(favorite);
-        } }
-      label179:
+        } 
+      }
+      
       em.getTransaction().commit();
       
-      XLogger.getInstance().log(Level.FINE, "Added for user: {0}, favorite feedids: {1}", getClass(), installation.getFeeduserid() == null ? null : installation.getFeeduserid().getEmailAddress(), feedids);
-
-    }
-    finally
-    {
+      XLogger.getInstance().log(Level.FINE, "Added for user: {0} favorite feedids: {1}", getClass(), userId, feedids);
+    }finally {
       if (em != null) {
         em.close();
       }
     }
     
-
     return java.util.Collections.emptyList();
+  }
+  
+  public boolean isExistingFavoritefeed(List<Favoritefeed> valuesFromDatabase, Object feedid) {
+    if(valuesFromDatabase != null) {
+      for(Favoritefeed favorite:valuesFromDatabase) {
+        if(feedid.equals(favorite.getFeedid().getFeedid())) {
+          // favorite alread exists
+          return true;
+        }
+      }
+    }
+    return false;
   }
 }

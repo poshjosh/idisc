@@ -2,7 +2,6 @@ package com.idisc.web.servlets.handlers.request;
 
 import com.bc.jpa.EntityController;
 import com.bc.util.XLogger;
-import com.idisc.core.IdiscApp;
 import com.idisc.pu.entities.Bookmarkfeed;
 import com.idisc.pu.entities.Feed;
 import com.idisc.pu.entities.Installation;
@@ -12,50 +11,46 @@ import java.util.logging.Level;
 import javax.persistence.EntityManager;
 import org.json.simple.JSONArray;
 import com.bc.jpa.JpaContext;
+import javax.servlet.http.HttpServletRequest;
 
-public class Addbookmarkfeedids extends UpdateUserPreferenceFeedids
-{
+public class Addbookmarkfeedids extends UpdateUserPreferenceFeedids {
+    
   @Override
-  public String getRequestParameterName()
-  {
+  public String getRequestParameterName(){
     return "com.looseboxes.idisc.addbookmarkfeedids.feedids";
   }
   
   @Override
-  protected List execute(String name, JSONArray feedids, Installation installation)
-    throws Exception
-  {
-    JpaContext factory = IdiscApp.getInstance().getJpaContext();
+  protected List execute(HttpServletRequest request, String name, JSONArray feedids, Installation installation)
+    throws Exception {
+      
+    JpaContext jpaContext = getJpaContext(request);
     
-    EntityManager em = factory.getEntityManager(Bookmarkfeed.class);
+    EntityManager em = jpaContext.getEntityManager(Bookmarkfeed.class);
     
-    try
-    {
+    try {
+        
       em.getTransaction().begin();
       
-      XLogger.getInstance().log(Level.FINE, "Adding {0} bookmarks for user: {1}", getClass(), Integer.valueOf(feedids.size()), installation.getFeeduserid() == null ? null : installation.getFeeduserid().getEmailAddress());
+      final Object userId = installation.getFeeduserid() == null ? installation.getInstallationid() : installation.getFeeduserid().getEmailAddress();
       
-
+      XLogger.getInstance().log(Level.FINE, "Adding for user: {0} bookmark feedids: {1}", getClass(), userId, feedids);
+      
       List<Bookmarkfeed> valuesFromDatabase = installation.getBookmarkfeedList();
       
-      EntityController<Feed, Integer> feedCtrl = factory.getEntityController(Feed.class, Integer.class);
+//      EntityController<Feed, Integer> feedCtrl = factory.getEntityController(Feed.class, Integer.class);
+      com.bc.jpa.dao.BuilderForSelect<Feed> select = jpaContext.getBuilderForSelect(Feed.class);
       
-
-
       outer:
-      for (Object feedid : feedids)
-      {
-        if (feedid != null)
-        {
+      for (Object feedid : feedids) {
+          
+        if (feedid != null){
 
-          for(Bookmarkfeed bookmark:valuesFromDatabase) {
-            if(feedid.equals(bookmark.getFeedid().getFeedid())) {
-              // bookmark alread exists
-              continue outer;
-            }
+          if(this.isExistingBookmarkfeed(valuesFromDatabase, feedid)) {
+            continue;
           }
 
-          Feed feed = (Feed)feedCtrl.find(Integer.valueOf(feedid.toString()));
+          Feed feed = select.findAndClose(Feed.class, feedid);
           
           Bookmarkfeed bookmark = new Bookmarkfeed();
           bookmark.setDatecreated(new Date());
@@ -63,21 +58,31 @@ public class Addbookmarkfeedids extends UpdateUserPreferenceFeedids
           bookmark.setInstallationid(installation);
           
           em.persist(bookmark);
-        } }
-      label179:
+        } 
+      }
+      
       em.getTransaction().commit();
       
-      XLogger.getInstance().log(Level.FINE, "Added for user: {0}, favorite feedids: {1}", getClass(), installation.getFeeduserid() == null ? null : installation.getFeeduserid().getEmailAddress(), feedids);
+      XLogger.getInstance().log(Level.FINE, "Added for user: {0}, bookmark feedids: {1}", getClass(), userId, feedids);
 
-    }
-    finally
-    {
+    }finally{
       if (em != null) {
         em.close();
       }
     }
     
-
     return java.util.Collections.emptyList();
+  }
+  
+  public boolean isExistingBookmarkfeed(List<Bookmarkfeed> valuesFromDatabase, Object feedid) {
+    if(valuesFromDatabase != null) {
+      for(Bookmarkfeed bookmark:valuesFromDatabase) {
+
+        if(feedid.equals(bookmark.getFeedid().getFeedid())) {
+          return true;
+        }
+      }
+    }
+    return false;
   }
 }

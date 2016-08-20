@@ -1,8 +1,6 @@
 package com.idisc.web.beans;
 
 import com.bc.jpa.EntityController;
-import com.bc.jpa.query.JPQL;
-import com.idisc.core.IdiscApp;
 import com.idisc.web.servlets.request.RequestParameters;
 import java.io.Serializable;
 import java.util.Collections;
@@ -11,6 +9,8 @@ import java.util.List;
 import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import com.bc.jpa.JpaContext;
+import com.idisc.web.AppContext;
+import com.idisc.web.Attributes;
 
 /**
  * @param <E>
@@ -32,14 +32,16 @@ public class SelectorBean<E> implements Serializable {
     
     private Map params;
     
-    private JpaContext cf;
+    private JpaContext jpaContext;
     
-    private JPQL<E> jpql;
+//    private JPQL<E> jpql;
     
     public void setRequest(HttpServletRequest request) {
         
-        cf = IdiscApp.getInstance().getJpaContext();
+        AppContext appCtx = (AppContext)request.getServletContext().getAttribute(Attributes.APP_CONTEXT);
         
+        jpaContext = appCtx.getIdiscApp().getJpaContext();
+
         if(this.isAddParametersFromRequest()) {
             
             Map map = new RequestParameters(request);
@@ -59,28 +61,27 @@ public class SelectorBean<E> implements Serializable {
                 params = Collections.singletonMap(columnName, columnValue);
             }
         }
-        this.jpql = cf.getJpql(this.getEntityClass());
     }
     
     public E getSingleResult() {
-        return jpql.getSingleResult(params, "AND", null, true);
+        return jpaContext.getBuilderForSelect(entityClass).where(entityClass, params).getSingleResultAndClose();
     }
     
     public List<E> getResultList() {
-        return jpql.getResultList(params, "AND", null, offset, limit, true);
+        return jpaContext.getBuilderForSelect(entityClass).where(entityClass, params).getResultsAndClose(offset, limit);
     }
     
     public List<Map<String, ?>> getResultListMappings() {
-        EntityController<E, ?> ec = cf.getEntityController(this.getEntityClass());
+        EntityController<E, ?> ec = jpaContext.getEntityController(this.getEntityClass());
         return ec.toMapList(this.getResultList(), -1);
     }
     
     public String getTableName() {
-        return cf.getMetaData().getTableName(entityClass);
+        return jpaContext.getMetaData().getTableName(entityClass);
     }
 
     public void setTableName(String table) {
-        this.entityClass = cf.getMetaData().findEntityClass(table);
+        this.entityClass = jpaContext.getMetaData().findEntityClass(table);
     }
 
     public Class<E> getEntityClass() {

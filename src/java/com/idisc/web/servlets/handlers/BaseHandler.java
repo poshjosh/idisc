@@ -1,5 +1,8 @@
 package com.idisc.web.servlets.handlers;
 
+import com.bc.jpa.JpaContext;
+import com.idisc.web.AppContext;
+import com.idisc.web.Attributes;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
@@ -31,5 +34,14 @@ public class BaseHandler {
     if(session != null) {
       session.removeAttribute(name);
     }
+  }
+
+  public AppContext getAppContext(HttpServletRequest request) {
+    AppContext appCtx = (AppContext)request.getServletContext().getAttribute(Attributes.APP_CONTEXT);
+    return appCtx;
+  }
+  
+  public JpaContext getJpaContext(HttpServletRequest request) {
+    return this.getAppContext(request).getIdiscApp().getJpaContext();
   }
 }

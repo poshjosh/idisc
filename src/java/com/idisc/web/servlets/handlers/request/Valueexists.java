@@ -1,13 +1,6 @@
 package com.idisc.web.servlets.handlers.request;
 
 import com.bc.jpa.EntityController;
-import com.idisc.core.IdiscApp;
-import com.idisc.pu.entities.Archivedfeed;
-import com.idisc.pu.entities.Comment;
-import com.idisc.pu.entities.Feeduser;
-import com.idisc.pu.entities.Installation;
-import com.idisc.pu.entities.Site;
-import com.idisc.pu.entities.Sitetype;
 import com.idisc.web.servlets.request.RequestParameters;
 import java.io.IOException;
 import java.util.List;
@@ -34,7 +27,7 @@ public class Valueexists extends AbstractRequestHandler<Boolean> {
       throw new ServletException("Missing value for required parameter: 'table'");
     }
     
-    EntityController ec = getEntityController(table);
+    EntityController ec = getEntityController(request, table);
     
     if (ec == null) {
       throw new ServletException("Invalid value for required parameter: 'table'");
@@ -55,24 +48,9 @@ public class Valueexists extends AbstractRequestHandler<Boolean> {
     return Boolean.TRUE;
   }
   
-  public EntityController getEntityController(String table) {
-    JpaContext cf = IdiscApp.getInstance().getJpaContext();
-    switch (table) {
-    case "installation": 
-      return cf.getEntityController(Installation.class);
-    case "feed": 
-      return cf.getEntityController(Feed.class);
-    case "comment": 
-      return cf.getEntityController(Comment.class);
-    case "feeduser": 
-      return cf.getEntityController(Feeduser.class);
-    case "site": 
-      return cf.getEntityController(Site.class);
-    case "sitetype": 
-      return cf.getEntityController(Sitetype.class);
-    case "archivedfeed": 
-      return cf.getEntityController(Archivedfeed.class);
-    }
-    return null;
+  public EntityController getEntityController(HttpServletRequest request, String table) {
+    JpaContext jpaContext = this.getJpaContext(request);
+    Class entityClass = jpaContext.getMetaData().findEntityClass(table);
+    return entityClass == null ? null : jpaContext.getEntityController(entityClass);
   }
 }

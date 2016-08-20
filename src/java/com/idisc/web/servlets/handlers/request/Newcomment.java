@@ -6,14 +6,12 @@ import com.bc.util.XLogger;
 import com.idisc.pu.entities.Comment;
 import com.idisc.pu.entities.Feed;
 import com.idisc.pu.entities.Installation;
-import com.idisc.web.exceptions.InstallationException;
 import com.idisc.web.exceptions.ValidationException;
 import java.io.IOException;
 import java.util.Date;
 import java.util.logging.Level;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 public class Newcomment extends NewEntityHandler<Comment> {
 
@@ -27,12 +25,8 @@ public class Newcomment extends NewEntityHandler<Comment> {
     throws ServletException, IOException
   {
 XLogger.getInstance().log(Level.FINER, "execute(HttpServletRequest, HttpServletResponse)", this.getClass());
-    Installation installation = getInstallation(request, true);
+    Installation installation = getInstallationOrException(request);
     
-    if(installation == null) {
-      throw new InstallationException("You are not authorized to perform the requested operation");
-    }
-
     Comment comment = new Comment();
     
     comment.setCommentSubject(request.getParameter("commentSubject"));
@@ -43,7 +37,7 @@ XLogger.getInstance().log(Level.FINER, "execute(HttpServletRequest, HttpServletR
     
     comment.setInstallationid(installation);
     
-    EntityController<Comment, Object> ec = getEntityController();
+    EntityController<Comment, Integer> ec = this.getJpaContext(request).getEntityController(Comment.class, Integer.class);
     
     Integer repliedto_id = getInteger(request, "repliedto");
     if (repliedto_id != null) {
@@ -70,7 +64,7 @@ XLogger.getInstance().log(Level.FINER, "execute(HttpServletRequest, HttpServletR
   }
   
   private <T> T getEntity(HttpServletRequest request, Class<T> aClass, String column) {
-    EntityController<T, Object> ec = getEntityController(aClass);
+    EntityController<T, Object> ec = this.getJpaContext(request).getEntityController(aClass);
     Integer feedIdVal = getInteger(request, column);
     T entity = ec.find(feedIdVal);
     return entity;

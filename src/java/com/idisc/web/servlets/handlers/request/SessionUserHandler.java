@@ -1,6 +1,6 @@
 package com.idisc.web.servlets.handlers.request;
 
-import com.idisc.core.User;
+import com.idisc.pu.User;
 import java.util.Map;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;

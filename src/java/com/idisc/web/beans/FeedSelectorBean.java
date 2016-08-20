@@ -2,23 +2,25 @@ package com.idisc.web.beans;
 
 import com.bc.util.XLogger;
 import com.idisc.core.comparator.BaseFeedComparator;
+import com.idisc.pu.SelectByDate;
 import com.idisc.pu.entities.Feed;
-import com.idisc.pu.entities.Installation;
+import com.idisc.pu.entities.Feed_;
 import com.idisc.web.AppContext;
 import com.idisc.web.Attributes;
-import com.idisc.web.servlets.handlers.request.SessionUserHandlerImpl;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import javax.servlet.http.HttpServletRequest;
+import com.bc.jpa.dao.BuilderForSelect;
 
 /**
  * @author Josh
  */
-public class FeedSelectorBean extends com.idisc.core.FeedSelector implements Serializable {
+public class FeedSelectorBean implements Serializable {
     
     private boolean async;
     
@@ -30,15 +32,13 @@ public class FeedSelectorBean extends com.idisc.core.FeedSelector implements Ser
     
     private int maxOutputSize;
 
-    private Installation installation;
-    
     private final long updateInterval;
     
     private long lastUpdateTime;
     
     private List<Feed> topfeeds;
     
-    private transient Runnable currentTask;
+    private boolean taskSubmitted;
     
     public FeedSelectorBean() { 
 XLogger.getInstance().log(Level.FINE, "<init>", this.getClass());  
@@ -51,14 +51,14 @@ XLogger.getInstance().log(Level.FINE, "<init>", this.getClass());
     }
     
     public boolean isTaskSubmitted() {
-        return currentTask != null;
+        return taskSubmitted;
     }
     
     public boolean isNextUpdateDue() {
         return (System.currentTimeMillis() - lastUpdateTime) > this.updateInterval;
     }
 
-    public List<Feed> getList() {
+    public List<Feed> getResultList() {
         return topfeeds;
     }
     
@@ -68,16 +68,15 @@ XLogger.getInstance().log(Level.FINE, "<init>", this.getClass());
     
     public void setRequest(HttpServletRequest request) {
 
-        if(this.installation == null) {
-            
-            this.installation = new SessionUserHandlerImpl().getInstallation(request, false);
-        }
-        
         if((topfeeds == null && !this.isTaskSubmitted()) || this.isNextUpdateDue()) {
             
 XLogger.getInstance().log(Level.FINER, "Refreshing Topfeeds", this.getClass());        
 
-            FeedSelectionTask task = new FeedSelectionTask();
+            AppContext appCtx = (AppContext)request.getServletContext().getAttribute(Attributes.APP_CONTEXT);
+            
+            SelectByDate feedDao = new SelectByDate(appCtx.getIdiscApp().getJpaContext(), Feed.class, Integer.class);
+            
+            FeedSelectionTask task = new FeedSelectionTask(feedDao);
             
             if(request.getSession() == null) {
                 return;
@@ -85,10 +84,9 @@ XLogger.getInstance().log(Level.FINER, "Refreshing Topfeeds", this.getClass());
             
             task.sessionId = request.getSession().getId();
             
-            currentTask = task;
+            taskSubmitted = true;
             
             if(async) {
-                AppContext appCtx = (AppContext)request.getServletContext().getAttribute(Attributes.APP_CONTEXT);
                 ExecutorService es = appCtx.getGlobalExecutorService(false);
                 if(es != null) {
                     es.submit(task);
@@ -101,23 +99,31 @@ XLogger.getInstance().log(Level.FINER, "Refreshing Topfeeds", this.getClass());
     
     private final class FeedSelectionTask implements Runnable {
         String sessionId;
+        SelectByDate<Feed, Integer> feedDao;
+        private FeedSelectionTask(SelectByDate<Feed, Integer> feedDao) {
+          this.feedDao = feedDao;  
+        }
         @Override
         public void run() {
             try{
-                List<Feed> selected = getList(maxAgeDays, maxSpread, batchSize);
-                topfeeds = sort(selected, createComparator(), maxOutputSize);
+                
+                List<Feed> selected = feedDao.getResultList(Feed_.feeddate.getName(), BuilderForSelect.GT, maxAgeDays, 
+                        TimeUnit.DAYS, maxSpread, batchSize);
+                
+                if(selected != null && !selected.isEmpty()) {
+                    topfeeds = new ArrayList(feedDao.sort(selected, createComparator(), maxOutputSize));
+                }
 XLogger.getInstance().log(Level.FINER, "Session ID: {0}, Topfeeds: {1}", 
 this.getClass(), sessionId, topfeeds == null ? null : topfeeds.size());
+
                 lastUpdateTime = System.currentTimeMillis();
-                currentTask = null;
+                
+                taskSubmitted = false;
+                
             }catch(RuntimeException e) {
                 XLogger.getInstance().log(Level.WARNING, "Thread: "+Thread.currentThread().getName(), this.getClass(), e);
             }
         }
-    }
-
-    public Installation getInstallation() {
-        return installation;
     }
 
     public boolean isAsync() {

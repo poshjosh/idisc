@@ -8,10 +8,13 @@ import com.bc.util.concurrent.DirectExecutorService;
 import com.bc.util.concurrent.NamedThreadFactory;
 import com.idisc.core.IdiscApp;
 import com.idisc.core.IdiscAuthSvcSession;
-import com.idisc.pu.SearchHandlerFactory;
-import com.idisc.pu.SearchHandlerFactoryImpl;
+import com.idisc.pu.SearchResultsHandlerFactoryImpl;
 import com.idisc.pu.entities.Feed;
 import com.idisc.pu.entities.Site;
+import com.idisc.shared.SharedContext;
+import com.idisc.shared.SharedContextImpl;
+import com.idisc.shared.feedid.FeedidsImpl;
+import com.idisc.shared.feedid.FeedidsServiceImpl;
 import com.idisc.web.servlets.handlers.request.Appproperties;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -31,9 +34,12 @@ import java.util.logging.Level;
 import java.util.logging.LogManager;
 import javax.servlet.ServletContext;
 import org.apache.commons.configuration.Configuration;
+import com.idisc.pu.SearchResultsHandlerFactory;
 
 public class WebApp implements AppContext, ThreadPoolData {
     
+  private final boolean productionMode;
+  
   private final boolean debug;
   
   private final boolean asyncProcessingEnabled;
@@ -52,7 +58,11 @@ public class WebApp implements AppContext, ThreadPoolData {
   
   private final ServletContext context;
   
-  public WebApp(ServletContext context, Configuration config){
+  private final IdiscApp idiscApp;
+  
+  private final SharedContext sharedContext;
+  
+  public WebApp(ServletContext context, Configuration config, IdiscApp idiscApp, boolean productionMode) {
       
     this.memoryAtStartup = Runtime.getRuntime().freeMemory();
 XLogger.getInstance().log(Level.INFO, "Memory at startup: {0}, available processors: {1}", 
@@ -60,6 +70,8 @@ XLogger.getInstance().log(Level.INFO, "Memory at startup: {0}, available process
 
     this.context = context;
     this.config = config;
+    
+    this.productionMode = productionMode;
     
     final Map appProps = WebApp.this.getAppProperties();
     final long connectTime = Long.parseLong(appProps.get(Appproperties.CONNECT_TIMEOUT_MILLIS).toString());
@@ -108,6 +120,20 @@ XLogger.getInstance().log(Level.INFO, "Async processing enabled: {0}", this.getC
     // supercede any previously loaded logging configuration file
     //
     this.initLogging2();
+    
+    this.idiscApp = idiscApp;
+    
+    this.sharedContext = new SharedContextImpl(new FeedidsServiceImpl(new FeedidsImpl()));
+  }
+  
+  @Override
+  public IdiscApp getIdiscApp() {
+    return this.idiscApp;
+  }
+
+  @Override
+  public final SharedContext getSharedContext() {
+    return sharedContext;
   }
   
   private void initLogging() {
@@ -148,7 +174,8 @@ XLogger.getInstance().log(Level.INFO, "Async processing enabled: {0}", this.getC
   @Override
   public List<Site> getSites() {
     if(sites == null) {
-      sites = IdiscApp.getInstance().getJpaContext().getEntityController(Site.class, Integer.class).find();
+      com.bc.jpa.dao.BuilderForSelect<Site> select = idiscApp.getJpaContext().getBuilderForSelect(Site.class);  
+      sites = select.from(Site.class).getResultsAndClose();
     }
     return sites;
   }
@@ -184,7 +211,7 @@ XLogger.getInstance().log(Level.INFO, "Async processing enabled: {0}", this.getC
   
   @Override
   public boolean isProductionMode() {
-    return true;
+    return this.productionMode;
   }
   
   @Override
@@ -239,16 +266,16 @@ XLogger.getInstance().log(Level.INFO, "Async processing enabled: {0}", this.getC
   }
   
   @Override
-  public SearchHandlerFactory getSearchHandlerFactory() {
+  public SearchResultsHandlerFactory getSearchHandlerFactory() {
     return this.getSearchHandlerFactory(false);
   }
   
   @Override
-  public SearchHandlerFactory getSearchHandlerFactory(boolean createIfNone) {
+  public SearchResultsHandlerFactory getSearchHandlerFactory(boolean createIfNone) {
     final String name = "SearchHandlerFactory";
-    SearchHandlerFactory shf = (SearchHandlerFactory)context.getAttribute(name);
+    SearchResultsHandlerFactory shf = (SearchResultsHandlerFactory)context.getAttribute(name);
     if(shf == null && createIfNone) {
-      shf = new SearchHandlerFactoryImpl(IdiscApp.getInstance().getJpaContext());
+      shf = new SearchResultsHandlerFactoryImpl(idiscApp.getJpaContext());
       context.setAttribute(name, shf);
     }
     return shf;

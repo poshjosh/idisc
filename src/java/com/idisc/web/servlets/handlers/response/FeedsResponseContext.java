@@ -1,13 +1,13 @@
 package com.idisc.web.servlets.handlers.response;
 
 import com.bc.util.XLogger;
-import com.idisc.core.CommentNotificationsBuilder;
+import com.idisc.core.CommentRepliesBuilder;
 import com.idisc.core.util.Util;
 import com.idisc.pu.entities.Feed;
 import com.idisc.pu.entities.Installation;
-import com.idisc.pu.entities.one.Feed_;
+import com.idisc.web.Attributes;
 import com.idisc.web.ConfigNames;
-import com.idisc.web.Notices;
+import com.idisc.web.tasks.UpdateFileFeeds;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -15,6 +15,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
+import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import org.apache.commons.configuration.Configuration;
 
@@ -36,7 +37,10 @@ public class FeedsResponseContext<E extends Feed> extends SuccessHandlerContext<
       
     final int feedCount = feeds == null ? 0 : feeds.size();
     
-    Collection<Map> notifications = getNotices(feeds);
+    Collection<Feed> notifications = getNotices(feeds, null);
+
+XLogger.getInstance().log(Level.FINER, "Installation: {0}, number of notifications: {1}", 
+        this.getClass(), installation, notifications==null?null:notifications.size());
     
     final int noticeCount = notifications == null ? 0 : notifications.size();
     
@@ -94,10 +98,10 @@ XLogger.getInstance().log(Level.FINER, "Installation: {0}, number of feeds: {1}"
       
       final boolean directRepliesOnly = config.getBoolean(ConfigNames.COMMENTS_NOTIFICATIONS_DIRECTREPLIESONLY, false);
       final int maxAgeDays = config.getInt(ConfigNames.COMMENTS_NOTIFICATIONS_MAXAGE_DAYS, 30);
-      final boolean repeat = config.getBoolean(ConfigNames.COMMENTS_NOTIFICATIONS_REPEAT, false);
+      final int max = config.getInt(ConfigNames.COMMENTS_NOTIFICATIONS_MAX, 0);
       
       List<Map<String, Object>> commentNotices = 
-              new CommentNotificationsBuilder().build(installation, directRepliesOnly, maxAgeDays, repeat);
+              new CommentRepliesBuilder().build(installation, directRepliesOnly, maxAgeDays, max);
       
       if ((commentNotices != null) && (!commentNotices.isEmpty())) {
         return Collections.singletonMap("notices", commentNotices);
@@ -109,30 +113,46 @@ XLogger.getInstance().log(Level.FINER, "Installation: {0}, number of feeds: {1}"
     }
   }
 
-  private static Collection<Map> _ns;
-  public Collection<Map> getNotices(List<E> feeds) {
-    try {
-      if (_ns == null) {
-        XLogger.getInstance().log(Level.INFO, "Creating tips cache", getClass());
-        _ns = new Notices(this.getServletContext(), true).values();
-      }
+  public Collection<Feed> getNotices(List<E> feeds, Collection<Feed> defaultValue) {
       
-      if ((_ns != null) && (!_ns.isEmpty())) {
+    Collection<Feed> notices = defaultValue;
+    
+    try {
+        
+      Map<String, Feed> noticesCache = this.getNoticesCache();
+      
+      notices = noticesCache == null ? null : new ArrayList(noticesCache.values());
+
+      if (notices != null && !notices.isEmpty()) {
           
-        XLogger.getInstance().log(Level.FINER, "Adding {0} tips to output", getClass(), _ns.size());
+        XLogger.getInstance().log(Level.FINER, "Adding {0} notices to output", getClass(), notices.size());
         
         Date date = Util.getEarliestDate(feeds);
         
-        for (Map notice : _ns) {
-          notice.put(Feed_.datecreated.getName(), date);
-          notice.put(Feed_.feeddate.getName(), date);
+        for (Feed notice : notices) {
+          notice.setDatecreated(date);
+          notice.setFeeddate(date);
         }
       }
     } catch (Exception e) { 
-      XLogger.getInstance().log(Level.WARNING, "Error loading tips", getClass(), e);
+      XLogger.getInstance().log(Level.WARNING, "Error loading notices", getClass(), e);
     }
     
-    return _ns;
+    return notices;
+  }
+  
+  public Map<String, Feed> getNoticesCache() {
+      
+    ServletContext context = this.getServletContext();
+    
+    Map<String, Feed> noticesCache = (Map<String, Feed>)context.getAttribute(Attributes.NOTICES_MAP);
+    
+    if(noticesCache == null) {
+        
+      noticesCache = new UpdateFileFeeds(context).call();
+    }
+    
+    return noticesCache;
   }
 
   public final Installation getInstallation() {

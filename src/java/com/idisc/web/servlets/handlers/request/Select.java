@@ -1,8 +1,6 @@
 package com.idisc.web.servlets.handlers.request;
 
-import com.bc.jpa.EntityController;
 import com.bc.util.XLogger;
-import com.idisc.core.IdiscApp;
 import com.idisc.web.Attributes;
 import com.idisc.web.AppContext;
 import com.idisc.web.ConfigNames;
@@ -13,23 +11,12 @@ import java.util.Map;
 import java.util.logging.Level;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
-import com.bc.jpa.JpaContext;
 
 public abstract class Select<T> extends AbstractRequestHandler<List<T>>{
     
-  private transient EntityController ec_accessViaGetter;
-  
   public Select(){ }
 
   protected abstract Class<T> getEntityClass();
-  
-  public EntityController<T, Object> getEntityController(){
-    if (this.ec_accessViaGetter == null) {
-      JpaContext factory = IdiscApp.getInstance().getJpaContext();
-      this.ec_accessViaGetter = factory.getEntityController(getEntityClass());
-    }
-    return this.ec_accessViaGetter;
-  }
   
   @Override
   public List<T> execute(HttpServletRequest request) throws ServletException, IOException{
@@ -51,7 +38,7 @@ XLogger.getInstance().entering(this.getClass(), "#execute(HttpServletRequest, Ht
     
     int limit = getLimit(request);
       
-    List<T> selected = getEntityController().select(searchParams, orderBy, offset, limit);
+    List<T> selected = this.getJpaContext(request).getEntityController(this.getEntityClass()).select(searchParams, orderBy, offset, limit);
     
 XLogger.getInstance().log(Level.FINE, "Selected: {0}", this.getClass(), selected==null?null:selected.size());
     return selected;

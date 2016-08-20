@@ -1,7 +1,6 @@
 package com.idisc.web.servlets.handlers.request;
 
 import com.bc.util.XLogger;
-import com.idisc.core.IdiscApp;
 import com.idisc.pu.entities.Favoritefeed;
 import com.idisc.pu.entities.Installation;
 import java.util.Collections;
@@ -11,18 +10,21 @@ import java.util.logging.Level;
 import javax.persistence.EntityManager;
 import org.json.simple.JSONArray;
 import com.bc.jpa.JpaContext;
+import javax.servlet.http.HttpServletRequest;
 
 public class Removefavoritefeedids extends UpdateUserPreferenceFeedids
 {
+  @Override
   public String getRequestParameterName()
   {
     return "com.looseboxes.idisc.removefavoritefeedids.feedids";
   }
   
-  protected List execute(String name, JSONArray feedids, Installation installation)
+  @Override
+  protected List execute(HttpServletRequest request, String name, JSONArray feedids, Installation installation)
     throws Exception
   {
-    JpaContext factory = IdiscApp.getInstance().getJpaContext();
+    JpaContext factory = this.getJpaContext(request);
     
     EntityManager em = factory.getEntityManager(Favoritefeed.class);
     

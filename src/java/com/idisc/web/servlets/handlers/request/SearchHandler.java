@@ -1,6 +1,5 @@
 package com.idisc.web.servlets.handlers.request;
 
-import com.bc.jpa.query.QueryBuilder;
 import com.idisc.web.exceptions.ValidationException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -8,18 +7,20 @@ import java.util.List;
 import javax.persistence.TypedQuery;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
+import com.bc.jpa.dao.BuilderForSelect;
 
 /**
  * @author poshjosh
+ * @param <T>
  */
-public abstract class SearchHandler<T> extends Select<T> {
+public abstract class SearchHandler<T> extends com.idisc.web.servlets.handlers.request.Select<T> {
 
   public SearchHandler() { }
 
   @Override
   protected abstract Class<T> getEntityClass();
   
-  protected abstract QueryBuilder getQueryBuilder(HttpServletRequest request, String query);
+  protected abstract BuilderForSelect<T> getSelect(HttpServletRequest request, String query);
 
   @Override
   public boolean isProtected() {
@@ -43,14 +44,14 @@ public abstract class SearchHandler<T> extends Select<T> {
 
   public List<T> select(HttpServletRequest request, String toFind, Date after, int offset, int limit) {
 
-    try(QueryBuilder qb = this.getQueryBuilder(request, toFind)) {
+    try(BuilderForSelect<T> select = this.getSelect(request, toFind)) {
     
         if(after != null) {
 
-            qb.where(Feed.class, "feeddate", QueryBuilder.GREATER_THAN, after);
+            select.where(Feed.class, "feeddate", BuilderForSelect.GREATER_THAN, after);
         }
 
-        final TypedQuery<T> tq = qb.build();
+        final TypedQuery<T> tq = select.createQuery();
 
         if(offset >= 0) {
 

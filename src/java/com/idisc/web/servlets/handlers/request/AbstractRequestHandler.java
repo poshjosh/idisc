@@ -1,11 +1,14 @@
 package com.idisc.web.servlets.handlers.request;
 
 import com.bc.jpa.search.SearchResults;
+import com.bc.util.JsonBuilder;
 import com.idisc.web.servlets.handlers.response.HtmlResponseHandler;
 import com.idisc.web.servlets.handlers.response.ResponseHandler;
 import com.bc.util.XLogger;
+import com.idisc.core.util.EntityJsonBuilder;
 import com.idisc.web.Attributes;
 import com.idisc.web.AppContext;
+import com.idisc.web.ConfigNames;
 import com.idisc.web.exceptions.LoginException;
 import com.idisc.web.servlets.handlers.response.ErrorHandlerContext;
 import com.idisc.web.servlets.handlers.response.ObjectToJsonResponseHandler;
@@ -19,6 +22,7 @@ import java.util.logging.Level;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
+import org.apache.commons.configuration.Configuration;
 
 public abstract class AbstractRequestHandler<V> 
         extends SessionUserHandlerImpl 
@@ -82,12 +86,29 @@ public abstract class AbstractRequestHandler<V>
           HttpServletRequest request, ResponseContext<X> context) {
     ResponseHandler<X, Object> output;
     if (this.isHtmlResponse(request)) {
-      output = new HtmlResponseHandler(request, context);
+      output = this.createHtmlResponseHandler(request, context);
     } else {
-      output = new ObjectToJsonResponseHandler(request, context);  
+      output = this.createJsonResponseHandler(request, context);
     }
 XLogger.getInstance().log(Level.FINER, "Response handler type: {0}", 
         this.getClass(), output.getClass().getName());
+    return output;
+  }
+  
+  protected <X> ResponseHandler<X, Object> createJsonResponseHandler(
+          HttpServletRequest request, ResponseContext<X> context) {
+    final boolean tidyOutput = this.isTidyOutput(request);
+    final boolean plainTextOnly = this.isPlainTextOnly(request);
+    final int bufferSize = this.getMaxTextLengthPerItem(request);
+    JsonBuilder jsonBuilder = 
+            new EntityJsonBuilder(tidyOutput, plainTextOnly, bufferSize);
+    ResponseHandler<X, Object> output = new ObjectToJsonResponseHandler(context, jsonBuilder, bufferSize);  
+    return output;
+  }
+  
+  protected <X> ResponseHandler<X, Object> createHtmlResponseHandler(
+          HttpServletRequest request, ResponseContext<X> context) {
+    ResponseHandler<X, Object> output = new HtmlResponseHandler(context);
     return output;
   }
   
@@ -148,5 +169,37 @@ XLogger.getInstance().log(Level.FINER, "Response format: {0}", this.getClass(), 
                 request, this.createErrorResponseContext(request));
     }  
     return errorResponseHandler;
+  }
+
+  public boolean isPlainTextOnly(HttpServletRequest request) {
+    String contentType = request.getParameter("content-type");
+    boolean b = (contentType != null) && (contentType.contains("text/plain"));
+    XLogger.getInstance().log(Level.FINER, "Plain text only: {0}", getClass(), b);
+    return b;
+  }
+
+  public boolean isTidyOutput(HttpServletRequest request) {
+    boolean tidy;
+    String tidyParam = request.getParameter("tidy");
+    if(tidyParam != null) {
+        tidy = "1".equals(tidyParam) || "true".equalsIgnoreCase(tidyParam);
+    }else{
+        tidy = !this.getAppContext(request).isProductionMode();
+    }
+    return tidy;
+  }
+  
+  public int getMaxTextLengthPerItem(HttpServletRequest request) {
+      Configuration config = this.getAppContext(request).getConfiguration();
+      final int defaultLen = config.getInt(ConfigNames.DEFAULT_CONTENT_LENGTH, 1000);
+      return getInt(request, "maxlen", defaultLen);
+  }
+  
+  private int getInt(HttpServletRequest request, String key, int defaultValue) {
+    String val = request.getParameter(key);
+    if ((val == null) || (val.isEmpty())) {
+      return defaultValue;
+    }
+    return Integer.parseInt(val);
   }
 }

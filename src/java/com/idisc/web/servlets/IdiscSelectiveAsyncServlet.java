@@ -22,7 +22,7 @@ public abstract class IdiscSelectiveAsyncServlet extends AbstractIdiscServlet {
     super(sc);
   }
   
-  public abstract boolean isProcessRequestAsync(final HttpServletRequest request);
+  public abstract boolean isProcessRequestAsync(final HttpServletRequest request, boolean defaultValue);
     
   @Override
   public void process(
@@ -33,7 +33,7 @@ public abstract class IdiscSelectiveAsyncServlet extends AbstractIdiscServlet {
     
     AppContext appCtx = (AppContext)request.getServletContext().getAttribute(Attributes.APP_CONTEXT);
         
-    if(appCtx.isAsyncProcessingEnabled() && this.isProcessRequestAsync(request)) {
+    if(appCtx.isAsyncProcessingEnabled() && this.isProcessRequestAsync(request, true)) {
 
         AsyncContext asyncContext = request.startAsync(request, response);
 

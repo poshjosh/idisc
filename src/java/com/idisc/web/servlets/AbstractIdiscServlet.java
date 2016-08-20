@@ -4,6 +4,7 @@ import com.idisc.web.servlets.handlers.ServiceController;
 import com.idisc.web.servlets.handlers.ServiceControllerImpl;
 import com.idisc.web.servlets.handlers.request.RequestHandler;
 import java.io.IOException;
+import java.util.Objects;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -21,7 +22,7 @@ public abstract class AbstractIdiscServlet extends HttpServlet {
   }
   
   public AbstractIdiscServlet(ServiceController sc) { 
-    this.serviceController = sc;
+    this.serviceController = Objects.requireNonNull(sc);
   }
   
   public abstract void process(

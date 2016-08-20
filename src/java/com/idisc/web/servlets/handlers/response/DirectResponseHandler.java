@@ -3,16 +3,12 @@ package com.idisc.web.servlets.handlers.response;
 import com.bc.util.JsonBuilder;
 import com.bc.util.XLogger;
 import com.idisc.core.util.EntityJsonBuilder;
-import com.idisc.web.AppContext;
-import com.idisc.web.Attributes;
-import com.idisc.web.ConfigNames;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.logging.Level;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import org.apache.commons.configuration.Configuration;
 
 /**
  * Writes the response output data directly to the response writer
@@ -20,19 +16,17 @@ import org.apache.commons.configuration.Configuration;
  */
 public abstract class DirectResponseHandler<V, O> extends AbstractResponseHandler<V, O> {
 
-  private final boolean tidyOutput;
-    
-  private final boolean plainTextOnly;
-    
-  private final int maxTextLengthPerItem;
+  private final JsonBuilder jsonBuilder;
 
-  public DirectResponseHandler(HttpServletRequest request, ResponseContext context) {
-    super(context);
-    this.tidyOutput = DirectResponseHandler.this.isTidyOutput(request);
-    this.plainTextOnly = DirectResponseHandler.this.isPlainTextOnly(request);
-    this.maxTextLengthPerItem = DirectResponseHandler.this.getMaxTextLengthPerItem(request);
+  public DirectResponseHandler(ResponseContext context, boolean tidyOutput, boolean plainTextOnly, int maxTextLengthPerItem) {
+    this(context, new EntityJsonBuilder(tidyOutput, plainTextOnly, maxTextLengthPerItem));
   }
     
+  public DirectResponseHandler(ResponseContext context, JsonBuilder jsonBuilder) {
+    super(context);
+    this.jsonBuilder = jsonBuilder;
+  }
+
   protected String toString(O output) {
     return String.valueOf(output);
   }
@@ -78,66 +72,8 @@ public abstract class DirectResponseHandler<V, O> extends AbstractResponseHandle
       return 200;
   }
 
-  private JsonBuilder _jf;
-  public JsonBuilder getJsonBuilder(HttpServletRequest request) {
-    if (this._jf == null) {
-      this._jf = this.createJsonBuilder(request);
-    }
-    return this._jf;
-  }
-
-  protected JsonBuilder createJsonBuilder(HttpServletRequest request) {
-      
-    EntityJsonBuilder jsonBuilder = new EntityJsonBuilder(
-            this.isTidyOutput(), this.isPlainTextOnly(), this.getMaxTextLengthPerItem());
-            
-    return jsonBuilder;
-  }
-  
-  private int getInt(HttpServletRequest request, String key, int defaultValue) {
-    String val = request.getParameter(key);
-    if ((val == null) || (val.isEmpty())) {
-      return defaultValue;
-    }
-    return Integer.parseInt(val);
-  }
-  
-  public boolean isPlainTextOnly(HttpServletRequest request) {
-    String contentType = request.getParameter("content-type");
-    boolean b = (contentType != null) && (contentType.contains("text/plain"));
-    XLogger.getInstance().log(Level.FINER, "Plain text only: {0}", getClass(), b);
-    return b;
-  }
-
-  public boolean isTidyOutput(HttpServletRequest request) {
-    boolean tidy;
-    String tidyParam = request.getParameter("tidy");
-    if(tidyParam != null) {
-        tidy = "1".equals(tidyParam) || "true".equalsIgnoreCase(tidyParam);
-    }else{
-        AppContext appContext = (AppContext)request.getServletContext().getAttribute(Attributes.APP_CONTEXT);
-        tidy = !appContext.isProductionMode();
-    }
-    return tidy;
-  }
-  
-  public int getMaxTextLengthPerItem(HttpServletRequest request) {
-      AppContext appContext = (AppContext)request.getServletContext().getAttribute(Attributes.APP_CONTEXT);
-      Configuration config = appContext.getConfiguration();
-      final int defaultLen = config.getInt(ConfigNames.DEFAULT_CONTENT_LENGTH, 1000);
-      return getInt(request, "maxlen", defaultLen);
-  }
-  
-  public boolean isTidyOutput() {
-    return tidyOutput;
-  }
-  
-  public boolean isPlainTextOnly() {
-    return plainTextOnly;
-  }
-
-  public int getMaxTextLengthPerItem() {
-    return maxTextLengthPerItem;
+  public final JsonBuilder getJsonBuilder() {
+    return this.jsonBuilder;
   }
 }
 /**

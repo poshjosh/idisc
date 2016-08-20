@@ -4,9 +4,9 @@ import javax.servlet.http.HttpServletRequest;
 
 public interface RequestHandlerProvider{
     
-    String getRequestHandlerParamName(HttpServletRequest request);
+    String getRequestHandlerName(HttpServletRequest request);
   
-    String[] getRequestHandlerParamNames(HttpServletRequest request);
+    String[] getRequestHandlerNames(HttpServletRequest request);
   
     RequestHandler getRequestHandler(HttpServletRequest request);
   

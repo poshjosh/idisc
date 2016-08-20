@@ -1,59 +1,58 @@
 package com.idisc.web.servlets.handlers.request;
 
-import com.bc.jpa.EntityController;
 import com.bc.util.XLogger;
-import com.idisc.core.IdiscApp;
 import com.idisc.pu.References;
 import com.idisc.pu.entities.Emailstatus;
 import com.idisc.pu.entities.Extractedemail;
 import com.idisc.pu.entities.Installation;
 import java.util.Date;
 import java.util.logging.Level;
-import javax.persistence.EntityManager;
 import org.json.simple.JSONObject;
 import com.bc.jpa.JpaContext;
+import java.util.List;
+import javax.servlet.http.HttpServletRequest;
 
 public class Addextractedemails extends AbstractUpdateValues {
     
   @Override
-  public String[] getNames()
-  {
+  public String[] getNames() {
     return new String[] { "extractedemails" };
   }
   
   @Override
-  protected int execute(String name, Object values, Installation installation)
-    throws Exception
-  {
+  protected int execute(HttpServletRequest request, String name, Object values, Installation installation)
+    throws Exception {
+      
     JSONObject emailsAndUsernames = (JSONObject)values;
     
-    JpaContext factory = IdiscApp.getInstance().getJpaContext();
-    
-    EntityController<Extractedemail, Integer> ec = factory.getEntityController(Extractedemail.class, Integer.class);
+    JpaContext jpaContext = getJpaContext(request);
     
     int created = 0;
     
-    EntityManager em = ec.getEntityManager();
-    
-    try
-    {
-      em.getTransaction().begin();
+    try (com.bc.jpa.dao.BuilderForSelect<Extractedemail> select = jpaContext.getBuilderForSelect(Extractedemail.class)){
+        
+      XLogger.getInstance().log(Level.FINE, "Adding {0} contacts", getClass(), emailsAndUsernames.size());
       
-      XLogger.getInstance().log(Level.FINE, "Adding {0} contacts", getClass(), Integer.valueOf(emailsAndUsernames.size()));
+      final Emailstatus emailstatus = (Emailstatus)jpaContext.getEnumReferences().getEntity(References.emailstatus.unverified);
       
-      Emailstatus emailstatus = (Emailstatus)factory.getEnumReferences().getEntity(References.emailstatus.unverified);
+      select.begin();
       
-      for (Object email : emailsAndUsernames.keySet())
-      {
-        if (email != null)
-        {
+      for (Object email : emailsAndUsernames.keySet()) {
+          
+        if (email != null) {
 
           Object username = emailsAndUsernames.get(email);
           
-          Extractedemail found = (Extractedemail)ec.selectFirst("emailAddress", email);
+          select.reset(); // Without reset reusing a dao will throw an exception
           
-          if (found == null)
-          {
+          final List<Extractedemail> foundList = select
+                  .where(Extractedemail.class, "emailAddress", email)
+                  .createQuery().setMaxResults(1).getResultList();
+          
+          Extractedemail found = foundList == null || foundList.isEmpty() ? null : foundList.get(0);
+          
+          if (found == null) {
+              
             found = new Extractedemail();
             
             found.setEmailstatus(emailstatus);
@@ -62,21 +61,17 @@ public class Addextractedemails extends AbstractUpdateValues {
             found.setInstallationid(installation);
             found.setUsername(username == null ? null : username.toString());
             
-            em.persist(found);
+            select.persist(found);
             
             created++;
           }
         }
       }
-      em.getTransaction().commit();
       
-      XLogger.getInstance().log(Level.FINE, "Added {0} contacts", getClass(), Integer.valueOf(created));
-    }
-    finally
-    {
-      if (em != null) {
-        em.close();
-      }
+      select.commit();
+      
+      XLogger.getInstance().log(Level.FINE, "Added {0} contacts", getClass(), created);
+      
     }
     
     return created;

@@ -1,20 +1,26 @@
 package com.idisc.web;
 
 import com.authsvc.client.AuthSvcSession;
-import com.idisc.pu.SearchHandlerFactory;
+import com.idisc.core.IdiscApp;
 import com.idisc.pu.entities.Feed;
 import com.idisc.pu.entities.Site;
+import com.idisc.shared.SharedContext;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
 import org.apache.commons.configuration.Configuration;
+import com.idisc.pu.SearchResultsHandlerFactory;
 
 /**
  * @author Josh
  */
 public interface AppContext {
+    
+    IdiscApp getIdiscApp();
+    
+    SharedContext getSharedContext();
 
     String getAppName();
   
@@ -61,12 +67,12 @@ public interface AppContext {
     BigDecimal getMemoryLevel();
 
     /**
-     * @return The SearchHandlerFactory or null if none had earlier been created
+     * @return The SearchResultsHandlerFactory or null if none had earlier been created
      * @see #getSearchHandlerFactory(boolean) 
      */
-    SearchHandlerFactory getSearchHandlerFactory();
+    SearchResultsHandlerFactory getSearchHandlerFactory();
     
-    SearchHandlerFactory getSearchHandlerFactory(boolean createIfNone);
+    SearchResultsHandlerFactory getSearchHandlerFactory(boolean createIfNone);
     
     List<Site> getSites();
     

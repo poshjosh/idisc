@@ -4,12 +4,10 @@ import com.bc.jpa.EntityController;
 import com.bc.jpa.exceptions.EntityInstantiationException;
 import com.bc.jpa.exceptions.PreexistingEntityException;
 import com.bc.util.XLogger;
-import com.idisc.core.IdiscApp;
 import com.idisc.pu.entities.Feedhit;
 import com.idisc.pu.entities.Installation;
 import com.idisc.pu.entities.Site;
-import com.idisc.pu.entities.one.Feed_;
-import com.idisc.web.exceptions.InstallationException;
+import com.idisc.pu.entities.Feed_;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
@@ -25,7 +23,6 @@ import javax.persistence.EntityTransaction;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 /**
  * @author poshjosh
  */
@@ -42,18 +39,12 @@ public class Newfeed extends NewEntityHandler<com.idisc.pu.entities.Feed> {
   {
       
     final Class cls = this.getClass();
-
     final XLogger log = XLogger.getInstance();
     
     log.log(Level.FINER, "execute(HttpServletRequest, HttpServletResponse)", cls);
 
-    Installation installation = getInstallation(request, true);
+    Installation installation = getInstallationOrException(request);
     
-    log.log(Level.FINER, "Installation: {0}", cls, installation);
-    if(installation == null) {
-      throw new InstallationException("You are not authorized to perform the requested operation");
-    }
-
     Map params = this.getParameterMap(request);
     log.log(Level.FINER, "Parameters: {0}", cls, params);
         
@@ -96,7 +87,8 @@ public class Newfeed extends NewEntityHandler<com.idisc.pu.entities.Feed> {
         params.put(feeddate_col, datecreated);
     }
     
-    EntityController<Site, Object> siteEc = this.getEntityController(Site.class);
+    EntityController<Site, Integer> siteEc = 
+            this.getJpaContext(request).getEntityController(Site.class, Integer.class);
     
     Site newsminute = siteEc.find(28); // News Minute has site id of 28
     
@@ -106,7 +98,8 @@ public class Newfeed extends NewEntityHandler<com.idisc.pu.entities.Feed> {
     
     params.put(Feed_.siteid.getName(), newsminute);
     
-    EntityController<com.idisc.pu.entities.Feed, Object> ec = this.getEntityController();
+    EntityController<com.idisc.pu.entities.Feed, Integer> ec = 
+            this.getJpaContext(request).getEntityController(com.idisc.pu.entities.Feed.class, Integer.class);
     
     Boolean output = Boolean.FALSE;
     try {
@@ -117,13 +110,13 @@ public class Newfeed extends NewEntityHandler<com.idisc.pu.entities.Feed> {
       
       ec.create(feed);
       
-      this.updateUrl(log, cls, request.getServletContext(), feed);
+      this.updateUrl(ec, log, cls, request.getServletContext(), feed);
         
       String hitcountStr = (String)params.remove("hitcount");
       final int hitcount = hitcountStr == null || hitcountStr.isEmpty() ? 0 : Integer.parseInt(hitcountStr);
       log.log(Level.FINER, "Hit count: {0}", cls, hitcountStr);
         
-      this.generateFeedhits(log, cls, installation, feed, hitcount);
+      this.generateFeedhits(request, log, cls, installation, feed, hitcount);
       
       output = Boolean.TRUE;
       
@@ -136,7 +129,9 @@ public class Newfeed extends NewEntityHandler<com.idisc.pu.entities.Feed> {
     return output;
   }
   
-  private boolean updateUrl(final XLogger log, final Class cls, ServletContext sc, com.idisc.pu.entities.Feed feed) {
+  private boolean updateUrl(EntityController<com.idisc.pu.entities.Feed, Integer> ec, final XLogger log, 
+          final Class cls, ServletContext sc, com.idisc.pu.entities.Feed feed) {
+      
       Integer feedid = feed.getFeedid();
       if(feedid == null) {
           throw new NullPointerException();
@@ -167,9 +162,10 @@ public class Newfeed extends NewEntityHandler<com.idisc.pu.entities.Feed> {
       
       try{
           
-        this.getEntityController().edit(feed);
+        ec.edit(feed);
         
         return true;
+        
       }catch(Exception e) {
         log.log(Level.WARNING, "Unexpected exception", cls, e);
         
@@ -178,13 +174,14 @@ public class Newfeed extends NewEntityHandler<com.idisc.pu.entities.Feed> {
   }
   
   private int generateFeedhits(
+          HttpServletRequest request, 
           final XLogger log, final Class cls,
           Installation installation, com.idisc.pu.entities.Feed feed, int count) {
       if(count < 1) {
           return count;
       }
       
-      EntityManager em = IdiscApp.getInstance().getJpaContext().getEntityManager(Feedhit.class);
+      EntityManager em = this.getJpaContext(request).getEntityManager(Feedhit.class);
       try{
           
         EntityTransaction t = em.getTransaction();

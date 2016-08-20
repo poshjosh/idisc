@@ -8,7 +8,6 @@ import com.idisc.web.ConfigurationLoader;
 import com.idisc.web.ConfigurationLoaderDevMode;
 import com.idisc.web.WebApp;
 import com.idisc.web.IdiscAppImpl;
-import com.idisc.web.WebAppDevMode;
 import com.idisc.web.servlets.handlers.CloseAutoCloseable;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
@@ -28,7 +27,7 @@ public class ServletContextListener implements javax.servlet.ServletContextListe
   
   @Override
   public void contextInitialized(ServletContextEvent sce) {
-    try {
+    try { 
       
       ServletContext sc = sce.getServletContext();
       
@@ -44,13 +43,11 @@ XLogger.getInstance().log(Level.INFO, "Production mode: {0}", this.getClass(), s
       
       Configuration config = configLoader.load();
       
-      WebApp webApp = productionMode ? new WebApp(sc, config) : new WebAppDevMode(sc, config);
+      IdiscApp idiscApp = new IdiscAppImpl(sc, config, productionMode);
+
+      WebApp webApp = new WebApp(sc, config, idiscApp, productionMode);
       
       sc.setAttribute(Attributes.APP_CONTEXT, webApp);
-      
-      IdiscApp idiscApp = new IdiscAppImpl(sc, config);
-
-      IdiscApp.setInstance(idiscApp);
       
     }catch (ConfigurationException | IOException | IllegalAccessException | InterruptedException | InvocationTargetException e) {
       Logger.getLogger(getClass().getName()).log(Level.SEVERE, null, e);

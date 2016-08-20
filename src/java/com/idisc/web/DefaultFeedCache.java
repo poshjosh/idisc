@@ -1,6 +1,7 @@
 package com.idisc.web;
 
 import com.idisc.core.FeedCache;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import org.apache.commons.configuration.Configuration;
 
@@ -9,10 +10,7 @@ public class DefaultFeedCache extends FeedCache {
   private final Configuration config;
   
   public DefaultFeedCache(Configuration config) { 
-      this.config = config;
-      if(config == null) {
-          throw new NullPointerException();
-      }
+      this.config = Objects.requireNonNull(config);
   }
 
   @Override

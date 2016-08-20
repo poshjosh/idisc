@@ -6,7 +6,6 @@ import java.util.HashMap;
 import java.util.Map;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
@@ -15,12 +14,12 @@ public abstract class AbstractUpdateValues
 {
   public abstract String[] getNames();
   
-  protected abstract int execute(String paramString, Object paramObject, Installation paramInstallation)
+  protected abstract int execute(HttpServletRequest request, 
+          String paramString, Object paramObject, Installation paramInstallation)
     throws Exception;
   
   @Override
-  public boolean isProtected()
-  {
+  public boolean isProtected() {
     return false;
   }
   
@@ -39,9 +38,8 @@ public abstract class AbstractUpdateValues
   }
   
   @Override
-  public Map execute(HttpServletRequest request)
-    throws ServletException
-  {
+  public Map execute(HttpServletRequest request) throws ServletException {
+      
     boolean create = true;
     Installation installation = getInstallation(request, create);
     
@@ -49,20 +47,19 @@ public abstract class AbstractUpdateValues
     
     Map output = new HashMap(3, 1.0F);
     try {
-      for (String name : names)
-      {
+        
+      for (String name : names) {
+          
         Object values = getValues(name, request);
         
-        int updated = execute(name, values, installation);
+        int updated = execute(request, name, values, installation);
         
-        output.put(name, Integer.valueOf(updated));
+        output.put(name, updated);
       }
-    }
-    catch (ValidationException e) {
+    } catch (ValidationException e) {
       throw e;
     }
-    catch (Exception e)
-    {
+    catch (Exception e) {
       throw new ServletException("Error updating values", e);
     }
     

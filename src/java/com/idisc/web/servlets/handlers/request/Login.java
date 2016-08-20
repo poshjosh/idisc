@@ -2,7 +2,7 @@ package com.idisc.web.servlets.handlers.request;
 
 import com.authsvc.client.AuthSvcSession;
 import com.bc.util.XLogger;
-import com.idisc.core.User;
+import com.idisc.pu.User;
 import com.idisc.web.AppContext;
 import com.idisc.web.Attributes;
 import com.idisc.web.servlets.request.RequestParameters;

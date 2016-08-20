@@ -1,8 +1,6 @@
 package com.idisc.web.servlets.handlers.request;
 
-import com.bc.jpa.EntityController;
 import com.bc.util.XLogger;
-import com.idisc.core.IdiscApp;
 import com.idisc.pu.entities.Comment;
 import com.idisc.web.AppContext;
 import com.idisc.web.Attributes;
@@ -77,7 +75,7 @@ public class Feed extends AbstractRequestHandler<com.idisc.pu.entities.Feed>{
     
     if (feed == null) {
 
-      feed = select(feedid);
+      feed = select(request, feedid);
     }
     
     XLogger.getInstance().log(Level.FINER, "Selected feed: {0}", getClass(), feed);
@@ -85,13 +83,11 @@ public class Feed extends AbstractRequestHandler<com.idisc.pu.entities.Feed>{
     return feed;
   }
 
-  public com.idisc.pu.entities.Feed select(Integer feedid) {
+  public com.idisc.pu.entities.Feed select(HttpServletRequest request, Integer feedid) {
       
-    JpaContext factory = IdiscApp.getInstance().getJpaContext();
+    JpaContext jpaContext = this.getJpaContext(request);
     
-    EntityController<com.idisc.pu.entities.Feed, Integer> ec = factory.getEntityController(com.idisc.pu.entities.Feed.class, Integer.class);
-    
-    return (com.idisc.pu.entities.Feed)ec.find(feedid);
+    return jpaContext.getBuilderForSelect(com.idisc.pu.entities.Feed.class).findAndClose(feedid);
   }
   
   public Integer getId(HttpServletRequest request) throws ValidationException {

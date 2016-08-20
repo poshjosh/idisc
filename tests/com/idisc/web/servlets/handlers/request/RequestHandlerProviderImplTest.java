@@ -25,7 +25,7 @@ public class RequestHandlerProviderImplTest extends LoginBase {
     public static void tearDownClass() { }
     
     /**
-     * Test of getRequestHandlerParamName method, of class RequestHandlerProviderImpl.
+     * Test of getRequestHandlerName method, of class RequestHandlerProviderImpl.
      */
     @Test
     public void testGetRequestHandlerParamName() {
@@ -34,12 +34,12 @@ public class RequestHandlerProviderImplTest extends LoginBase {
         request.from("/index.jsp").with(Collections.singletonMap("feedid", "455167")).to("/feed");
         RequestHandlerProviderImpl instance = new RequestHandlerProviderImpl();
         String expResult = "feed";
-        String result = instance.getRequestHandlerParamName(request);
+        String result = instance.getRequestHandlerName(request);
         assertEquals(expResult, result);
     }
 
     /**
-     * Test of getRequestHandlerParamNames method, of class RequestHandlerProviderImpl.
+     * Test of getRequestHandlerNames method, of class RequestHandlerProviderImpl.
      */
     @Test
     public void testGetRequestHandlerParamNames() {
@@ -48,7 +48,7 @@ public class RequestHandlerProviderImplTest extends LoginBase {
         request.from("/index.jsp").with(Collections.singletonMap("feedid", "455167")).to("/feed");
         RequestHandlerProviderImpl instance = new RequestHandlerProviderImpl();
         String[] expResult = {"feed"};
-        String[] result = instance.getRequestHandlerParamNames(request);
+        String[] result = instance.getRequestHandlerNames(request);
         assertArrayEquals(expResult, result);
     }
    
@@ -64,7 +64,7 @@ public class RequestHandlerProviderImplTest extends LoginBase {
         request.from("/login.jsp").with(loginParameters).to("/login");
         RequestHandlerProviderImpl instance = new RequestHandlerProviderImpl();
         String[] expResult = {"login"};
-        String[] result = instance.getRequestHandlerParamNames(request);
+        String[] result = instance.getRequestHandlerNames(request);
         assertArrayEquals(expResult, result);
     }
 
@@ -76,7 +76,7 @@ public class RequestHandlerProviderImplTest extends LoginBase {
         RequestHandlerProviderImpl instance = new RequestHandlerProviderImpl();
         String[] expResult = {"aliasesforcategories", "aliasesforcontent", "appproperties"};
 this.log("Expected: %s", Arrays.toString(expResult));
-        String[] result = instance.getRequestHandlerParamNames(request);
+        String[] result = instance.getRequestHandlerNames(request);
 this.log("   Found: %s", result==null?null:Arrays.toString(result));        
         assertArrayEquals(expResult, result);
     }
@@ -91,6 +91,7 @@ this.log("   Found: %s", result==null?null:Arrays.toString(result));
         request.from("/index.jsp").with(Collections.singletonMap("feedid", "455167")).to("/feed");
         RequestHandlerProviderImpl instance = new RequestHandlerProviderImpl();
         RequestHandler expResult = new com.idisc.web.servlets.handlers.request.Feed();
+        
         RequestHandler result = instance.getRequestHandler(request);
         assertEquals(expResult.getClass(), result.getClass());
     }

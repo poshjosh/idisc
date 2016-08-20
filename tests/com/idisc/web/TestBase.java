@@ -12,6 +12,7 @@ import com.idisc.web.servlets.handlers.request.RequestHandlerProvider;
 import com.idisc.web.servlets.handlers.response.ResponseHandler;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -54,6 +55,17 @@ public class TestBase extends WebappSetup {
                 System.getProperty("user.home")+"/Documents/NetBeansProjects/idisc/web",
                 "/idisc");
         requestHandlerProvider = TestBase.this.createRequestHandlerProvider();
+    }
+    
+    public Map<String, String> getDefaultOutputParameters() {
+        Map<String, String> parameters = new HashMap<>();
+        parameters.put("installationid", "2");
+        parameters.put("installationkey", "abdb33ee-a09e-4d7d-b861-311ee7061325");
+        parameters.put("screenname", "user_2");
+        parameters.put("format", "text/json");
+        parameters.put("versionCode", "20");
+        parameters.put("tidy", "true");
+        return parameters;
     }
 
     @BeforeClass
@@ -304,7 +316,7 @@ public class TestBase extends WebappSetup {
 
         RequestHandler rh = provider.getRequestHandler((HttpServletRequest)request);
         
-        final String name = provider.getRequestHandlerParamNames(request)[0];
+        final String name = provider.getRequestHandlerNames(request)[0];
 
         try{
 
