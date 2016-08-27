@@ -3,6 +3,7 @@ package com.idisc.web.servlets.handlers.request;
 import com.bc.util.XLogger;
 import com.idisc.web.AppContext;
 import com.idisc.web.Attributes;
+import com.idisc.web.ConfigNames;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -20,18 +21,14 @@ public class Getmultipleresults extends AbstractRequestHandler<Map> {
   }
   
   @Override
-  public boolean isProtected() {
-    return false;
-  }
-  
-  @Override
   public Map execute(HttpServletRequest request) {
     
     final String [] paramNames = provider.getRequestHandlerNames(request);
     
     AppContext appContext = (AppContext)request.getServletContext().getAttribute(Attributes.APP_CONTEXT);
     
-    final Level level = appContext.isDebug() ? Level.INFO : Level.FINE;
+    final Level level = appContext.getConfiguration().getBoolean(ConfigNames.DEBUG, false) 
+            ? Level.INFO : Level.FINE;
 
 XLogger.getInstance().log(level, "Parameter names: {0}", this.getClass(), paramNames==null?null:Arrays.toString(paramNames));
 

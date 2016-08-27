@@ -2,6 +2,8 @@ package com.idisc.web.servlets.handlers.response;
 
 import com.bc.util.JsonBuilder;
 import com.bc.util.XLogger;
+import com.idisc.web.AppContext;
+import com.idisc.web.ConfigNames;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -59,11 +61,10 @@ XLogger.getInstance().entering(this.getClass(), "#processResponse(HttpServletReq
 
     final Class cls = this.getClass();
     final XLogger logger = XLogger.getInstance();
-    final Level level = Level.FINER;
       
 logger.entering(cls, "#sendResponse(HttpServletRequest, HttpServletRequest, String, Map)", name);
 
-this.logOutput(logger, level, output);
+this.logOutputSizes(logger, Level.FINE, cls, output);
 
     final PrintWriter pw = response.getWriter();
     
@@ -71,24 +72,34 @@ this.logOutput(logger, level, output);
      
     try {
         
-logger.log(level, "==================== Printing Output =====================\n{0}", cls, output);
+//logger.log(level, "==================== Printing Output =====================\n{0}", cls, output);
 
       JsonBuilder jsonBuilder = this.getJsonBuilder();
 
-      jsonBuilder.appendJSONString(output, bw);
+long tb4 = System.currentTimeMillis();
+long mb4 = Runtime.getRuntime().freeMemory();
       
-if(logger.isLoggable(level, cls)) {      
-      StringBuilder builder = new StringBuilder();
-      jsonBuilder.appendJSONString(output, builder);
-      Object oval = JSONValue.parse(builder.toString());
-logger.log(level, "{0}\n{1}", cls, builder, oval); 
-}
+      jsonBuilder.appendJSONString(output, bw);
+
+this.logJsonOutput(logger, Level.FINER, cls, jsonBuilder, output);
+
       bw.flush();
-         
+
+XLogger.getInstance().log(this.isDebugTimeAndMemory(request) ? Level.INFO : Level.FINE, 
+"Written to output, json response name: {0}. Consumed time: {1}, memory: {2}", this.getClass(), 
+name, (System.currentTimeMillis()-tb4), (mb4-Runtime.getRuntime().freeMemory()));
+      
     }finally{
       this.close(pw);
       this.close(bw);
     }
+  }
+  
+  private boolean isDebugTimeAndMemory(HttpServletRequest request) {
+    AppContext appContext = this.getAppContext(request);
+    final boolean debugTimeAndMemory = 
+        appContext.getConfiguration().getBoolean(ConfigNames.DEBUG_TIME_AND_MEMORY, false);
+    return debugTimeAndMemory;  
   }
   
   private void close(AutoCloseable c) {
@@ -100,8 +111,20 @@ logger.log(level, "{0}\n{1}", cls, builder, oval);
     }     
   }
   
-  private void logOutput(XLogger logger, Level level, Map output) {
-    final Class cls = this.getClass();
+  private void logJsonOutput(XLogger logger, Level level, Class cls, JsonBuilder jsonBuilder, Map output) {
+if(logger.isLoggable(level, cls)) {   
+    try{
+      StringBuilder builder = new StringBuilder();
+      jsonBuilder.appendJSONString(output, builder);
+      Object oval = JSONValue.parse(builder.toString());
+logger.log(level, "{0}\n{1}", cls, builder, oval);
+    }catch(Exception e) {
+      XLogger.getInstance().log(Level.WARNING, "Unexpected exception", this.getClass(), e);
+    }
+}
+      
+  }
+  private void logOutputSizes(XLogger logger, Level level, Class cls, Map output) {
     if(output != null && logger.isLoggable(level, cls)) {
         StringBuilder builder = new StringBuilder();
         final Set keys = output.keySet();
@@ -113,10 +136,10 @@ logger.log(level, "{0}\n{1}", cls, builder, oval);
             }else if(val instanceof Map) {
                 builder.append(((Map)val).size()).append(" elements");
             }else{
-                builder.append("[NO SIZE METHOD FOR THIS VALUE]");
+                builder.append("[NO SIZE METHOD]");
             }
         }
-        logger.log(level, "==================== Printing Output =====================\n{0}", cls, builder);
+        logger.log(level, "==================== Printing Output Sizes =====================\n{0}", cls, builder);
     }
   }
 

@@ -31,7 +31,7 @@ public class AppFilter extends BaseFilter {
 
         if(this.isRequestFromOrToAWebPage(request)) { 
 
-          sessionTimeoutSeconds = 30 * 60;
+          sessionTimeoutSeconds = TimeUnit.MINUTES.toSeconds(30);
 
           request.setAttribute(Attributes.REQUEST_FROM_OR_TO_WEBPAGE, Boolean.TRUE);
 

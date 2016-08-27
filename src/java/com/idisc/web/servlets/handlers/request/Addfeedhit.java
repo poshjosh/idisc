@@ -15,18 +15,15 @@ import com.idisc.pu.entities.Feed_;
 public class Addfeedhit extends AbstractRequestHandler<Long> {
     
   @Override
-  public boolean isProtected() {
-    return false;
-  }
-  
-  @Override
   public Long execute(HttpServletRequest request) throws ServletException {
       
     Installation installation = getInstallationOrException(request);
     
     String param = null;
     Integer feedid;
-    long hittime; try { param = "feedid";
+    long hittime; 
+    try { 
+      param = "feedid";
       feedid = Integer.valueOf(request.getParameter(param));
       param = "hittime";
       hittime = Long.parseLong(request.getParameter(param));
@@ -79,6 +76,6 @@ public class Addfeedhit extends AbstractRequestHandler<Long> {
       dao.close();
     }
     
-    return output;
+    return output== null ? 1 : output + 1;
   }
 }

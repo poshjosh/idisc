@@ -1,6 +1,7 @@
 package com.idisc.web.servlets.handlers.request;
 
 import com.idisc.pu.entities.Comment;
+import com.idisc.pu.entities.Comment_;
 import com.idisc.web.exceptions.ValidationException;
 import java.util.Collections;
 import java.util.Map;
@@ -8,19 +9,13 @@ import javax.servlet.http.HttpServletRequest;
 
 public class Comments extends Select<Comment> {
 
-  @Override
-  public boolean isProtected() {
-    return false;
+  public Comments() {
+    super(Comment.class);
   }
-  
-  @Override
-  protected Class<Comment> getEntityClass() {
-    return Comment.class;
-  }
-  
+
   public Object getFeedid(HttpServletRequest request) throws ValidationException {
-    String col = "feedid";
-    String sval = request.getParameter(col);
+    final String col = Comment_.feedid.getName();
+    final String sval = request.getParameter(col);
     if (sval == null || sval.isEmpty()) {
       throw new ValidationException("Required parameter: " + col + " is missing");
     }
@@ -34,14 +29,13 @@ public class Comments extends Select<Comment> {
   @Override
   protected Map<String, Object> getSearchParams(HttpServletRequest request) 
           throws ValidationException {
-    String col = "feedid";
-    return Collections.singletonMap(col, this.getFeedid(request));
+    return Collections.singletonMap(Comment_.feedid.getName(), this.getFeedid(request));
   }
   
   @Override
   protected Map<String, String> getOrderBy(HttpServletRequest request)
     throws ValidationException {
-    Map<String, String> orderBy = Collections.singletonMap("datecreated", "DESC");
+    Map<String, String> orderBy = Collections.singletonMap(Comment_.datecreated.getName(), "DESC");
     return orderBy;
   }
 }

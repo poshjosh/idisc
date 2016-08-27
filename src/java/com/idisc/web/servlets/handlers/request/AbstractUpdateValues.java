@@ -18,11 +18,6 @@ public abstract class AbstractUpdateValues
           String paramString, Object paramObject, Installation paramInstallation)
     throws Exception;
   
-  @Override
-  public boolean isProtected() {
-    return false;
-  }
-  
   protected Object getValues(String name, HttpServletRequest request) throws ValidationException {
     String str = request.getParameter(name);
     if ((str == null) || (str.isEmpty())) {

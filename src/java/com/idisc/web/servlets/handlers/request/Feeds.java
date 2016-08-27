@@ -2,6 +2,7 @@ package com.idisc.web.servlets.handlers.request;
 
 import com.bc.util.JsonBuilder;
 import com.bc.util.XLogger;
+import com.idisc.core.SpreadBySite;
 import com.idisc.core.comparator.BaseFeedComparator;
 import com.idisc.core.util.EntityJsonBuilder;
 import com.idisc.core.util.EntityMapBuilder;
@@ -10,7 +11,8 @@ import com.idisc.pu.entities.Feed;
 import com.idisc.pu.entities.Installation;
 import com.idisc.web.AppContext;
 import com.idisc.web.Attributes;
-import com.idisc.web.DefaultFeedCache;
+import com.idisc.web.ConfigNames;
+import com.idisc.web.FeedComparatorUserSiteHitcountImpl;
 import com.idisc.web.exceptions.ValidationException;
 import com.idisc.web.servlets.handlers.response.FeedsResponseContext;
 import com.idisc.web.servlets.handlers.response.FeedsResponseContext_outdatedApps;
@@ -19,9 +21,12 @@ import com.idisc.web.servlets.handlers.response.ResponseContext;
 import com.idisc.web.servlets.handlers.response.ResponseHandler;
 import com.idisc.web.servlets.request.AppVersionCode;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.logging.Level;
+import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 
@@ -75,6 +80,7 @@ public class Feeds extends Selectfeeds {
     boolean create = true;
     
     this.installation = getInstallation(request, create);
+    
     this.versionCodeManager = new AppVersionCode(request.getServletContext(), installation);
     
     List<Feed> output = super.execute(request);
@@ -84,38 +90,103 @@ public class Feeds extends Selectfeeds {
   
   @Override
   public synchronized List<Feed> select(HttpServletRequest request)
-    throws ValidationException {
+    throws ServletException {
       
 XLogger.getInstance().entering(this.getClass(), "#select(HttpServletRequest)", "");
-      
-    AppContext appContext = (AppContext)request.getServletContext().getAttribute(Attributes.APP_CONTEXT);
 
-    DefaultFeedCache fc = new DefaultFeedCache(appContext.getConfiguration());
-
-    List<Feed> output;
-    if (!fc.isCachedFeedsAvailable()) {
+    List<Feed> feeds;
+    
+    if(this.isHtmlResponse(request)) {
+     
+      feeds = super.select(request);
         
-      output = fc.updateCache();
     }else{
-      output = fc.getCachedFeeds(getLimit(request));
+     
+      feeds = selectFeedsForJsonResponse(request);
+      
+      AppContext appContext = this.getAppContext(request);
+      
+      feeds = this.sort(appContext, feeds);
+    }
+
+    return feeds;
+  }
+  
+  @Override
+  protected int getLimit(HttpServletRequest request) throws ValidationException {
+    return this.isHtmlResponse(request) ? super.getLimit(request) : getMaxLimit(request);
+  }
+  
+  private List<Feed> selectFeedsForJsonResponse(HttpServletRequest request) 
+      throws ServletException {
+      
+    ServletContext context = request.getServletContext();
+      
+    List<Feed> feeds = (List<Feed>)context.getAttribute(Attributes.FEEDS);
+    
+    if(feeds == null || feeds.isEmpty()) {
+        
+      feeds = super.select(request);
+      
+    }else{
+      
+      feeds = new ArrayList(feeds);
     }
     
+    final int limitFromSuper = super.getLimit(request);
+      
+    feeds = new SpreadBySite().spread(feeds, limitFromSuper);      
+    
+    return feeds == null ? Collections.EMPTY_LIST : feeds;
+  }
+
+  private List<Feed> sort(AppContext appContext, List<Feed> feeds) {
+    
+    if(feeds != null && !feeds.isEmpty()) {
+        
+        feeds = new ArrayList(feeds);
+        
+        final boolean reverseOrder = true;
+
+        Comparator<Feed> comparator = this.getComparator(appContext, reverseOrder);
+
 long tb4 = System.currentTimeMillis();
 long mb4 = Runtime.getRuntime().freeMemory();
 
-    final boolean reverseOrder = true;
+        try{
+            Collections.sort(feeds, comparator);
+        }finally{
+          if(comparator instanceof AutoCloseable) {
+            try{
+              ((AutoCloseable)comparator).close();
+            }catch(Exception e) {
+              XLogger.getInstance().log(Level.WARNING, "Exception closing: "+comparator, this.getClass(), e);
+            }
+          }    
+        }
 
-//    try (DefaultFeedComparator autoCloseableFeedComparator = 
-//            new DefaultFeedComparator(appContext, installation, reverseOrder)) {
-          
-//      Collections.sort(output, autoCloseableFeedComparator);
-//    }
-    
-    Collections.sort(output, new BaseFeedComparator(reverseOrder));
-    
-XLogger.getInstance().log(Level.FINE, "Sorted {0} feeds. Consumed time: {1}, memory: {2}", 
-this.getClass(), output.size(), (System.currentTimeMillis()-tb4), (mb4-Runtime.getRuntime().freeMemory()));
+        final boolean debugTimeAndMemory = 
+                appContext.getConfiguration().getBoolean(ConfigNames.DEBUG_TIME_AND_MEMORY, false);
 
-    return output;
+XLogger.getInstance().log(debugTimeAndMemory ? Level.INFO : Level.FINE, 
+"Comparator: {0}, sorted {1} feeds. Consumed time: {2}, memory: {3}", this.getClass(), 
+comparator.getClass().getName(), feeds.size(), (System.currentTimeMillis()-tb4), (mb4-Runtime.getRuntime().freeMemory()));
+    }
+
+    return feeds == null ? Collections.EMPTY_LIST : feeds;
+  }
+  
+  protected Comparator<Feed> getComparator(AppContext appContext, boolean reverseOrder) {
+    Comparator<Feed> output;
+    final String type = appContext.getConfiguration().getString(ConfigNames.COMPARATOR_FEED_TYPE, "hitcount");
+    switch(type) {
+      case "userSiteHitcount":
+        output = new FeedComparatorUserSiteHitcountImpl(appContext, installation, reverseOrder); 
+        break;
+      default:  
+        output = new BaseFeedComparator(reverseOrder);
+        break;
+    }
+    return output;  
   }
 }

@@ -15,8 +15,6 @@ public abstract interface RequestHandler<V, O> {
   
   public abstract boolean isOutputLarge(HttpServletRequest request);
 
-  public abstract boolean isProtected();
-  
   public abstract V processRequest(HttpServletRequest request)
           throws ServletException, IOException;
 }

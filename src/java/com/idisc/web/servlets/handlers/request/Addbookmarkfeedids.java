@@ -1,6 +1,5 @@
 package com.idisc.web.servlets.handlers.request;
 
-import com.bc.jpa.EntityController;
 import com.bc.util.XLogger;
 import com.idisc.pu.entities.Bookmarkfeed;
 import com.idisc.pu.entities.Feed;

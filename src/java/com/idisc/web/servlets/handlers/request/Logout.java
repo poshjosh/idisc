@@ -7,11 +7,6 @@ import javax.servlet.http.HttpServletRequest;
 public class Logout extends AbstractRequestHandler<Boolean> {
     
   @Override
-  public boolean isProtected() {
-    return false;
-  }
-
-  @Override
   public Boolean execute(HttpServletRequest request) throws ServletException, IOException {
     if (!isLoggedIn(request)) {
       return Boolean.TRUE;

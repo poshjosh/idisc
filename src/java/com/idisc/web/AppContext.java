@@ -2,7 +2,6 @@ package com.idisc.web;
 
 import com.authsvc.client.AuthSvcSession;
 import com.idisc.core.IdiscApp;
-import com.idisc.pu.entities.Feed;
 import com.idisc.pu.entities.Site;
 import com.idisc.shared.SharedContext;
 import java.math.BigDecimal;
@@ -32,8 +31,6 @@ public interface AppContext {
   
     AuthSvcSession getAuthSvcSession();
   
-    List<Feed> getCachedFeeds();
-    
     Configuration getConfiguration();
 
     /**
@@ -77,8 +74,6 @@ public interface AppContext {
     List<Site> getSites();
     
     boolean isAsyncProcessingEnabled();
-    
-    boolean isDebug();
     
     boolean isProductionMode();
 }

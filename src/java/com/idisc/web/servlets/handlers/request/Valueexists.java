@@ -11,11 +11,6 @@ import com.bc.jpa.JpaContext;
 public class Valueexists extends AbstractRequestHandler<Boolean> {
     
   @Override
-  public boolean isProtected() {
-    return false;
-  }
-  
-  @Override
   public Boolean execute(HttpServletRequest request)
     throws ServletException, IOException  {
       

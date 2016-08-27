@@ -17,11 +17,6 @@ import org.json.simple.parser.ParseException;
 import com.bc.jpa.JpaContext;
 
 public class Addfeedhits extends AbstractRequestHandler<Map<Integer, Long>> {
-    
-  @Override
-  public boolean isProtected(){
-    return false;
-  }
   
   @Override
   public Map<Integer, Long> execute(HttpServletRequest request) throws ServletException {
@@ -49,11 +44,10 @@ public class Addfeedhits extends AbstractRequestHandler<Map<Integer, Long>> {
     return execute(request, installation, list);
   }
   
-  protected Map<Integer, Long> execute(HttpServletRequest request, Installation installation, List<String> hits)
-    throws ServletException {
+  protected Map<Integer, Long> execute(
+      HttpServletRequest request, Installation installation, List<String> hits)
+      throws ServletException {
       
-    Feedhit reusedFeedhit = new Feedhit();
-    
     Date reusedDate = new Date();
     
     JpaContext jpaContext = getJpaContext(request);
@@ -64,7 +58,7 @@ public class Addfeedhits extends AbstractRequestHandler<Map<Integer, Long>> {
     
     try {
         
-      EntityTransaction t = em.getTransaction();
+      final EntityTransaction t = em.getTransaction();
       
       try {
           
@@ -78,28 +72,39 @@ public class Addfeedhits extends AbstractRequestHandler<Map<Integer, Long>> {
             
             if ((parts != null) && (parts.length >= 2)) {
 
-              final String part = parts[0];
-
-              if(part == null || part.isEmpty()) {
+              if(parts[0] == null || parts[0].isEmpty()) {
                   continue;
               }
 
-              Integer feedid = Integer.valueOf(part);
+              final Integer feedid = Integer.valueOf(parts[0]);
 
               final long hittime = Long.parseLong(parts[1]);
 
-              Feed feed = persistFeedhit(em, installation, feedid, hittime, reusedFeedhit, reusedDate);
+              Feed feed = (Feed)em.find(Feed.class, feedid);
+
+              if (feed == null) {
+          //      throw new ServletException("News record not found in database, id: " + feedid);
+                // May have been archived
+                continue;
+              }
+              
+              Feedhit feedhit = getFeedhit(installation, feed, reusedDate, hittime);
+              
+              em.persist(feedhit);
               
               List<Feedhit> feedhits = feed.getFeedhitList();
               
               Long hitcount = feedhits == null ? 0 : (long)feedhits.size();
               
-              output.put(feedid, hitcount);
+              output.put(feedid, hitcount + 1);
             }
-          }catch(NumberFormatException | ServletException e) {
+          }catch(NumberFormatException e) {
               XLogger.getInstance().log(Level.WARNING, "{0}", this.getClass(), e.toString());
           }
         }
+        
+        t.commit();
+        
       }finally {
         if (t.isActive()) {
           t.rollback();
@@ -112,32 +117,20 @@ public class Addfeedhits extends AbstractRequestHandler<Map<Integer, Long>> {
     return output;
   }
   
-  protected Feed persistFeedhit(
-          EntityManager em, Installation installation, 
-          Integer feedid, long hittime, 
-          Feedhit reusedFeedhit, Date reusedDate)
-    throws ServletException {
+  protected Feedhit getFeedhit(
+          Installation installation, Feed feed, Date reusedDate, long hittime) {
       
-    Feed feed = (Feed)em.find(Feed.class, feedid);
+    Feedhit feedhit = new Feedhit();
     
-    if (feed == null) {
-//      throw new ServletException("News record not found in database, id: " + feedid);
-      // May have been archived
-      return null;
-    }
+    feedhit.setFeedhitid(null);
     
-    reusedFeedhit.setFeedhitid(null);
+    feedhit.setFeedid(feed);
     
-    reusedFeedhit.setFeedid(feed);
-    
-    reusedFeedhit.setInstallationid(installation);
+    feedhit.setInstallationid(installation);
     
     reusedDate.setTime(hittime);
+    feedhit.setHittime(reusedDate);
     
-    reusedFeedhit.setHittime(reusedDate);
-    
-    em.persist(reusedFeedhit);
-    
-    return feed;
+    return feedhit;
   }
 }

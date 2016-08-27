@@ -13,13 +13,7 @@ public abstract class UpdateUserPreferenceFeedids extends AbstractRequestHandler
   public abstract String getRequestParameterName();
   
   protected abstract List execute(HttpServletRequest request, String paramString, 
-          JSONArray paramJSONArray, Installation paramInstallation)
-      throws Exception;
-  
-  @Override
-  public boolean isProtected() {
-    return false;
-  }
+          JSONArray paramJSONArray, Installation paramInstallation) throws Exception;
   
   protected JSONArray getValues(String name, HttpServletRequest request) throws ServletException {
     String str = request.getParameter(name);

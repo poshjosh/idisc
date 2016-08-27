@@ -6,10 +6,10 @@ import com.bc.util.XLogger;
 import com.bc.util.concurrent.BoundedExecutorService;
 import com.bc.util.concurrent.DirectExecutorService;
 import com.bc.util.concurrent.NamedThreadFactory;
+import com.idisc.core.FeedService;
 import com.idisc.core.IdiscApp;
 import com.idisc.core.IdiscAuthSvcSession;
 import com.idisc.pu.SearchResultsHandlerFactoryImpl;
-import com.idisc.pu.entities.Feed;
 import com.idisc.pu.entities.Site;
 import com.idisc.shared.SharedContext;
 import com.idisc.shared.SharedContextImpl;
@@ -39,8 +39,6 @@ import com.idisc.pu.SearchResultsHandlerFactory;
 public class WebApp implements AppContext, ThreadPoolData {
     
   private final boolean productionMode;
-  
-  private final boolean debug;
   
   private final boolean asyncProcessingEnabled;
   
@@ -80,8 +78,6 @@ XLogger.getInstance().log(Level.INFO, "Memory at startup: {0}, available process
 XLogger.getInstance().log(Level.INFO, "Session timeout for apps: {0} seconds", 
         this.getClass(), appSessionTimeoutMillis);
     
-    debug = this.config.getBoolean("debug", false);
-    
     asyncProcessingEnabled = config.getBoolean(ConfigNames.PROCESS_REQUEST_ASYNC, true);
 XLogger.getInstance().log(Level.INFO, "Async processing enabled: {0}", this.getClass(), asyncProcessingEnabled);
     
@@ -106,16 +102,6 @@ XLogger.getInstance().log(Level.INFO, "Async processing enabled: {0}", this.getC
 
     sessLoader.loadAfter(30L, TimeUnit.SECONDS, authsvc_url, app_name, app_email, app_pass);
 
-    final boolean startFeedUpdateService = config.getBoolean(ConfigNames.START_FEED_UPDATE_SERVICE, true);
-    if (startFeedUpdateService) {
-        
-      final int initialDelay = config.getInt(ConfigNames.FEED_CYCLE_DELAY);
-      final int interval = config.getInt(ConfigNames.FEED_CYCLE_INTERVAL);
-      
-      ScheduledExecutorService svc = WebApp.this.getGlobalScheduledExecutorService(true);
-      svc.scheduleWithFixedDelay(new IdiscUpdateTask(this.config), initialDelay, interval, TimeUnit.MINUTES);
-    }
-    
     // We call this after initializing the IdiscApp so that its properties will
     // supercede any previously loaded logging configuration file
     //
@@ -124,6 +110,21 @@ XLogger.getInstance().log(Level.INFO, "Async processing enabled: {0}", this.getC
     this.idiscApp = idiscApp;
     
     this.sharedContext = new SharedContextImpl(new FeedidsServiceImpl(new FeedidsImpl()));
+    
+    final boolean startFeedUpdateService = config.getBoolean(ConfigNames.START_FEED_UPDATE_SERVICE, true);
+    if (startFeedUpdateService) {
+        
+      final int initialDelay = config.getInt(ConfigNames.FEED_CYCLE_DELAY);
+      final int interval = config.getInt(ConfigNames.FEED_CYCLE_INTERVAL);
+      
+      ScheduledExecutorService svc = WebApp.this.getGlobalScheduledExecutorService(true);
+      
+      FeedService feedService = new DefaultFeedService(idiscApp, config);      
+
+      DefaultFeedUpdateTask task = new DefaultFeedUpdateTask(context, feedService);
+      
+      svc.scheduleWithFixedDelay(task, initialDelay, interval, TimeUnit.MINUTES);
+    }
   }
   
   @Override
@@ -181,11 +182,6 @@ XLogger.getInstance().log(Level.INFO, "Async processing enabled: {0}", this.getC
   }
   
   @Override
-  public List<Feed> getCachedFeeds() {
-    return new DefaultFeedCache(config).getCachedFeeds();
-  }
-  
-  @Override
   public AuthSvcSession getAuthSvcSession() {
     return this.authSvcSession;
   }
@@ -214,11 +210,6 @@ XLogger.getInstance().log(Level.INFO, "Async processing enabled: {0}", this.getC
     return this.productionMode;
   }
   
-  @Override
-  public boolean isDebug() {
-    return debug;
-  }
-
   @Override
   public boolean isAsyncProcessingEnabled() {
     return this.asyncProcessingEnabled;
@@ -275,7 +266,7 @@ XLogger.getInstance().log(Level.INFO, "Async processing enabled: {0}", this.getC
     final String name = "SearchHandlerFactory";
     SearchResultsHandlerFactory shf = (SearchResultsHandlerFactory)context.getAttribute(name);
     if(shf == null && createIfNone) {
-      shf = new SearchResultsHandlerFactoryImpl(idiscApp.getJpaContext());
+      shf = new SearchResultsHandlerFactoryImpl();
       context.setAttribute(name, shf);
     }
     return shf;

@@ -162,8 +162,9 @@ XLogger.getInstance().log(Level.INFO, "BotFilter, memory ceiling: {0}, floor: {1
             return null;
         }
         
+        final boolean debug = appContext.getConfiguration().getBoolean(ConfigNames.DEBUG, false);
         return new BotCheckerImpl(
                 "/adminAdminPage", memoryCeiling, memoryFloor, cacheDir,
-                appContext.isProductionMode(), appContext.isDebug());
+                appContext.isProductionMode(), debug);
     }
 }

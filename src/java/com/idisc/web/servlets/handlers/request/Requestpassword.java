@@ -13,13 +13,8 @@ import javax.servlet.http.HttpServletRequest;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.ParseException;
 
-public class Requestpassword extends AbstractRequestHandler<Boolean>
-{
-  @Override
-  public boolean isProtected() {
-    return false;
-  }
-  
+public class Requestpassword extends AbstractRequestHandler<Boolean> {
+    
   @Override
   public Boolean execute(HttpServletRequest request)
     throws ServletException, IOException {

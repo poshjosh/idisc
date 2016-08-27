@@ -12,20 +12,20 @@ import org.apache.commons.configuration.Configuration;
  * <b>Implements {@link java.lang.AutoCloseable} hence must be closed after use</b>
  * @author poshjosh
  */
-public class DefaultFeedComparator extends FeedComparatorUserSiteHitcount {
+public class FeedComparatorUserSiteHitcountImpl extends FeedComparatorUserSiteHitcount {
     
   private final long addValuePerHit;
   private final long addedValueMax;
   
-  public DefaultFeedComparator(AppContext appContext) { 
+  public FeedComparatorUserSiteHitcountImpl(AppContext appContext) { 
       this(appContext, null);
   }
   
-  public DefaultFeedComparator(AppContext appContext, Installation installation) { 
+  public FeedComparatorUserSiteHitcountImpl(AppContext appContext, Installation installation) { 
     this(appContext, installation, false);
   }  
   
-  public DefaultFeedComparator(AppContext appContext, Installation installation, boolean reverseOrder) {
+  public FeedComparatorUserSiteHitcountImpl(AppContext appContext, Installation installation, boolean reverseOrder) {
       
     super(
       installation, 

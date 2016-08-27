@@ -14,11 +14,11 @@ import javax.servlet.http.HttpServletResponse;
 /**
  * @author Josh
  */
-public class IdiscAsyncServlet extends AbstractIdiscServlet {
+public class IdiscServlet extends AbstractIdiscServlet {
 
-  public IdiscAsyncServlet() { }
+  public IdiscServlet() { }
 
-  public IdiscAsyncServlet(ServiceController sc) {
+  public IdiscServlet(ServiceController sc) {
     super(sc);
   }
     

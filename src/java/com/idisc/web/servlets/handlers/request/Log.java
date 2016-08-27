@@ -10,19 +10,12 @@ import java.util.logging.Level;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 
-public class Log
-  extends AbstractRequestHandler<Boolean>
-{
-  @Override
-  public boolean isProtected()
-  {
-    return false;
-  }
-  
+public class Log extends AbstractRequestHandler<Boolean> {
+    
   @Override
   public Boolean execute(HttpServletRequest request)
-    throws ServletException, IOException
-  {
+    throws ServletException, IOException {
+      
     RequestParameters params = new RequestParameters(request);
     
     String id = (String)params.remove("id");

@@ -1,8 +1,11 @@
 package com.idisc.web;
 
 public abstract interface ConfigNames {
-    
+  
+  public static final String DEBUG = "debug";
+  public static final String DEBUG_TIME_AND_MEMORY = "debug.timeAndMemory";
   public static final String APP_VERSIONCODE_LATEST = "app.versionCode.latest";
+  public static final String CACHE_FEEDS = "cacheFeeds";
   public static final String START_FEED_UPDATE_SERVICE = "startFeedUpdateService";
   public static final String PROCESS_REQUEST_ASYNC = "processRequestAsync";
   public static final String REQUEST_EXECUTOR_SERVICE_POOL_SIZE = "requestExecutorService.poolSize";
@@ -24,6 +27,7 @@ public abstract interface ConfigNames {
   public static final String COMMENTS_NOTIFICATIONS_MAXAGE_DAYS = "comments.notifications.maxAgeDays";
   public static final String COMMENTS_NOTIFICATIONS_MAX = "comments.notifications.max";
   public static final String COMMENTS_NOTIFICATIONS_DIRECTREPLIESONLY = "comments.notifications.directRepliesOnly";
+  public static final String COMPARATOR_FEED_TYPE = "comparator.feed.type";
   public static final String MAX_LIMIT = "maxLimit";
   public static final String MIN_LIMIT  = "minLimit";
   public static final String DEFAULT_LIMIT = "defaultLimit";

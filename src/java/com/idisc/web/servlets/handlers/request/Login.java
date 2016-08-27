@@ -15,10 +15,6 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.ParseException;
 
 public class Login extends AbstractRequestHandler<Boolean> {
-  @Override
-  public boolean isProtected() {
-    return false;
-  }
   
   @Override
   public Boolean execute(HttpServletRequest request)

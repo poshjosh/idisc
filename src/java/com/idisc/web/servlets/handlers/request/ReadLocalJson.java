@@ -28,11 +28,6 @@ public class ReadLocalJson extends AbstractRequestHandler<Map> {
   }
   
   @Override
-  public boolean isProtected() {
-    return false;
-  }
-  
-  @Override
   public String getResponseFormat(HttpServletRequest request) {
     return "text/json";
   }

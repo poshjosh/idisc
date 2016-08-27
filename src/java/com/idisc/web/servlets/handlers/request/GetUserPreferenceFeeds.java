@@ -25,11 +25,6 @@ public abstract class GetUserPreferenceFeeds<K> extends Selectfeeds {
   }
   
   @Override
-  public boolean isProtected() {
-    return false;
-  }
-  
-  @Override
   public List<Feed> execute(HttpServletRequest request) throws ServletException, IOException {
       
     this.user = findUser(request);

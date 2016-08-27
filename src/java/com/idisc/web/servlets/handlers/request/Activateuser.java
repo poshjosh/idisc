@@ -12,12 +12,6 @@ import javax.servlet.http.HttpServletRequest;
 public class Activateuser extends AbstractRequestHandler<Boolean> {
     
   @Override
-  public boolean isProtected() {
-      
-    return false;
-  }
-  
-  @Override
   public Boolean execute(HttpServletRequest request)
     throws ServletException, IOException {
       

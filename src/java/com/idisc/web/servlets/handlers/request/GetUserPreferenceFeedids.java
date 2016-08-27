@@ -12,11 +12,6 @@ public abstract class GetUserPreferenceFeedids extends AbstractRequestHandler<Li
   public abstract List getFeedids(Installation paramInstallation);
   
   @Override
-  public boolean isProtected(){
-    return false;
-  }
-  
-  @Override
   public List execute(HttpServletRequest request) throws ServletException, IOException {
       
     Installation installation = getInstallationOrException(request);

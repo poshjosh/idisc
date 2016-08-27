@@ -2,7 +2,6 @@ package com.idisc.web.servlets.handlers.request;
 
 import com.bc.util.XLogger;
 import com.idisc.pu.entities.Comment;
-import com.idisc.web.AppContext;
 import com.idisc.web.Attributes;
 import com.idisc.web.exceptions.ValidationException;
 import java.io.IOException;
@@ -11,11 +10,11 @@ import java.util.logging.Level;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import com.bc.jpa.JpaContext;
+import com.bc.jpa.search.SearchResults;
+import java.util.Collection;
 
 public class Feed extends AbstractRequestHandler<com.idisc.pu.entities.Feed>{
 
-  private com.idisc.pu.entities.Feed feed;
-  
   @Override
   public String getResponseFormat(HttpServletRequest request) {
     String resFmt = super.getResponseFormat(request);
@@ -23,15 +22,10 @@ public class Feed extends AbstractRequestHandler<com.idisc.pu.entities.Feed>{
   }
   
   @Override
-  public boolean isProtected() {
-    return false;
-  }
-
-  @Override
   public com.idisc.pu.entities.Feed execute(HttpServletRequest request)
     throws ServletException, IOException {
     
-    this.feed = this.select(request);
+    com.idisc.pu.entities.Feed feed = this.select(request);
     
     if(feed != null) {
         
@@ -43,7 +37,7 @@ public class Feed extends AbstractRequestHandler<com.idisc.pu.entities.Feed>{
           
         if(comments != null && !comments.isEmpty()) {
             
-          this.setAttributeForAsync(request, "comments", comments);
+          this.setAttributeForAsync(request, Attributes.COMMENTS, comments);
         }
       }
     }
@@ -54,27 +48,23 @@ public class Feed extends AbstractRequestHandler<com.idisc.pu.entities.Feed>{
   public com.idisc.pu.entities.Feed select(HttpServletRequest request)
     throws ServletException, IOException {
       
-    Integer feedid = getId(request);
+    final Integer feedid = getId(request);
     
-    com.idisc.pu.entities.Feed feed = null;
+    SearchResults<com.idisc.pu.entities.Feed> searchResults = 
+            this.getSearchResults(request, Feed.class, SearchResults.EMPTY_INSTANCE);
     
-    AppContext appContext = (AppContext)request.getServletContext().getAttribute(Attributes.APP_CONTEXT);
+    com.idisc.pu.entities.Feed feed = this.findByFeedid(searchResults.getPages(), feedid, null);
     
-    List<com.idisc.pu.entities.Feed> lastFeeds = appContext.getCachedFeeds();
-    
-    if ((lastFeeds != null) && (!lastFeeds.isEmpty())){
+    if(feed == null) {
         
-      for (com.idisc.pu.entities.Feed lastFeed : lastFeeds) {
-          
-        if (lastFeed.getFeedid().intValue() == feedid) {
-          feed = lastFeed;
-          break;
-        }
-      }
+      List<com.idisc.pu.entities.Feed> feeds = (List<com.idisc.pu.entities.Feed>)
+              request.getServletContext().getAttribute(Attributes.FEEDS);
+      
+      feed = this.findByFeedid(feeds, feedid, feed);
     }
     
     if (feed == null) {
-
+        
       feed = select(request, feedid);
     }
     
@@ -100,13 +90,32 @@ public class Feed extends AbstractRequestHandler<com.idisc.pu.entities.Feed>{
       throw new ValidationException("Required parameter 'feedid' not found");
     }
     int ival;
-    try
-    {
+    try {
+        
       ival = Integer.parseInt(sval);
+      
     } catch (NumberFormatException e) {
+        
       throw new ValidationException("Invalid value for required parameter: 'feedid'");
     }
-    return Integer.valueOf(ival);
+    return ival;
+  }
+  
+  public com.idisc.pu.entities.Feed findByFeedid(
+          Collection<com.idisc.pu.entities.Feed> feeds, Integer feedid, 
+          com.idisc.pu.entities.Feed outputIfNone) {
+      
+    com.idisc.pu.entities.Feed output = outputIfNone;
+    
+    if(feeds != null && !feeds.isEmpty()) {
+      for(com.idisc.pu.entities.Feed f:feeds) {
+        if(f.getFeedid().equals(feedid)) {
+          output = f;
+          break;
+        }
+      }
+    }
+    return output;
   }
 }
 /**

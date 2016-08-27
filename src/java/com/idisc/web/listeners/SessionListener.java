@@ -22,8 +22,6 @@ public class SessionListener implements HttpSessionListener {
     @Override
     public void sessionDestroyed(HttpSessionEvent se) { 
         HttpSession session = se.getSession();
-//final Level level = WebApp.getInstance().isDebug() ? Level.INFO : Level.FINE;
-//XLogger.getInstance().log(level, "Session destroyed: {0}", this.getClass(), session.getId());
         Enumeration<String> en = session.getAttributeNames();
         CloseAutoCloseable cac = new CloseAutoCloseable();
         while(en.hasMoreElements()) {

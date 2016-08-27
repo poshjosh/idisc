@@ -11,18 +11,12 @@ import javax.servlet.http.HttpServletRequest;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.ParseException;
 
-public class Signup extends AbstractRequestHandler<Boolean>
-{
-  @Override
-  public boolean isProtected()
-  {
-    return false;
-  }
-  
+public class Signup extends AbstractRequestHandler<Boolean> {
+    
   @Override
   public Boolean execute(HttpServletRequest request)
-    throws ServletException, IOException
-  {
+    throws ServletException, IOException {
+      
     if (isLoggedIn(request)) {
       return Boolean.TRUE;
     }

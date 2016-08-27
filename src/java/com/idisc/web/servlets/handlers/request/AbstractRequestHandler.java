@@ -6,22 +6,18 @@ import com.idisc.web.servlets.handlers.response.HtmlResponseHandler;
 import com.idisc.web.servlets.handlers.response.ResponseHandler;
 import com.bc.util.XLogger;
 import com.idisc.core.util.EntityJsonBuilder;
+import com.idisc.pu.SearchResultsHandlerFactory;
 import com.idisc.web.Attributes;
 import com.idisc.web.AppContext;
 import com.idisc.web.ConfigNames;
-import com.idisc.web.exceptions.LoginException;
 import com.idisc.web.servlets.handlers.response.ErrorHandlerContext;
 import com.idisc.web.servlets.handlers.response.ObjectToJsonResponseHandler;
 import com.idisc.web.servlets.handlers.response.ResponseContext;
 import com.idisc.web.servlets.handlers.response.SuccessHandlerContext;
 import java.io.IOException;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.logging.Level;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
 import org.apache.commons.configuration.Configuration;
 
 public abstract class AbstractRequestHandler<V> 
@@ -43,30 +39,27 @@ public abstract class AbstractRequestHandler<V>
   public boolean isOutputLarge(HttpServletRequest request) {
       return false;
   }
-  
+
   public <X> SearchResults<X> getSearchResults(
-          HttpSession session, Class<X> enityType, String query, Date after, int limit) {
-    Map<String, Object> parameters = new HashMap<>();
-    parameters.put("query", query);
-    parameters.put("after", after);
-    parameters.put("limit", limit);
-    AppContext appCtx = (AppContext)session.getServletContext().getAttribute(Attributes.APP_CONTEXT);
-    SearchResults<X> searchResults = appCtx.getSearchHandlerFactory(true).get(
-            session.getId(), enityType, parameters, true);
-    return searchResults;
+          HttpServletRequest request, Class<X> enityType, SearchResults<X> outputIfNone) {
+    AppContext appCtx = this.getAppContext(request);
+    SearchResultsHandlerFactory sf = appCtx.getSearchHandlerFactory(false);
+    SearchResults<X> searchResults = sf == null ? null : 
+            sf.get(request.getSession().getId(), enityType, outputIfNone);
+    return searchResults == null ? outputIfNone : searchResults;
   }
   
   @Override
   public final V processRequest(HttpServletRequest request) 
       throws ServletException, IOException {
       
-      if ((isProtected()) && (!isLoggedIn(request))) {
-        tryLogin(request);
-      }
+//      if (isProtected() && !isLoggedIn(request)) {
+//        tryLogin(request);
+//      }
       
-      if ((isProtected()) && (!isLoggedIn(request))) {
-        throw new LoginException("Login required");
-      }
+//      if (isProtected() && !isLoggedIn(request)) {
+//        throw new LoginException("Login required");
+//      }
       
       XLogger.getInstance().log(Level.FINER, "Executing: {0}", getClass(), this.getClass().getName());
       
@@ -75,11 +68,6 @@ public abstract class AbstractRequestHandler<V>
       XLogger.getInstance().log(Level.FINER, "Execution finished, output:\n{0}", getClass(), x);
       
       return x;
-  }
-  
-  @Override
-  public boolean isProtected() {
-    return true;
   }
   
   public <X> ResponseHandler<X, Object> createResponseHandler(

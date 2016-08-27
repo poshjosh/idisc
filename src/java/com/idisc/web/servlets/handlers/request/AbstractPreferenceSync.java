@@ -49,11 +49,6 @@ public abstract class AbstractPreferenceSync<E>
     return new String[] { "com.looseboxes.idisc.common." + key + ".feedids", "com.looseboxes.idisc.common." + getKey() + ".feedids_to_add", "com.looseboxes.idisc.common." + getKey() + ".feedids_to_remove" };
   }
 
-  @Override
-  public boolean isProtected()  {
-    return false;
-  }
-  
   protected List getValues(String name, HttpServletRequest request) throws ValidationException {
    
     final List output;

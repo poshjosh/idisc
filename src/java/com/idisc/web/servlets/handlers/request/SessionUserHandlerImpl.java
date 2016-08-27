@@ -4,12 +4,14 @@ import com.bc.jpa.EntityController;
 import com.bc.jpa.JpaContext;
 import com.bc.jpa.exceptions.PreexistingEntityException;
 import com.bc.util.XLogger;
+import com.bc.web.core.util.ServletUtil;
 import com.idisc.pu.Installations;
 import com.idisc.pu.User;
 import com.idisc.pu.entities.Feeduser;
 import com.idisc.pu.entities.Installation;
 import com.idisc.pu.entities.Installation_;
 import com.idisc.web.AppContext;
+import com.idisc.web.ConfigNames;
 import com.idisc.web.servlets.handlers.BaseHandler;
 import java.io.IOException;
 import java.util.Date;
@@ -63,23 +65,18 @@ XLogger.getInstance().log(Level.FINER, "getInstallation(HttpServletRequest, Http
       installation = new Installations(jpaContext).from(
           user, installationkey, screenname, firstinstall, lastinstall, createIfNone);
       
-    }catch (ServletException | NumberFormatException e) {
+    }catch (ServletException e) {
       installation = null;
-      XLogger.getInstance().log(Level.WARNING, "Unexpected Exception", this.getClass(), e);
-    }catch(RuntimeException e) {
-      installation = null;  
-      XLogger.getInstance().log(Level.WARNING, "Unexpected Exception", this.getClass(), e);
+      XLogger.getInstance().log(Level.WARNING, "{0}", this.getClass(), e.toString());
     }
     
     if(installation != null) {
         
-      // ////////////////////////
-      //
       this.setAttributeForAsync(request, "installation", installation);
       
     }else{
         
-      if(XLogger.getInstance().isLoggable(Level.WARNING, this.getClass())) {
+      if(XLogger.getInstance().isLoggable(Level.FINEST, this.getClass())) {
           
         StringBuilder builder = new StringBuilder();
         if(createIfNone) {
@@ -88,6 +85,9 @@ XLogger.getInstance().log(Level.FINER, "getInstallation(HttpServletRequest, Http
             builder.append("Could not find installation for user:\n");
         }
         this.appendDetails(builder, user, installationkey, screenname, firstinstall, lastinstall);
+        builder.append('\n');
+        builder.append(ServletUtil.getDetails(request, "\n", Level.FINEST))
+                ;
         XLogger.getInstance().log(Level.WARNING, "{0}", this.getClass(), builder);
       }
     }
@@ -137,15 +137,26 @@ XLogger.getInstance().log(Level.FINER, "Updated session attribute user = {0}", t
   
   @Override
   public User findUser(HttpServletRequest request) {
+      
 XLogger.getInstance().log(Level.FINER, "findUser(HttpServletRequest, HttpServletResponse)", this.getClass());
+
     User user;
     if (isLoggedIn(request)) {
       user = getUser(request);
     } else {
       user = tryLogin(request);
     }
-XLogger.getInstance().log(Level.FINE, "Found user: {0}", User.class, user);
+    
+    final Level logLevel = user != null && this.isDebug(request) ? Level.INFO : Level.FINE;
+    
+XLogger.getInstance().log(logLevel, "Found user: {0}", User.class, user);
+
     return user;
+  }
+  
+  private boolean isDebug(HttpServletRequest request) {
+      
+    return this.getBooleanProperty(request, ConfigNames.DEBUG, Boolean.FALSE);
   }
   
   @Override
@@ -217,8 +228,16 @@ XLogger.getInstance().log(Level.FINE, "User: {0}", User.class, output);
 
     return output;
   }
+  
+  boolean getBooleanProperty(HttpServletRequest request, String propertyName, Boolean defaultValue) {
+    return this.getAppContext(request).getConfiguration().getBoolean(propertyName, defaultValue);
+  }
 
-  private long getLongParameter(HttpServletRequest request, String paramName, long defaultValue) 
+  Integer getIntegerProperty(HttpServletRequest request, String propertyName, Integer defaultValue) {
+    return this.getAppContext(request).getConfiguration().getInteger(propertyName, defaultValue);
+  }
+  
+  long getLongParameter(HttpServletRequest request, String paramName, long defaultValue) 
       throws ServletException {
     
     String paramValue = this.getParameter(request, paramName, false);
@@ -226,7 +245,7 @@ XLogger.getInstance().log(Level.FINE, "User: {0}", User.class, output);
     return paramValue == null ? defaultValue : Long.parseLong(paramValue);
   }
   
-  private String getParameter(HttpServletRequest request, String paramName, boolean exceptionIfNone) 
+  String getParameter(HttpServletRequest request, String paramName, boolean exceptionIfNone) 
       throws ServletException {
     
     String paramValue = request.getParameter(paramName);

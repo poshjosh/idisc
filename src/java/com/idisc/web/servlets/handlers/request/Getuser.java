@@ -18,14 +18,8 @@ import javax.servlet.http.HttpServletRequest;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.ParseException;
 
-public class Getuser
-  extends AbstractRequestHandler<Map>
-{
-  public boolean isProtected()
-  {
-    return false;
-  }
-  
+public class Getuser extends AbstractRequestHandler<Map> {
+    
   @Override
   public Map execute(HttpServletRequest request) throws ServletException, IOException {
       

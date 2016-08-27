@@ -19,11 +19,6 @@ import com.bc.jpa.dao.BuilderForSelect;
 public class Updatereadcomments extends AbstractRequestHandler<Boolean> {
     
   @Override
-  public boolean isProtected(){
-    return false;
-  }
-  
-  @Override
   public Boolean execute(HttpServletRequest request)
     throws ServletException {
       
@@ -96,23 +91,22 @@ public class Updatereadcomments extends AbstractRequestHandler<Boolean> {
     
     try(BuilderForSelect<Commentreplynotice> qb = jpaContext.getBuilderForSelect(Commentreplynotice.class)) {
 
-      qb.from(Commentreplynotice.class);
-        
-      for(Long commentid:commentids) {
-           
-        qb.where(Commentreplynotice_.commentid.getName(), commentid, BuilderForSelect.OR);
-      }     
+      qb.where(Commentreplynotice.class, Commentreplynotice_.commentid.getName(), commentids);  
         
       List<Commentreplynotice> notices = qb.createQuery().getResultList();
         
       if(notices != null) {
           
+        qb.begin();
+        
         for(Commentreplynotice notice:notices) {
             
           notice.setDateuserread(NOW);
           
-          qb.getEntityManager().merge(notice);
+          qb.merge(notice);
         }
+        
+        qb.commit();
         
         updateCount = notices.size();
       }

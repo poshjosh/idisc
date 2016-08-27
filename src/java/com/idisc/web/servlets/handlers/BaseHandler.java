@@ -11,6 +11,8 @@ import javax.servlet.http.HttpSession;
  */
 public class BaseHandler {
     
+  private AppContext appContext;
+    
   public Object getAttributeForAsync(HttpServletRequest request, String name) {
     Object value = request.getAttribute(name);
     HttpSession session;
@@ -37,8 +39,10 @@ public class BaseHandler {
   }
 
   public AppContext getAppContext(HttpServletRequest request) {
-    AppContext appCtx = (AppContext)request.getServletContext().getAttribute(Attributes.APP_CONTEXT);
-    return appCtx;
+    if(appContext == null) {
+      appContext = (AppContext)request.getServletContext().getAttribute(Attributes.APP_CONTEXT);
+    }
+    return appContext;
   }
   
   public JpaContext getJpaContext(HttpServletRequest request) {

@@ -9,11 +9,6 @@ import javax.servlet.http.HttpServletRequest;
  */
 public abstract class NewEntityHandler<E> extends AbstractRequestHandler<Boolean> {
     
-  @Override
-  public boolean isProtected() {
-    return false;
-  }
-  
   public abstract Class<E> getEntityType();
 
   @Override
