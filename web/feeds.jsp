@@ -7,18 +7,15 @@
     pageKeywords="news,nigeria news update, latest nigeria news,breaking news,extracted news,various sources" 
     pageDescription="Latest breaking news feeds from various nigerian sources">
     <jsp:attribute name="pageContent" trim="true">
-        <c:if test="${feeds == null || empty feeds}">
-            <c:set var="feeds" value="${AppContext.cachedFeeds}"/>
-        </c:if>
         <c:choose>
-            <c:when test="${feeds == null || empty feeds}">
+            <c:when test="${searchresults == null || empty searchresults}">
                 <h4>
                     No current feeds available, check back later
                 </h4>
             </c:when>    
             <c:otherwise>
                 <idisc:displayfeeds displayPageNav="true" displayPageLinks="true" 
-                                    feeds="${feeds}" page="${page}" nextPage="/feeds.jsp"/>
+                                    feeds="${searchresults}" page="${page}" nextPage="/feeds.jsp"/>
             </c:otherwise>
         </c:choose>        
     </jsp:attribute>

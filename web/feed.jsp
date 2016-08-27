@@ -48,7 +48,6 @@
             <div><b>Comments</b></div>
             <idisc:displaycomments displayPageNav="true" displayPageLinks="true" comments="${comments}"/> 
         </c:if>
-        <c:set var="feeds" value="${searchresults == null || empty searchresults ? (feeds == null || empty feeds ? AppContext.cachedFeeds : feeds) : searchresults}"/>
         
 <%-- // @related Topfeeds --%>
         <jsp:useBean id="Topfeeds" scope="session" class="com.idisc.web.beans.FeedSelectorBean">

@@ -54,6 +54,11 @@
         <async-supported>true</async-supported>
     </filter>
     <filter>
+        <filter-name>LoginFilter</filter-name>
+        <filter-class>com.idisc.web.filters.LoginFilter</filter-class>
+        <async-supported>true</async-supported>
+    </filter>
+    <filter>
         <filter-name>AppFilter</filter-name>
         <filter-class>com.idisc.web.filters.AppFilter</filter-class>
         <async-supported>true</async-supported>
@@ -75,6 +80,13 @@
         <filter-name>BotFilter</filter-name>
         <url-pattern>/*</url-pattern>
         <dispatcher>REQUEST</dispatcher>
+    </filter-mapping>
+    <filter-mapping>
+        <filter-name>LoginFilter</filter-name>
+        <url-pattern>/newfeed</url-pattern>
+        <dispatcher>REQUEST</dispatcher>
+        <dispatcher>FORWARD</dispatcher>
+        <dispatcher>INCLUDE</dispatcher>
     </filter-mapping>
     <filter-mapping>
         <filter-name>AppFilter</filter-name>
@@ -125,12 +137,13 @@
     </listener>
     <servlet>
         <servlet-name>Idisc</servlet-name>
-        <servlet-class>com.idisc.web.servlets.IdiscAsyncNonHtmlResponseServlet</servlet-class>
+        <!--servlet-class>com.idisc.web.servlets.IdiscAsyncNonHtmlResponseServlet</servlet-class-->
+        <servlet-class>com.idisc.web.servlets.IdiscServlet</servlet-class>
         <async-supported>true</async-supported>
     </servlet>
     <servlet-mapping>
         <servlet-name>Idisc</servlet-name>
-        <url-pattern></url-pattern>
+        <url-pattern/>
         <url-pattern>/activateuser</url-pattern>
         <url-pattern>/addbookmarkfeedids</url-pattern>
         <url-pattern>/addextractedemails</url-pattern>
