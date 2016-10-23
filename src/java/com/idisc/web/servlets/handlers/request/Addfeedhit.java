@@ -15,8 +15,9 @@ import com.idisc.pu.entities.Feed_;
 public class Addfeedhit extends AbstractRequestHandler<Long> {
     
   @Override
-  public Long execute(HttpServletRequest request) throws ServletException {
-      
+  protected Long execute(HttpServletRequest request) throws ServletException {
+XLogger.getInstance().log(Level.FINER, "#execute(HttpServletRequest)", this.getClass());     
+
     Installation installation = getInstallationOrException(request);
     
     String param = null;
@@ -33,7 +34,11 @@ public class Addfeedhit extends AbstractRequestHandler<Long> {
       throw new ServletException("Required parameter: " + param + " is missing", e);
     }
     
-    return execute(request, installation, feedid, hittime);
+    Long hitcount = execute(request, installation, feedid, hittime);
+    
+XLogger.getInstance().log(Level.FINE, "{0} = {1}", this.getClass(), feedid, hitcount);
+
+    return hitcount;
   }
   
 

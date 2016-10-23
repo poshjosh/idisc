@@ -33,7 +33,7 @@ public class ReadLocalJson extends AbstractRequestHandler<Map> {
   }
   
   @Override
-  public Map execute(HttpServletRequest request) throws ServletException, IOException {
+  protected Map execute(HttpServletRequest request) throws ServletException, IOException {
       
     Map output = load(request.getServletContext());
     

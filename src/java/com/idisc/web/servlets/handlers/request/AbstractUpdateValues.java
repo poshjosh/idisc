@@ -33,7 +33,7 @@ public abstract class AbstractUpdateValues
   }
   
   @Override
-  public Map execute(HttpServletRequest request) throws ServletException {
+  protected Map execute(HttpServletRequest request) throws ServletException {
       
     boolean create = true;
     Installation installation = getInstallation(request, create);

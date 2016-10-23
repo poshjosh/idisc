@@ -51,7 +51,7 @@ public class TestBase extends WebappSetup {
     protected TestBase() {
         super(
                 new com.idisc.web.listeners.ServletContextListener(),
-                "http://www.looseboxes.com",
+                "http://localhost:8080",
                 System.getProperty("user.home")+"/Documents/NetBeansProjects/idisc/web",
                 "/idisc");
         requestHandlerProvider = TestBase.this.createRequestHandlerProvider();

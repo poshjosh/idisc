@@ -14,7 +14,7 @@ import org.json.simple.parser.ParseException;
 public class Signup extends AbstractRequestHandler<Boolean> {
     
   @Override
-  public Boolean execute(HttpServletRequest request)
+  protected Boolean execute(HttpServletRequest request)
     throws ServletException, IOException {
       
     if (isLoggedIn(request)) {
@@ -39,7 +39,7 @@ public class Signup extends AbstractRequestHandler<Boolean> {
         
       JSONObject authuserdetails = authSession.createUser(params);
       
-      output = Boolean.valueOf(authuserdetails != null);
+      output = authuserdetails != null;
       
     } catch (ParseException e) {
       throw new ServletException("Invalid response from server", e);

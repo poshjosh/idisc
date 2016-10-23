@@ -22,7 +22,7 @@ public class Feed extends AbstractRequestHandler<com.idisc.pu.entities.Feed>{
   }
   
   @Override
-  public com.idisc.pu.entities.Feed execute(HttpServletRequest request)
+  protected com.idisc.pu.entities.Feed execute(HttpServletRequest request)
     throws ServletException, IOException {
     
     com.idisc.pu.entities.Feed feed = this.select(request);
@@ -33,7 +33,7 @@ public class Feed extends AbstractRequestHandler<com.idisc.pu.entities.Feed>{
           
         final Comments commentsRequestHandler = new Comments();
         
-        List<Comment> comments = commentsRequestHandler.execute(request); 
+        List<Comment> comments = commentsRequestHandler.processRequest(request);
           
         if(comments != null && !comments.isEmpty()) {
             

@@ -1,12 +1,8 @@
 package com.idisc.web.servlets.handlers.request;
 
-import com.bc.util.JsonBuilder;
 import com.bc.util.XLogger;
-import com.idisc.core.SpreadBySite;
-import com.idisc.core.comparator.BaseFeedComparator;
-import com.idisc.core.util.EntityJsonBuilder;
-import com.idisc.core.util.EntityMapBuilder;
-import com.idisc.core.util.EntityMapBuilder_appVersionCode8orBelow;
+import com.idisc.pu.SpreadBySite;
+import com.idisc.core.comparator.feed.BaseFeedComparator;
 import com.idisc.pu.entities.Feed;
 import com.idisc.pu.entities.Installation;
 import com.idisc.web.AppContext;
@@ -16,11 +12,8 @@ import com.idisc.web.FeedComparatorUserSiteHitcountImpl;
 import com.idisc.web.exceptions.ValidationException;
 import com.idisc.web.servlets.handlers.response.FeedsResponseContext;
 import com.idisc.web.servlets.handlers.response.FeedsResponseContext_outdatedApps;
-import com.idisc.web.servlets.handlers.response.ObjectToJsonResponseHandler;
 import com.idisc.web.servlets.handlers.response.ResponseContext;
-import com.idisc.web.servlets.handlers.response.ResponseHandler;
 import com.idisc.web.servlets.request.AppVersionCode;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -32,60 +25,23 @@ import javax.servlet.http.HttpServletRequest;
 
 public class Feeds extends Selectfeeds {
     
-  private Installation installation;
-  
-  private AppVersionCode versionCodeManager;
-
   @Override
   public boolean isOutputLarge(HttpServletRequest request) {
     return !this.isHtmlResponse(request);
   }
-
-  @Override
-  protected <X> ResponseHandler<X, Object> createJsonResponseHandler(
-          HttpServletRequest request, ResponseContext<X> context) {
-      
-    final boolean tidyOutput = this.isTidyOutput(request);
-    final boolean plainTextOnly = this.isPlainTextOnly(request);
-    final int bufferSize = this.getMaxTextLengthPerItem(request);
-    
-    EntityMapBuilder mapBuilder;
-    if(this.versionCodeManager != null && this.versionCodeManager.isLessOrEquals(request, 8, false)) {
-      mapBuilder = new EntityMapBuilder_appVersionCode8orBelow(plainTextOnly, bufferSize);
-    }else{
-      mapBuilder = new EntityMapBuilder(plainTextOnly, bufferSize);
-    }
-    
-    JsonBuilder jsonBuilder = 
-            new EntityJsonBuilder(tidyOutput, true, "  ", mapBuilder); 
-    
-    ResponseHandler<X, Object> output = new ObjectToJsonResponseHandler(context, jsonBuilder, bufferSize); 
-    
-    return output;
-  }
   
   @Override
   protected ResponseContext<List<Feed>> createSuccessResponseContext(HttpServletRequest request) {
+      
+    Installation installation = this.getInstallation(request, true);
     
-    if(this.versionCodeManager != null && this.versionCodeManager.isLessThanLatest(request, false)) {
+    AppVersionCode versionCodeManager = this.getVersionCodeManager();
+    
+    if(versionCodeManager != null && versionCodeManager.isLessThanLatest(request, false)) {
       return new FeedsResponseContext_outdatedApps(request, installation);
     }else{
       return new FeedsResponseContext(request, installation);
     }
-  }
-  
-  @Override
-  public List<Feed> execute(HttpServletRequest request) throws ServletException, IOException {
-      
-    boolean create = true;
-    
-    this.installation = getInstallation(request, create);
-    
-    this.versionCodeManager = new AppVersionCode(request.getServletContext(), installation);
-    
-    List<Feed> output = super.execute(request);
-    
-    return output;
   }
   
   @Override
@@ -181,7 +137,7 @@ comparator.getClass().getName(), feeds.size(), (System.currentTimeMillis()-tb4),
     final String type = appContext.getConfiguration().getString(ConfigNames.COMPARATOR_FEED_TYPE, "hitcount");
     switch(type) {
       case "userSiteHitcount":
-        output = new FeedComparatorUserSiteHitcountImpl(appContext, installation, reverseOrder); 
+        output = new FeedComparatorUserSiteHitcountImpl(appContext, this.getInstallation(), reverseOrder); 
         break;
       default:  
         output = new BaseFeedComparator(reverseOrder);

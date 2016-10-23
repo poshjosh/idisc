@@ -1,20 +1,24 @@
 package com.idisc.web.servlets.handlers.request;
 
-import com.bc.jpa.EntityController;
 import com.idisc.web.servlets.request.RequestParameters;
 import java.io.IOException;
-import java.util.List;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import com.bc.jpa.JpaContext;
+import com.bc.jpa.dao.Criteria;
+import com.bc.util.XLogger;
+import com.idisc.pu.DaoService;
+import java.util.logging.Level;
 
 public class Valueexists extends AbstractRequestHandler<Boolean> {
     
   @Override
-  public Boolean execute(HttpServletRequest request)
+  protected Boolean execute(HttpServletRequest request)
     throws ServletException, IOException  {
       
     RequestParameters params = new RequestParameters(request);
+    
+    XLogger.getInstance().log(Level.FINE, "Request parameters: {0}", this.getClass(), params);
     
     String table = (String)params.remove("table");
     
@@ -22,30 +26,28 @@ public class Valueexists extends AbstractRequestHandler<Boolean> {
       throw new ServletException("Missing value for required parameter: 'table'");
     }
     
-    EntityController ec = getEntityController(request, table);
+    final JpaContext jpaContext = this.getJpaContext(request);
     
-    if (ec == null) {
+    final Class entityType = jpaContext.getMetaData().findEntityClass(table);
+    
+    if (entityType == null) {
       throw new ServletException("Invalid value for required parameter: 'table'");
+    }else{
+      XLogger.getInstance().log(Level.FINE, "{0} = {1}", this.getClass(), table, entityType);
     }
     
-    String connector = (String)params.remove("connector");
+    final String logicalOptrStr = (String)params.remove("connector");
     
-    if ((connector == null) || (connector.isEmpty())) {
-      connector = "AND";
+    final Criteria.LogicalOperator logicalOptr;
+    if(logicalOptrStr == null) {
+        logicalOptr = Criteria.AND;
+    }else{
+        switch(logicalOptrStr) {
+            case "OR": logicalOptr = Criteria.OR; break;
+            default: logicalOptr = Criteria.AND; break;
+        }
     }
     
-    List found = ec.select(params, null, connector, 1, 0);
-    
-    if ((found == null) || (found.isEmpty())) {
-      return Boolean.FALSE;
-    }
-    
-    return Boolean.TRUE;
-  }
-  
-  public EntityController getEntityController(HttpServletRequest request, String table) {
-    JpaContext jpaContext = this.getJpaContext(request);
-    Class entityClass = jpaContext.getMetaData().findEntityClass(table);
-    return entityClass == null ? null : jpaContext.getEntityController(entityClass);
+    return new DaoService(jpaContext).exists(entityType, logicalOptr, params);
   }
 }

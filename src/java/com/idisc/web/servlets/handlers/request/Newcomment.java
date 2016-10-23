@@ -21,10 +21,11 @@ public class Newcomment extends NewEntityHandler<Comment> {
   }
   
   @Override
-  public Boolean execute(HttpServletRequest request)
-    throws ServletException, IOException
-  {
+  protected Boolean execute(HttpServletRequest request)
+    throws ServletException, IOException {
+      
 XLogger.getInstance().log(Level.FINER, "execute(HttpServletRequest, HttpServletResponse)", this.getClass());
+
     Installation installation = getInstallationOrException(request);
     
     Comment comment = new Comment();

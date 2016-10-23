@@ -1,6 +1,6 @@
 package com.idisc.web;
 
-import com.idisc.core.comparator.FeedComparatorUserSiteHitcount;
+import com.idisc.core.comparator.feed.FeedComparatorUserSiteHitcount;
 import com.idisc.pu.entities.Installation;
 import com.idisc.web.servlets.handlers.request.Appproperties;
 import java.util.Collections;

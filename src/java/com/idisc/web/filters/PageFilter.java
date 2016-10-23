@@ -5,7 +5,6 @@ import com.bc.web.core.util.Redirect;
 import com.bc.web.core.filters.AbstractPageRedirectionFilter;
 import com.bc.web.core.util.SimpleRedirect;
 import com.idisc.pu.entities.Feed_;
-import com.idisc.web.servlets.handlers.request.Searchresults;
 import java.util.regex.Pattern;
 import javax.servlet.http.HttpServletRequest;
 
@@ -51,7 +50,8 @@ public class PageFilter extends AbstractPageRedirectionFilter {
       
     }else if(requestUri.endsWith("/feeds.jsp")) { 
         
-      return new SimpleRedirect("/feeds.jsp", "/searchresults?" + Searchresults.NO_QUERY + "=1");
+//      return new SimpleRedirect("/feeds.jsp", "/searchresults?" + Searchresults.NO_QUERY + "=1");
+      return new SimpleRedirect("/feeds.jsp", "/searchresults");
       
     }else{
         

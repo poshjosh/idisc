@@ -1,7 +1,7 @@
 package com.idisc.web.beans;
 
 import com.bc.util.XLogger;
-import com.idisc.core.comparator.BaseFeedComparator;
+import com.idisc.core.comparator.feed.BaseFeedComparator;
 import com.idisc.pu.SelectByDate;
 import com.idisc.pu.entities.Feed;
 import com.idisc.pu.entities.Feed_;

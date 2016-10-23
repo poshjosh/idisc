@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
 import java.net.URL;
+import java.nio.file.Paths;
 import java.util.logging.Level;
 import javax.servlet.ServletContext;
 import org.apache.commons.configuration.Configuration;
@@ -38,7 +39,7 @@ public class IdiscAppImpl extends IdiscApp {
         String corePropertiesFile = config.getString("idisccorePropertiesFile");
         XLogger.getInstance().log(Level.INFO, "Idisc core properties file: {0}", getClass(), corePropertiesFile);
         if (corePropertiesFile != null) {
-          propertiesURL = context.getResource(corePropertiesFile);
+          propertiesURL = Paths.get(corePropertiesFile).toUri().toURL();
         } else {
           propertiesURL = null;
         }
@@ -48,7 +49,7 @@ public class IdiscAppImpl extends IdiscApp {
         this.persistenceFile = config.getString(ConfigNames.PERSISTENCE_FILE, null);
         XLogger.getInstance().log(Level.INFO, "Persistence config file: {0}", getClass(), this.persistenceFile);
         
-        if (corePropertiesFile != null) {
+        if (propertiesURL != null) {
           IdiscAppImpl.this.init(propertiesURL);
         } else {
           IdiscAppImpl.this.init();

@@ -15,6 +15,8 @@ SELECT * FROM `feed` WHERE `feedid` = '518979' OR `feedid` = '496313' OR `feedid
 * Maintain a Map of (sessionIds+requestUris) = (Future)
 When multiple requests with the same key comes in, only the last should suffice
 
+* Add site stargist
+
 * Implements pagination for Comments as already done for Searchresults ???
 
 * Each request handler should have a getParameterName method

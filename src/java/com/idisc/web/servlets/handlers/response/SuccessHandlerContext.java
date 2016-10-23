@@ -35,9 +35,9 @@ public class SuccessHandlerContext<V> extends AbstractResponseContext<V> {
     try{
       Boolean success = (Boolean)value;
       if(success) {
-        message = name + " successful";
+        message = name + " request successful";
       }else{
-        message = name + " failed";
+        message = name + " request failed";
       }
     }catch(ClassCastException ignored) {}
     return message;

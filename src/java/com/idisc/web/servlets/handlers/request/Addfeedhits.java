@@ -19,8 +19,9 @@ import com.bc.jpa.JpaContext;
 public class Addfeedhits extends AbstractRequestHandler<Map<Integer, Long>> {
   
   @Override
-  public Map<Integer, Long> execute(HttpServletRequest request) throws ServletException {
-      
+  protected Map<Integer, Long> execute(HttpServletRequest request) throws ServletException {
+XLogger.getInstance().log(Level.FINER, "#execute(HttpServletRequest)", this.getClass());
+
     Installation installation = getInstallationOrException(request);
     
     String hits = request.getParameter("hits");
@@ -41,15 +42,17 @@ public class Addfeedhits extends AbstractRequestHandler<Map<Integer, Long>> {
       throw new ServletException("Invalid value for parameter: hits", e);
     }
     
-    return execute(request, installation, list);
+    Map<Integer, Long> added = execute(request, installation, list);
+
+XLogger.getInstance().log(Level.FINE, "{0}", this.getClass(), added);
+
+    return added;
   }
   
   protected Map<Integer, Long> execute(
       HttpServletRequest request, Installation installation, List<String> hits)
       throws ServletException {
       
-    Date reusedDate = new Date();
-    
     JpaContext jpaContext = getJpaContext(request);
     
     EntityManager em = jpaContext.getEntityManager(Feedhit.class);
@@ -88,7 +91,7 @@ public class Addfeedhits extends AbstractRequestHandler<Map<Integer, Long>> {
                 continue;
               }
               
-              Feedhit feedhit = getFeedhit(installation, feed, reusedDate, hittime);
+              Feedhit feedhit = getFeedhit(installation, feed, hittime);
               
               em.persist(feedhit);
               
@@ -118,7 +121,7 @@ public class Addfeedhits extends AbstractRequestHandler<Map<Integer, Long>> {
   }
   
   protected Feedhit getFeedhit(
-          Installation installation, Feed feed, Date reusedDate, long hittime) {
+          Installation installation, Feed feed, long hittime) {
       
     Feedhit feedhit = new Feedhit();
     
@@ -128,8 +131,7 @@ public class Addfeedhits extends AbstractRequestHandler<Map<Integer, Long>> {
     
     feedhit.setInstallationid(installation);
     
-    reusedDate.setTime(hittime);
-    feedhit.setHittime(reusedDate);
+    feedhit.setHittime(new Date(hittime));
     
     return feedhit;
   }

@@ -1,8 +1,8 @@
 package com.idisc.web;
 
 import com.bc.util.XLogger;
-import com.idisc.core.FeedService;
 import com.idisc.core.FeedUpdateTask;
+import com.idisc.pu.FeedService;
 import com.idisc.pu.entities.Feed;
 import java.util.List;
 import java.util.Objects;
@@ -33,7 +33,10 @@ public class DefaultFeedUpdateTask extends FeedUpdateTask {
       
       if(config.getBoolean(ConfigNames.CACHE_FEEDS, Boolean.FALSE)) {
         
-        this.refreshFeedsAttribute();
+        final int limit = config.getInt(ConfigNames.CACHE_LIMIT, 200);
+        final boolean spreadOutput = config.getBoolean(ConfigNames.REARRANGE_OUTPUT, true);
+          
+        this.refreshFeedsAttribute(0, limit, spreadOutput);
       }
     }catch(RuntimeException e) {
      
@@ -41,11 +44,11 @@ public class DefaultFeedUpdateTask extends FeedUpdateTask {
     }
   }
   
-  public void refreshFeedsAttribute() {
+  public void refreshFeedsAttribute(int offset, int limit, boolean spreadOutput) {
       
     try {
         
-      List<Feed> feeds = feedService.getFeeds();
+      List<Feed> feeds = feedService.getFeeds(offset, limit, spreadOutput);
       
       if(feeds != null && !feeds.isEmpty()) {
           

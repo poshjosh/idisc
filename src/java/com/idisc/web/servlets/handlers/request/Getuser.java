@@ -2,11 +2,17 @@ package com.idisc.web.servlets.handlers.request;
 
 import com.authsvc.client.AuthSvcSession;
 import com.authsvc.client.parameters.Createuser;
+import com.bc.jpa.util.EntityMapBuilder;
 import com.bc.util.XLogger;
-import com.idisc.core.util.EntityMapBuilder;
+import com.idisc.core.util.DefaultEntityMapBuilder;
+import com.idisc.core.util.mapbuildertransformers.TransformerService;
+import com.idisc.core.util.mapbuildertransformers.TransformerServiceImpl;
 import com.idisc.pu.User;
+import com.idisc.pu.entities.Feeduser;
+import com.idisc.pu.entities.Installation;
 import com.idisc.web.AppContext;
 import com.idisc.web.Attributes;
+import com.idisc.web.servlets.request.AppVersionCode;
 import com.idisc.web.servlets.request.RequestParameters;
 import java.io.IOException;
 import java.util.Collections;
@@ -21,13 +27,32 @@ import org.json.simple.parser.ParseException;
 public class Getuser extends AbstractRequestHandler<Map> {
     
   @Override
-  public Map execute(HttpServletRequest request) throws ServletException, IOException {
+  protected Map execute(HttpServletRequest request) throws ServletException, IOException {
       
-    Map output;
+    AppVersionCode versionCode = new AppVersionCode(request.getServletContext(), null);
     
-    if (isLoggedIn(request)) {
+    int version = versionCode.get(request, -1);
+    
+    if(version > 24) {
+      this.getInstallationOrException(request);  
+    }
+      
+      Map<String, String> params = new RequestParameters(request);
+    
+XLogger.getInstance().log(Level.FINE, "Request parameters: {0}", this.getClass(), params);
+    
+    final boolean loggedIn = this.isLoggedIn(request);
+    
+    XLogger.getInstance().log(Level.FINE, "Logged in: {0}", this.getClass(), loggedIn);
+
+    Map output = Collections.EMPTY_MAP;
+    
+    if (loggedIn) {
+        
       User user = getUser(request);
-      output = this.getDetails(user);
+      
+      output = this.getDetails(request, user);
+      
     }else {
        
       AppContext appContext = (AppContext)request.getServletContext().getAttribute(Attributes.APP_CONTEXT);        
@@ -40,41 +65,80 @@ public class Getuser extends AbstractRequestHandler<Map> {
         throw new ServletException("Authentication Service Unavailable");
       }
       
-      Map<String, String> params = new RequestParameters(request);
       params.put(Createuser.ParamName.sendregistrationmail.name(), Boolean.toString(false));
       
       try {
           
-        JSONObject authuserdetails = authSession.getUser(params);
-        if (authuserdetails != null) {
-          if ((authSession.isError(authuserdetails)) || (authSession.getResponseCode() >= 300))
-          {
+XLogger.getInstance().log(Level.FINE, "Getuser parameters: {0}", this.getClass(), params);
 
-            throw new ServletException(authSession.getResponseMessage());
+        JSONObject authuserdetails = authSession.getUser(params);
+        
+//        XLogger.getInstance().log(Level.FINE, "User auth details: {0}", this.getClass(), authuserdetails);
+        
+        if (authuserdetails != null) {
+            
+          if (authSession.isError(authuserdetails) || !authSession.isPositiveCompletion())       {
+
+            this.throwServletException(authSession);
           }
           
           Object oval = params.get(com.authsvc.client.parameters.Getuser.ParamName.create.name());
+          
           boolean create = Boolean.parseBoolean(oval.toString());
+          
           User user = setLoggedIn(request, authuserdetails, create);
-          output = this.getDetails(user);
-        }
-        else {
-          throw new ServletException("Error processing request");
+          
+          output = this.getDetails(request, user);
+          
+        }else {
+            
+          this.throwServletException(authSession);
         }
       } catch (ParseException e) {
+          
         throw new ServletException("Invalid response from server", e);
       }
     }
     
-    return output == null ? Collections.emptyMap() : output;
+    XLogger.getInstance().log(Level.INFO, "x x x x x x x Output: {0}", this.getClass(), output);
+    
+    return output;
   }
 
-  public Map getDetails(User user) {
-    XLogger.getInstance().log(Level.FINER, "Authentication details: {0}", getClass(), user.getAuthdetails());
-    Map output = new HashMap(40, 0.75F);
-    output.putAll(user.getAuthdetails());
-    Map feeduserdetails = new EntityMapBuilder().toMap(user.getDelegate());
-    output.putAll(feeduserdetails);
+  public Map getDetails(HttpServletRequest request, User user) {
+    
+    Map output = new HashMap(64, 0.9f);
+    
+    Map authDetails = user.getAuthdetails();
+    output.putAll(authDetails);
+    XLogger.getInstance().log(Level.FINER, "Authentication details: {0}", getClass(), authDetails);
+    
+    EntityMapBuilder mapBuilder = new DefaultEntityMapBuilder();
+    TransformerService transformerService = new TransformerServiceImpl(false, 1000);
+    
+    Installation installation = this.getInstallation(request, false);
+    Map instDetails = mapBuilder.build(Installation.class, installation, transformerService.get(Installation.class));
+    if(instDetails != null) {
+      output.putAll(instDetails);
+    }
+    XLogger.getInstance().log(Level.FINER, "Installation details: {0}", getClass(), instDetails);
+    
+    Feeduser feeduser = user.getDelegate();
+    Map userDetails = mapBuilder.build(Feeduser.class, feeduser, transformerService.get(Feeduser.class));
+    output.putAll(userDetails);
+    XLogger.getInstance().log(Level.FINER, "Feeduser details: {0}", getClass(), userDetails);
+    
     return output;
+  }
+  
+  private void throwServletException(AuthSvcSession authSession) throws ServletException {
+      
+    final String responseMessage = authSession.getResponseMessage();  
+
+    if(responseMessage == null || responseMessage.isEmpty()) {
+      throw new ServletException("Error processing request");  
+    }else{
+      throw new ServletException("Error processing request" + responseMessage);
+    }
   }
 }

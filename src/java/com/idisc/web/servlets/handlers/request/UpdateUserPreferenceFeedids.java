@@ -30,7 +30,7 @@ public abstract class UpdateUserPreferenceFeedids extends AbstractRequestHandler
   }
   
   @Override
-  public List execute(HttpServletRequest request) throws ServletException {
+  protected List execute(HttpServletRequest request) throws ServletException {
       
     Installation installation = getInstallationOrException(request);
     

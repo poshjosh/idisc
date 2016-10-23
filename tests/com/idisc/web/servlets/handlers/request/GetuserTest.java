@@ -15,11 +15,8 @@
  */
 package com.idisc.web.servlets.handlers.request;
 
-import com.bc.util.JsonFormat;
 import com.idisc.web.LoginBase;
 import java.io.IOException;
-import java.util.LinkedList;
-import java.util.List;
 import javax.servlet.ServletException;
 import junit.framework.Assert;
 import org.json.simple.JSONObject;
@@ -28,33 +25,17 @@ import org.json.simple.parser.ParseException;
 import org.junit.Test;
 
 /**
+ *
  * @author Josh
  */
-public class AddfeedhitsTest extends LoginBase {
+public class GetuserTest extends LoginBase {
 
     @Test
     public void test() throws ServletException, IOException, ParseException {
         
-        this.test(524244, 532798);
-    }
-    
-    public void test(int... feedids) throws ServletException, IOException, ParseException {
+        final String name = "getuser";
         
-        final long hittime = System.currentTimeMillis();
-        
-        final List<String> hitList = new LinkedList();
-        int i = 0;
-        for(int feedid:feedids) {
-            hitList.add(""+feedid+","+(hittime+(++i)));
-        }
-        
-        JsonFormat fmt = new JsonFormat();
-        
-        final String hits = fmt.toJSONString(hitList);
-        
-        final String name = "addfeedhits";
-        
-        Object output = this.execute("/index.jsp", "hits="+hits+"&installationid=2&installationkey=abdb33ee-a09e-4d7d-b861-311ee7061325&limit=20&format=text/json&tidy=true", "/"+name);
+        Object output = this.execute("/index.jsp", "installationid=2&installationkey=abdb33ee-a09e-4d7d-b861-311ee7061325&format=text/json&tidy=true", "/"+name);
         
         JSONObject json = (JSONObject)JSONValue.parseWithException(output.toString());
         

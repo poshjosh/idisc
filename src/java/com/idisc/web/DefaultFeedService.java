@@ -18,8 +18,8 @@ package com.idisc.web;
 
 import com.bc.jpa.JpaContext;
 import com.bc.util.XLogger;
-import com.idisc.core.FeedService;
 import com.idisc.core.IdiscApp;
+import com.idisc.pu.FeedService;
 import com.idisc.pu.entities.Feed;
 import java.util.List;
 import java.util.logging.Level;
@@ -30,36 +30,32 @@ import org.apache.commons.configuration.Configuration;
  */
 public class DefaultFeedService extends FeedService {
 
-    private final boolean debugTimeAndMemory;
+  private final boolean debugTimeAndMemory;
     
-    public DefaultFeedService(AppContext appContext) {
-        this(appContext.getIdiscApp().getJpaContext(),
-                appContext.getConfiguration().getInt(ConfigNames.CACHE_LIMIT, 200),
-                appContext.getConfiguration().getBoolean(ConfigNames.REARRANGE_OUTPUT, true),
-                appContext.getConfiguration().getBoolean(ConfigNames.DEBUG, true)
-        );
-    }
+  public DefaultFeedService(AppContext appContext) {
+    this(appContext.getIdiscApp().getJpaContext(),
+            appContext.getConfiguration().getBoolean(ConfigNames.DEBUG_TIME_AND_MEMORY, false)
+    );
+  }
     
-    public DefaultFeedService(IdiscApp idiscApp, Configuration config) {
-        this(idiscApp.getJpaContext(), 
-                config.getInt(ConfigNames.CACHE_LIMIT, 200),
-                config.getBoolean(ConfigNames.REARRANGE_OUTPUT, true),
-                config.getBoolean(ConfigNames.DEBUG, true)
-        );
-    }
+  public DefaultFeedService(IdiscApp idiscApp, Configuration config) {
+    this(idiscApp.getJpaContext(), 
+            config.getBoolean(ConfigNames.DEBUG_TIME_AND_MEMORY, false)
+    );
+  }
 
-    public DefaultFeedService(JpaContext jpaContext, int limit, boolean spreadOutput, boolean debug) {
-        super(jpaContext, limit, spreadOutput);
-        this.debugTimeAndMemory = debug;
-    }
+  public DefaultFeedService(JpaContext jpaContext, boolean debugTimeAndMemory) {
+    super(jpaContext);
+    this.debugTimeAndMemory = debugTimeAndMemory;
+  }
 
   @Override
-  protected List<Feed> selectFeeds() {
+  public List<Feed> selectFeeds(int offset, int limit) {
       
 long tb4 = System.currentTimeMillis();
 long mb4 = Runtime.getRuntime().freeMemory();
 
-    List<Feed> loadedFeeds = super.selectFeeds();
+    List<Feed> loadedFeeds = super.selectFeeds(offset, limit);
             
 XLogger.getInstance().log(debugTimeAndMemory ? Level.INFO : Level.FINE, 
 "Selected {0} feeds. Consumed time: {1}, memory: {2}", this.getClass(), 
@@ -82,7 +78,7 @@ XLogger.getInstance().log(debugTimeAndMemory ? Level.INFO : Level.FINE,
     return output;
   }
 
-  public boolean isDebugTimeAndMemory() {
+  public final boolean isDebugTimeAndMemory() {
     return debugTimeAndMemory;
   }
 }

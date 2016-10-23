@@ -1,12 +1,19 @@
 package com.idisc.web.servlets.handlers.request;
 
 import com.bc.jpa.search.SearchResults;
+import com.bc.jpa.util.EntityMapBuilder;
 import com.bc.util.JsonBuilder;
 import com.idisc.web.servlets.handlers.response.HtmlResponseHandler;
 import com.idisc.web.servlets.handlers.response.ResponseHandler;
 import com.bc.util.XLogger;
+import com.idisc.core.util.DefaultEntityMapBuilder;
 import com.idisc.core.util.EntityJsonBuilder;
+import com.idisc.core.util.TimeZones;
+import com.idisc.core.util.mapbuildertransformers.TransformerService;
+import com.idisc.core.util.mapbuildertransformers.TransformerServiceImpl;
+import com.idisc.core.util.mapbuildertransformers.TransformerService_appVersionCode8orBelow;
 import com.idisc.pu.SearchResultsHandlerFactory;
+import com.idisc.pu.entities.Installation;
 import com.idisc.web.Attributes;
 import com.idisc.web.AppContext;
 import com.idisc.web.ConfigNames;
@@ -14,7 +21,13 @@ import com.idisc.web.servlets.handlers.response.ErrorHandlerContext;
 import com.idisc.web.servlets.handlers.response.ObjectToJsonResponseHandler;
 import com.idisc.web.servlets.handlers.response.ResponseContext;
 import com.idisc.web.servlets.handlers.response.SuccessHandlerContext;
+import com.idisc.web.servlets.request.AppVersionCode;
 import java.io.IOException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
+import java.util.TimeZone;
 import java.util.logging.Level;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -30,9 +43,13 @@ public abstract class AbstractRequestHandler<V>
   
   private ResponseHandler<Throwable, Object> errorResponseHandler;
   
+  private Installation installation;
+  
+  private AppVersionCode versionCodeManager;
+
   public AbstractRequestHandler() { }
   
-  public abstract V execute(HttpServletRequest request)
+  protected abstract V execute(HttpServletRequest request)
           throws ServletException, IOException;
   
   @Override
@@ -61,9 +78,15 @@ public abstract class AbstractRequestHandler<V>
 //        throw new LoginException("Login required");
 //      }
       
+      boolean create = true;
+    
+      this.installation = getInstallation(request, create);
+    
+      this.versionCodeManager = new AppVersionCode(request.getServletContext(), installation);
+    
       XLogger.getInstance().log(Level.FINER, "Executing: {0}", getClass(), this.getClass().getName());
       
-      V x = execute(request);
+      V x = execute(request); 
       
       XLogger.getInstance().log(Level.FINER, "Execution finished, output:\n{0}", getClass(), x);
       
@@ -85,12 +108,44 @@ XLogger.getInstance().log(Level.FINER, "Response handler type: {0}",
   
   protected <X> ResponseHandler<X, Object> createJsonResponseHandler(
           HttpServletRequest request, ResponseContext<X> context) {
+      
     final boolean tidyOutput = this.isTidyOutput(request);
     final boolean plainTextOnly = this.isPlainTextOnly(request);
     final int bufferSize = this.getMaxTextLengthPerItem(request);
+    
+    final EntityMapBuilder mapBuilder = new DefaultEntityMapBuilder();
+    final TransformerService transformerService;
+    if(this.versionCodeManager != null && this.versionCodeManager.isLessOrEquals(request, 8, false)) {
+      transformerService = new TransformerService_appVersionCode8orBelow(plainTextOnly, bufferSize);
+    }else{
+      transformerService = new TransformerServiceImpl(plainTextOnly, bufferSize);
+    }
+    
+    final Locale requestLocale = request.getLocale(); // Returns request locale or server default
+    
+    XLogger.getInstance().log(Level.FINE, "Request locale: {0}", this.getClass(), requestLocale.getDisplayName(Locale.ENGLISH));
+    
+    final String legacyDateFormatPattern = "EEE MMM dd HH:mm:ss z yyyy";
+    final DateFormat outputDateFormat = new SimpleDateFormat(legacyDateFormatPattern);
+    outputDateFormat.setTimeZone(TimeZone.getTimeZone(TimeZones.UTC_ZONEID));
+    
     JsonBuilder jsonBuilder = 
-            new EntityJsonBuilder(tidyOutput, plainTextOnly, bufferSize);
-    ResponseHandler<X, Object> output = new ObjectToJsonResponseHandler(context, jsonBuilder, bufferSize);  
+            new EntityJsonBuilder(tidyOutput, true, "  ", mapBuilder, transformerService){
+                
+        @Override
+        public void appendJSONString(Object value, Appendable appendTo) throws IOException {
+            
+            if(value instanceof Date) {
+                
+                value = outputDateFormat.format((Date)value);
+            }
+            
+            super.appendJSONString(value, appendTo); //To change body of generated methods, choose Tools | Templates.
+        }
+    }; 
+    
+    ResponseHandler<X, Object> output = new ObjectToJsonResponseHandler(context, jsonBuilder, bufferSize); 
+    
     return output;
   }
   
@@ -189,5 +244,13 @@ XLogger.getInstance().log(Level.FINER, "Response format: {0}", this.getClass(), 
       return defaultValue;
     }
     return Integer.parseInt(val);
+  }
+
+  public final Installation getInstallation() {
+    return installation;
+  }
+
+  public final AppVersionCode getVersionCodeManager() {
+    return versionCodeManager;
   }
 }

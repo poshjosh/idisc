@@ -27,7 +27,6 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import org.junit.Test;
-import com.bc.jpa.dao.BuilderForSelect;
 
 /**
  * @author Josh
@@ -48,12 +47,9 @@ public class FeedsTest extends LoginBase {
         
         JpaContext jpaContext = appContext.getIdiscApp().getJpaContext();
         
-        List<Installation> resultList;
-        
-        try(BuilderForSelect<Installation> qb = jpaContext.getBuilderForSelect(Installation.class)) {
-            
-            resultList = qb.from(Installation.class).createQuery().setMaxResults(max).getResultList();
-        }
+        List<Installation> resultList =        
+            jpaContext.getBuilderForSelect(Installation.class)
+                .from(Installation.class).getResultsAndClose(0, max);
         
         int i = 0;
         
@@ -112,10 +108,12 @@ log("ID:"+data.get("feedid")+", siteid: "+data.get("siteid"));
         }
     }
     
-//    @Test
-    public void test() throws ServletException, IOException {
+    @Test
+    public void testAfter() throws ServletException, IOException {
         
-        this.execute("/index.jsp", "installationid=2&installationkey=abdb33ee-a09e-4d7d-b861-311ee7061325&limit=20&format=text/json&tidy=true", "/feeds");
+        final long oneHourAgo = System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(60);
+        
+        this.execute("/index.jsp", "installationid=2&installationkey=abdb33ee-a09e-4d7d-b861-311ee7061325&after="+oneHourAgo+"&format=text/json&tidy=true", "/feeds");
     }
     
     @Test

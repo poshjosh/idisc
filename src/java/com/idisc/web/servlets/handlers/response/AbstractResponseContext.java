@@ -11,19 +11,17 @@ import javax.servlet.http.HttpServletRequest;
  */
 public abstract class AbstractResponseContext<V> implements ResponseContext<V>, Serializable {
     
-
-  private final String referer;
+    private final String referer;
   
-  private final ServletContext servletContext;
+    private final ServletContext servletContext;
   
-  private final AppContext appContext;
+    private final AppContext appContext;
   
-  
-  public AbstractResponseContext(HttpServletRequest request) {
-    this.referer = request.getHeader("referer");
-    this.servletContext = request.getServletContext();
-    this.appContext = (AppContext)servletContext.getAttribute(Attributes.APP_CONTEXT);
-  }
+    public AbstractResponseContext(HttpServletRequest request) {
+        this.referer = request.getHeader("referer");
+        this.servletContext = request.getServletContext();
+        this.appContext = (AppContext)servletContext.getAttribute(Attributes.APP_CONTEXT);
+    }
     
     public ServletContext getServletContext() {
         return servletContext;

@@ -97,6 +97,18 @@ XLogger.getInstance().log(Level.FINE, "Less than or equals version {0}: {1}, ins
   public Date getInstallationDate(int versionCode) {
     Calendar cal = Calendar.getInstance();
     switch(versionCode) {
+      case 26:
+        cal.set(2016, 8, 25); break; 
+      case 25:
+        cal.set(2016, 8, 24); break; 
+      case 24:
+        cal.set(2016, 8, 17); break; 
+      case 23:
+        cal.set(2016, 8, 16); break; 
+      case 22:
+        cal.set(2016, 7, 26); break; 
+      case 21:
+        cal.set(2016, 7, 16); break; 
       case 20:
         cal.set(2016, 7, 10); break;
       case 19:

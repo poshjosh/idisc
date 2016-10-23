@@ -73,7 +73,7 @@ XLogger.getInstance().log(Level.FINER, "{0} = {1}", this.getClass(), name, outpu
   }
   
   @Override
-  public Map<String, List> execute(HttpServletRequest request) throws ServletException {
+  protected Map<String, List> execute(HttpServletRequest request) throws ServletException {
       
     Installation installation = getInstallationOrException(request);
     

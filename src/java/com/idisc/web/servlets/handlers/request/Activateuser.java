@@ -12,7 +12,7 @@ import javax.servlet.http.HttpServletRequest;
 public class Activateuser extends AbstractRequestHandler<Boolean> {
     
   @Override
-  public Boolean execute(HttpServletRequest request)
+  protected Boolean execute(HttpServletRequest request)
     throws ServletException, IOException {
       
     if (isLoggedIn(request)) {

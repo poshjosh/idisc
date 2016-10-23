@@ -1,9 +1,7 @@
 package com.idisc.web.servlets.handlers.request;
 
-import com.idisc.pu.User;
 import com.idisc.pu.entities.Feed;
 import com.idisc.pu.entities.Installation;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import javax.servlet.ServletException;
@@ -11,8 +9,6 @@ import javax.servlet.http.HttpServletRequest;
 
 public abstract class GetUserPreferenceFeeds<K> extends Selectfeeds {
     
-  private User user;
-  
   public abstract Class<K> getPreferenceEntityClass();
   
   public abstract List<K> getPreferenceFeedList(Installation paramInstallation);
@@ -22,14 +18,6 @@ public abstract class GetUserPreferenceFeeds<K> extends Selectfeeds {
   @Override
   public boolean isOutputLarge(HttpServletRequest request) {
     return false;
-  }
-  
-  @Override
-  public List<Feed> execute(HttpServletRequest request) throws ServletException, IOException {
-      
-    this.user = findUser(request);
-    
-    return super.execute(request);
   }
   
   @Override

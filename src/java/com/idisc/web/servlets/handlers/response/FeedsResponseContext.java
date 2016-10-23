@@ -2,7 +2,6 @@ package com.idisc.web.servlets.handlers.response;
 
 import com.bc.util.XLogger;
 import com.idisc.core.CommentRepliesBuilder;
-import com.idisc.core.util.Util;
 import com.idisc.pu.entities.Feed;
 import com.idisc.pu.entities.Installation;
 import com.idisc.web.Attributes;
@@ -127,7 +126,9 @@ XLogger.getInstance().log(Level.FINER, "Installation: {0}, number of feeds: {1}"
           
         XLogger.getInstance().log(Level.FINER, "Adding {0} notices to output", getClass(), notices.size());
         
-        Date date = Util.getEarliestDate(feeds);
+        com.idisc.pu.FeedService feedService = new com.idisc.pu.FeedService(this.getAppContext().getIdiscApp().getJpaContext());
+                
+        Date date = feedService.getEarliestDate(feeds);
         
         for (Feed notice : notices) {
           notice.setDatecreated(date);

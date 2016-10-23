@@ -21,7 +21,7 @@ public class Getmultipleresults extends AbstractRequestHandler<Map> {
   }
   
   @Override
-  public Map execute(HttpServletRequest request) {
+  protected Map execute(HttpServletRequest request) {
     
     final String [] paramNames = provider.getRequestHandlerNames(request);
     

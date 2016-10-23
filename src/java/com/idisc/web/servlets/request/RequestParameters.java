@@ -1,6 +1,7 @@
 package com.idisc.web.servlets.request;
 
 import com.bc.util.XLogger;
+import com.idisc.pu.entities.Feeduser_;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.logging.Level;
@@ -63,6 +64,18 @@ logger.log(level, "{0} = {1}", cls, name, values==null?null:Arrays.toString(valu
           this.add(name, values[0]);
         }
       }
+    }
+    
+    final String key0 = Feeduser_.emailAddress.getName();
+    final String key1 = com.authsvc.client.parameters.Getuser.ParamName.emailaddress.name();
+    String email = this.get(key0);
+    if(email != null) {
+        this.put(key1, email);
+    }else{
+        email = this.get(key1);
+        if(email != null) {
+            this.put(key0, email);
+        }
     }
   }
   

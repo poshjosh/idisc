@@ -2,6 +2,8 @@ package com.idisc.web.servlets.handlers.response;
 
 import com.bc.util.JsonBuilder;
 import com.bc.util.XLogger;
+import com.idisc.core.util.EntityJsonBuilder;
+import com.idisc.pu.entities.Feed;
 import com.idisc.web.AppContext;
 import com.idisc.web.ConfigNames;
 import java.io.BufferedWriter;
@@ -9,6 +11,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
@@ -25,13 +28,14 @@ public class ObjectToJsonResponseHandler<V> extends DirectResponseHandler<V, Map
 
   private final int bufferSize;
   
+  private final JsonBuilder jsonBuilder;
+  
   public ObjectToJsonResponseHandler(ResponseContext context, boolean tidyOutput, boolean plainTextOnly) {
     this(context, tidyOutput, plainTextOnly, 8192);
   }
   
   public ObjectToJsonResponseHandler(ResponseContext context, boolean tidyOutput, boolean plainTextOnly, int maxTextLengthPerItem) {
-    super(context, tidyOutput, plainTextOnly, maxTextLengthPerItem);
-    this.bufferSize = maxTextLengthPerItem;
+    this(context, new EntityJsonBuilder(tidyOutput, plainTextOnly, maxTextLengthPerItem), maxTextLengthPerItem);
   }
 
   public ObjectToJsonResponseHandler(ResponseContext context, JsonBuilder jsonBuilder) {
@@ -39,8 +43,9 @@ public class ObjectToJsonResponseHandler<V> extends DirectResponseHandler<V, Map
   }
   
   public ObjectToJsonResponseHandler(ResponseContext context, JsonBuilder jsonBuilder, int bufferSize) {
-    super(context, jsonBuilder);
+    super(context);
     this.bufferSize = bufferSize;
+    this.jsonBuilder = jsonBuilder;
   }
 
   @Override
@@ -49,6 +54,10 @@ public class ObjectToJsonResponseHandler<V> extends DirectResponseHandler<V, Map
       throws ServletException, IOException {
 XLogger.getInstance().entering(this.getClass(), "#processResponse(HttpServletRequest, HttpServletRequest, String, V)", name);
     
+//    try{
+//      this.printFirstDateLastDateAndFeedIds(Level.FINE, "Json response for: "+name, (List)message);
+//    }catch(Exception e) { }
+
     Object output = this.getContext().format(name, message);
     
     return Collections.singletonMap(name, output);
@@ -66,15 +75,11 @@ logger.entering(cls, "#sendResponse(HttpServletRequest, HttpServletRequest, Stri
 
 this.logOutputSizes(logger, Level.FINE, cls, output);
 
-    final PrintWriter pw = response.getWriter();
-    
-    final BufferedWriter bw = this.bufferSize < 1 ? new BufferedWriter(pw) : new BufferedWriter(pw, this.bufferSize);
-     
-    try {
+    try(PrintWriter pw = response.getWriter();
+            BufferedWriter bw = this.bufferSize < 1 ? 
+                    new BufferedWriter(pw) : new BufferedWriter(pw, this.bufferSize)) {
         
-//logger.log(level, "==================== Printing Output =====================\n{0}", cls, output);
-
-      JsonBuilder jsonBuilder = this.getJsonBuilder();
+logger.log(Level.FINER, "==================== Printing Output =====================\n{0}", cls, output);
 
 long tb4 = System.currentTimeMillis();
 long mb4 = Runtime.getRuntime().freeMemory();
@@ -89,9 +94,6 @@ XLogger.getInstance().log(this.isDebugTimeAndMemory(request) ? Level.INFO : Leve
 "Written to output, json response name: {0}. Consumed time: {1}, memory: {2}", this.getClass(), 
 name, (System.currentTimeMillis()-tb4), (mb4-Runtime.getRuntime().freeMemory()));
       
-    }finally{
-      this.close(pw);
-      this.close(bw);
     }
   }
   
@@ -100,15 +102,6 @@ name, (System.currentTimeMillis()-tb4), (mb4-Runtime.getRuntime().freeMemory()))
     final boolean debugTimeAndMemory = 
         appContext.getConfiguration().getBoolean(ConfigNames.DEBUG_TIME_AND_MEMORY, false);
     return debugTimeAndMemory;  
-  }
-  
-  private void close(AutoCloseable c) {
-    if(c == null) {
-      return;
-    }  
-    try { c.close(); } catch (Exception e) { 
-      XLogger.getInstance().log(Level.WARNING, "Failed to close", getClass(), e);
-    }     
   }
   
   private void logJsonOutput(XLogger logger, Level level, Class cls, JsonBuilder jsonBuilder, Map output) {
@@ -132,9 +125,9 @@ logger.log(level, "{0}\n{1}", cls, builder, oval);
             Object val = output.get(key);
             builder.append(key).append('=');
             if(val instanceof Collection) {
-                builder.append(((Collection)val).size()).append(" elements");
+                builder.append(((Collection)val).size()).append(" elements in ").append(val.getClass().getName());
             }else if(val instanceof Map) {
-                builder.append(((Map)val).size()).append(" elements");
+                builder.append(((Map)val).size()).append(" elements in ").append(val.getClass().getName());
             }else{
                 builder.append("[NO SIZE METHOD]");
             }
@@ -143,8 +136,21 @@ logger.log(level, "{0}\n{1}", cls, builder, oval);
     }
   }
 
+  private void printFirstDateLastDateAndFeedIds(Level level, String key, List response) {
+    if (XLogger.getInstance().isLoggable(level, this.getClass()) && response != null && !response.isEmpty()) {
+      Feed first = (Feed)response.get(0);
+      Feed last = (Feed)response.get(response.size() - 1);
+      XLogger.getInstance().log(level, "{0}. First feed, date: {1}. Last feed, date: {2}. {3} items", 
+          this.getClass(), key, first.getFeeddate(), last.getFeeddate(), response.size());
+    }
+  }
+  
   public final int getBufferSize() {
     return bufferSize;
+  }
+
+  public final JsonBuilder getJsonBuilder() {
+    return this.jsonBuilder;
   }
 }
 /**

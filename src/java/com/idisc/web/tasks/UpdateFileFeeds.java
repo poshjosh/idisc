@@ -37,7 +37,7 @@ public class UpdateFileFeeds extends com.bc.task.AbstractStoppableTask<Map<Strin
     }
 
     @Override
-    public Map<String, Feed> doCall() {
+    protected Map<String, Feed> doCall() {
         
         XLogger.getInstance().log(Level.INFO, "Creating notices", getClass()); 
       

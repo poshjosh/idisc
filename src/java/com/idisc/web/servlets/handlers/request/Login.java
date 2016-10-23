@@ -17,7 +17,7 @@ import org.json.simple.parser.ParseException;
 public class Login extends AbstractRequestHandler<Boolean> {
   
   @Override
-  public Boolean execute(HttpServletRequest request)
+  protected Boolean execute(HttpServletRequest request)
     throws ServletException, IOException {
     if (isLoggedIn(request)) {
       return Boolean.TRUE;

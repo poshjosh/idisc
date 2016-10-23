@@ -6,7 +6,6 @@ import java.util.Arrays;
 import java.util.logging.Level;
 import javax.servlet.http.HttpServletRequest;
 
-
 public class RequestHandlerProviderImpl implements RequestHandlerProvider{
     
   private static final Class cls = RequestHandlerProviderImpl.class;

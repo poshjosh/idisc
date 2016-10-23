@@ -12,6 +12,9 @@ import javax.servlet.http.HttpServletRequest;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import com.bc.jpa.dao.BuilderForSelect;
+import com.bc.util.XLogger;
+import com.idisc.core.util.TimeZones;
+import java.util.logging.Level;
 
 /**
  * @author Chinomso Bassey Ikwuagwu on Aug 6, 2016 5:50:23 PM
@@ -19,7 +22,7 @@ import com.bc.jpa.dao.BuilderForSelect;
 public class Updatereadcomments extends AbstractRequestHandler<Boolean> {
     
   @Override
-  public Boolean execute(HttpServletRequest request)
+  protected Boolean execute(HttpServletRequest request)
     throws ServletException {
       
     Installation installation = getInstallationOrException(request);
@@ -59,13 +62,14 @@ public class Updatereadcomments extends AbstractRequestHandler<Boolean> {
       final int pageSize = 20;
         
       JpaContext jpaContext = this.getJpaContext(request);
-      final Date NOW = new Date();
+      
+      final Date NOW_DB_TIMEZONE = new TimeZones().getCurrentTimeInDatabaseTimeZone();
       
       int updateCount = 0;
       
       if(commentids.size() < pageSize) {
           
-        updateCount = this.update(jpaContext, commentids, NOW);
+        updateCount = this.update(jpaContext, commentids, NOW_DB_TIMEZONE);
          
       }else{
           
@@ -75,7 +79,7 @@ public class Updatereadcomments extends AbstractRequestHandler<Boolean> {
 
           List<Long> page = pages.getPage(pageNum);
           
-          updateCount += this.update(jpaContext, page, NOW);
+          updateCount += this.update(jpaContext, page, NOW_DB_TIMEZONE);
         }
       }
   
@@ -85,7 +89,7 @@ public class Updatereadcomments extends AbstractRequestHandler<Boolean> {
     return output;
   }
   
-  private int update(JpaContext jpaContext, List<Long> commentids, Date NOW) {
+  private int update(JpaContext jpaContext, List<Long> commentids, Date dateuserread) {
       
     int updateCount = 0;
     
@@ -100,13 +104,16 @@ public class Updatereadcomments extends AbstractRequestHandler<Boolean> {
         qb.begin();
         
         for(Commentreplynotice notice:notices) {
-            
-          notice.setDateuserread(NOW);
           
-          qb.merge(notice);
+          notice = qb.merge(notice);  // Assignment important
+          
+          notice.setDateuserread(dateuserread);
         }
         
         qb.commit();
+        
+        XLogger.getInstance().log(Level.FINE, 
+            "Updated dateuserread for {0}", this.getClass(), notices);
         
         updateCount = notices.size();
       }

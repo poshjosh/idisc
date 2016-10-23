@@ -3,6 +3,7 @@ package com.idisc.web.servlets.handlers.response;
 import com.bc.util.XLogger;
 import com.idisc.web.exceptions.ValidationException;
 import java.io.IOException;
+import java.util.Objects;
 import java.util.logging.Level;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -26,6 +27,11 @@ public class HtmlResponseHandler<V> extends AbstractResponseHandler<V, Object> {
           HttpServletRequest request, HttpServletResponse response, 
           String name, V message)
     throws ServletException, IOException {
+      
+//    try{
+//      this.printFirstDateLastDateAndFeedIds(Level.INFO, "Html response for: " + name, (List<com.idisc.pu.entities.Feed>)message);
+//    }catch(Exception e) { }
+    
 XLogger.getInstance().entering(this.getClass(), "#processResponse(HttpServletRequest, HttpServletRequest, String, V)", name);
       
     targetPage = this.getContext().getTargetPage(name, message); 
@@ -34,9 +40,7 @@ XLogger.getInstance().entering(this.getClass(), "#processResponse(HttpServletReq
     //
     Object output = this.getContext().format(name, message);
     
-    if(output == null) {
-        throw new NullPointerException();
-    }
+    Objects.requireNonNull(output);
     
     this.setAttributeForAsync(request, name, output);
     

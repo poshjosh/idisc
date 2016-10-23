@@ -1,10 +1,11 @@
 package com.idisc.web.servlets.handlers.request;
 
 import com.bc.jpa.EntityController;
+import com.bc.jpa.JpaContext;
 import com.bc.jpa.exceptions.EntityInstantiationException;
 import com.bc.jpa.exceptions.PreexistingEntityException;
+import com.bc.task.Task;
 import com.bc.util.XLogger;
-import com.idisc.pu.entities.Feedhit;
 import com.idisc.pu.entities.Installation;
 import com.idisc.pu.entities.Site;
 import com.idisc.pu.entities.Feed_;
@@ -18,8 +19,6 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
-import javax.persistence.EntityManager;
-import javax.persistence.EntityTransaction;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -34,14 +33,13 @@ public class Newfeed extends NewEntityHandler<com.idisc.pu.entities.Feed> {
   }
 
   @Override
-  public Boolean execute(HttpServletRequest request)
-    throws ServletException, IOException
-  {
+  protected Boolean execute(HttpServletRequest request)
+    throws ServletException, IOException {
       
     final Class cls = this.getClass();
     final XLogger log = XLogger.getInstance();
     
-    log.log(Level.FINER, "execute(HttpServletRequest, HttpServletResponse)", cls);
+    log.log(Level.FINER, "execute(HttpServletRequest)", cls);
 
     Installation installation = getInstallationOrException(request);
     
@@ -116,7 +114,9 @@ public class Newfeed extends NewEntityHandler<com.idisc.pu.entities.Feed> {
       final int hitcount = hitcountStr == null || hitcountStr.isEmpty() ? 0 : Integer.parseInt(hitcountStr);
       log.log(Level.FINER, "Hit count: {0}", cls, hitcountStr);
         
-      this.generateFeedhits(request, log, cls, installation, feed, hitcount);
+      final JpaContext jpaContext = this.getJpaContext(request);
+      Task<Integer> feedhitGenerationTask = new FeedhitGenerator(jpaContext, installation, feed, hitcount);
+      feedhitGenerationTask.call();
       
       output = Boolean.TRUE;
       
@@ -170,50 +170,6 @@ public class Newfeed extends NewEntityHandler<com.idisc.pu.entities.Feed> {
         log.log(Level.WARNING, "Unexpected exception", cls, e);
         
         return false;
-      }
-  }
-  
-  private int generateFeedhits(
-          HttpServletRequest request, 
-          final XLogger log, final Class cls,
-          Installation installation, com.idisc.pu.entities.Feed feed, int count) {
-      if(count < 1) {
-          return count;
-      }
-      
-      EntityManager em = this.getJpaContext(request).getEntityManager(Feedhit.class);
-      try{
-          
-        EntityTransaction t = em.getTransaction();
-        try{
-            
-            t.begin();
-            
-            Date hittime = new Date();
-            Feedhit feedhit = new Feedhit();
-
-            for(int i=0; i<count; i++) {
-                
-              feedhit.setFeedid(feed);
-              feedhit.setHittime(hittime);
-              feedhit.setInstallationid(installation);
-              
-              em.persist(feedhit);
-            }
-            
-            t.commit();
-            
-        }finally{
-          if(t.isActive()) {
-            t.rollback();
-          }
-        }
-        return count;
-      }catch(Exception e) {
-          log.log(Level.WARNING, "Error generating hitcount for: "+feed, cls, e);
-          return 0;
-      }finally{
-          em.close();
       }
   }
   

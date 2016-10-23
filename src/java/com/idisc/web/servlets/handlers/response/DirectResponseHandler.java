@@ -1,8 +1,6 @@
 package com.idisc.web.servlets.handlers.response;
 
-import com.bc.util.JsonBuilder;
 import com.bc.util.XLogger;
-import com.idisc.core.util.EntityJsonBuilder;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.logging.Level;
@@ -13,18 +11,13 @@ import javax.servlet.http.HttpServletResponse;
 /**
  * Writes the response output data directly to the response writer
  * @author Josh
+ * @param <V>
+ * @param <O>
  */
 public abstract class DirectResponseHandler<V, O> extends AbstractResponseHandler<V, O> {
 
-  private final JsonBuilder jsonBuilder;
-
-  public DirectResponseHandler(ResponseContext context, boolean tidyOutput, boolean plainTextOnly, int maxTextLengthPerItem) {
-    this(context, new EntityJsonBuilder(tidyOutput, plainTextOnly, maxTextLengthPerItem));
-  }
-    
-  public DirectResponseHandler(ResponseContext context, JsonBuilder jsonBuilder) {
+  public DirectResponseHandler(ResponseContext context) {
     super(context);
-    this.jsonBuilder = jsonBuilder;
   }
 
   protected String toString(O output) {
@@ -49,6 +42,7 @@ public abstract class DirectResponseHandler<V, O> extends AbstractResponseHandle
         localThrowable2 = localThrowable1;
         
         throw localThrowable1;
+        
       }finally{
         if (out != null) {
           if (localThrowable2 != null) { 
@@ -70,10 +64,6 @@ public abstract class DirectResponseHandler<V, O> extends AbstractResponseHandle
   
   public int getEstimatedLengthChars(V value, Object messageCreatedFromValue) {
       return 200;
-  }
-
-  public final JsonBuilder getJsonBuilder() {
-    return this.jsonBuilder;
   }
 }
 /**
