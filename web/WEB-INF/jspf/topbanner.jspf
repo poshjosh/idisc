@@ -5,17 +5,11 @@
 <%-- //@related userMessage --%>    
 <c:if test="${userMessage != null}">
     <div class="content_sub">${userMessage}</div>  
-</c:if> 
+</c:if>
+    
 <span style="float:left;">
     <span class="justified"><%@include file="/WEB-INF/jspf/socialbox.jspf"%></span>
 </span>
-
-<small>
-    <a style="color:#bd5a35;" href="${pageContext.servletContext.contextPath}/rio2016/medalsTable.jsp" target="_blank">
-        Rio 2016 Olympics Medals Table
-    </a>
-</small>
-
 <span style="float:right;">
     <c:choose>
         <c:when test="${user == null}">
@@ -35,39 +29,51 @@
         </c:otherwise>
     </c:choose>
 </span>
-<table style="width:100%;">
-    <tr>
-        <td>
-            <a href="${pageContext.servletContext.contextPath}/home.jsp">
-                <img class="icon_medium" src="${pageContext.servletContext.contextPath}/images/appicon.png" 
-                     alt="${appName} icon" title="${appName} icon"/>
-            </a>
-        </td>    
-        <td>
-            <a href="${pageContext.servletContext.contextPath}/home.jsp">
-                <span class="font_heavy app_color">${appName}</span>
-            </a>
-<%-- 
-  App default format is text/json.
-  For format=text/html and req=searchresults, the response will be forwarded 
-  to page searchresults.jsp with a parameter named searchresults referencing
-  the search results
---%>
-            <form id="searchForm" method="post" action="${pageContext.servletContext.contextPath}/searchresults">
-                <input type="hidden" name="format" value="text/html"/>
-                <input type="hidden" name="req" value="searchresults"/>
-                <input type="hidden" name="limit" value="20"/>
-                <input type="text" name="query"/>
-                <select name="siteid" size="1">
-<%-- We use empty string here as when we left out the value altogether it used the contents of the option tag --%>        
-                    <option value="" disabled selected>All Sites</option>  
-                    <c:forEach var="Site" items="${AppContext.sites}">
-                        <option value="${Site.siteid}">${Site.site}</option>
-                    </c:forEach>
-                </select>
-                <input type="submit" value="Search"/>
-            </form>
-        </td>    
-    </tr>    
+<table style="width:100%">
+    <tr style="width:100%">
+        <td style="width:33%"></td>
+        <td style="width:33%; text-align:center;">
+            <div id="getAppDialog">
+
+                <div id="closeGetAppDialog" style="width:100%; float:right; text-align:right">
+
+                  <input type="button" value=" x " 
+                         style="text-align:center; background-color:white; color:red; border-width:0 0 0.05em 0.05em; border-style:solid; border-color:black" 
+                         onclick="looseboxes.setDisplay('getAppDialog', 'none')"/>
+                </div>
+                <br/>
+                <%@include file="/WEB-INF/jspf/applink.jspf"%>
+
+            </div>  
+        </td>
+        <td style="width:33%"></td>
+    </tr>
 </table>
+<c:choose>
+    <c:when test="${mobile}">
+        <p>
+            <a href="${pageContext.servletContext.contextPath}/home.jsp">
+                <span class="app_color font_heavy">${appName}</span>
+            </a>
+            <a href="${appUrl}" class="button button_prompt">Get the App</a> 
+        </p>
+        <%@include file="/WEB-INF/jspf/slider.jspf"%>    
+    </c:when>
+    <c:otherwise>
+        <table style="width:100%;">
+            <tr>
+                <td>
+                    <a href="${pageContext.servletContext.contextPath}/home.jsp">
+                        <div class="app_color">${appName}</div>
+                        <img class="icon_dimension" src="${pageContext.servletContext.contextPath}/images/appicon.png" 
+                             alt="${appName} icon" title="${appName} icon"/>
+                    </a>
+                </td>   
+                <td>
+                    <%@include file="/WEB-INF/jspf/slider.jspf"%>
+                </td>
+            </tr>    
+        </table>
+    </c:otherwise>
+</c:choose>
 

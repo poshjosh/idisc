@@ -28,7 +28,9 @@
         
       <%@include file="/WEB-INF/jspf/topbanner.jspf"%>
       
-<%-- @include file="/WEB-INF/jspf/google_leaderboardad_script.jspf"--%>
+      <%@include file="/WEB-INF/jspf/searchform.jspf"%>
+      
+<!-- %@include file="/WEB-INF/jspf/google_leaderboardad_script.jspf"% -->
       
       <div class="content">
         <jsp:invoke fragment="pageContent"/>

@@ -24,5 +24,6 @@
         "niger tornadoes", "plateau united", "ranchers bees", "sharks f.c",
         "shooting stars", "sokoto united", "stationery stores", "udoji united", 
         "warri wolves", "wikki tourists"],
-    "politics": ["boko haram", "apc", "pdp"]
+    "politics": ["boko haram", "apc", "pdp", "inec", "governorship", "presidential", 
+        "party chairman"]
 }

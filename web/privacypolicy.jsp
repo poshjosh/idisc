@@ -2,7 +2,7 @@
 <%@taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
 <%@taglib uri="/WEB-INF/tlds/idisc" prefix="idisc"%>
 
-<idisc:page_without_slider 
+<idisc:page_with_slider 
     pageTitle="${appName} Privacy Policy" 
     pageKeywords="privacy policy, collation, use, disclosure, spam, security, cookies, closing and account, miscellaneous, ammendments" 
     pageDescription="${appName} Privacy Policy">
@@ -133,4 +133,4 @@
           will notify you in accordance with your Notification Preferences.<br />
         </div>
     </jsp:attribute>
-</idisc:page_without_slider>
+</idisc:page_with_slider>

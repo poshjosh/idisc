@@ -2,7 +2,7 @@
 <%@taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
 <%@taglib uri="/WEB-INF/tlds/idisc" prefix="idisc"%>
 
-<idisc:page_without_slider 
+<idisc:page_with_slider 
     pageTitle="${appName} - Login" 
     pageKeywords="login page" 
     pageDescription="${appName} - Login">
@@ -15,4 +15,4 @@
             <input type="submit" value="Login"/>
         </form>
     </jsp:attribute>
-</idisc:page_without_slider>
+</idisc:page_with_slider>

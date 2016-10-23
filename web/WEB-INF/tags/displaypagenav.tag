@@ -36,7 +36,7 @@
 <c:if test="${end > totalSize}"><c:set var="end" value="${totalSize}"/></c:if>
 
 <c:if test="${!AppContext.productionMode}">
-  <p>Total size: ${totalSize}. Pages: ${pages}. Page: ${page}. Offset: ${offset}. End: ${end}</p>
+  <p><small>DEBUG:&emsp;<small>Total size: ${totalSize}. Pages: ${pages}. Page: ${page}. Offset: ${offset}. End: ${end}</small></small></p>
 </c:if>
 
 <p class="content_sub">

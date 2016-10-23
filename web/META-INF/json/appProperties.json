@@ -14,7 +14,7 @@
     "connectTimeoutMillis": 15000,
     "readTimeoutMillis": 30000,
     "feedDownloadLimit": 100,
-    "feedDownloadBufferSize": 1000,
+    "feedDownloadBufferSize": 500,
     "textLengthXShort": 50,
     "textLengthShort": 100,
     "textLengthMedium": 150,

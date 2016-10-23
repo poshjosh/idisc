@@ -1,0 +1,21 @@
+<%@taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
+<%-- 
+  App default format is text/json.
+  For format=text/html and req=searchresults, the response will be forwarded 
+  to page searchresults.jsp with a parameter named searchresults referencing
+  the search results
+--%>
+            <form id="searchForm" method="post" action="${pageContext.servletContext.contextPath}/searchresults">
+                <input type="hidden" name="format" value="text/html"/>
+                <input type="hidden" name="req" value="searchresults"/>
+                <input type="hidden" name="limit" value="20"/>
+                <input type="text" name="query"/>
+                <select name="siteid" size="1">
+<%-- We use empty string here as when we left out the value altogether it used the contents of the option tag --%>        
+                    <option value="" disabled selected>All Sites</option>  
+                    <c:forEach var="Site" items="${AppContext.sites}">
+                        <option value="${Site.siteid}">${Site.site}</option>
+                    </c:forEach>
+                </select>
+                <input type="submit" value="Search"/>
+            </form>

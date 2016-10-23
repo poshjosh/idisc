@@ -28,8 +28,6 @@
 
     <jsp:attribute name="pageContent" trim="true">
         
-        <%@include file="/WEB-INF/jspf/top.jspf"%>
-        
         <jsp:invoke fragment="pageContent"/>
     
     </jsp:attribute>

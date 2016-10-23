@@ -8,7 +8,7 @@
 <%@taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
 <%@taglib uri="/WEB-INF/tlds/idisc" prefix="idisc"%>
 
-<idisc:page_without_slider 
+<idisc:page_with_slider 
     pageTitle="${appName} - Upload New Comment" 
     pageKeywords="upload new comment" 
     pageDescription="${appName} - Upload New Comment">
@@ -18,4 +18,4 @@
             cfFeedid="${feedid == null ? param.feedid : feedid}" 
             cfRepliedto="${repliedto == null ? param.repliedto : repliedto}"/>
     </jsp:attribute> 
-</idisc:page_without_slider>
+</idisc:page_with_slider>

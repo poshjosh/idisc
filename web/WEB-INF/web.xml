@@ -38,6 +38,10 @@
         <param-name>appDownloadUrl</param-name>
         <param-value>/downloads/newsminutefree.apk</param-value>
     </context-param>
+    <context-param>
+        <param-name>twitterUsername</param-name>
+        <param-value>mynewsminute</param-value>
+    </context-param>
     <filter>
         <description>Sets charset for post requests, charset for GET requests is set by adding URIEncoding=UTF-8 to connector in server.xml</description>
         <filter-name>SetCharsetFilter</filter-name>
@@ -149,18 +153,21 @@
         <url-pattern>/addextractedemails</url-pattern>
         <url-pattern>/addfavoritefeedids</url-pattern>
         <url-pattern>/addfeedhit</url-pattern>
+        <url-pattern>/addfeedhits</url-pattern>
         <url-pattern>/aliasesforcategories</url-pattern>
         <url-pattern>/aliasesforcontent</url-pattern>
         <url-pattern>/appproperties</url-pattern>
         <url-pattern>/comments</url-pattern>
         <url-pattern>/feed</url-pattern>
         <url-pattern>/feeds</url-pattern>
+        <url-pattern>/generatefeedhit</url-pattern>
         <url-pattern>/getbookmarkfeeds</url-pattern>
         <url-pattern>/getbookmarkfeedids</url-pattern>
         <url-pattern>/getfavoritefeeds</url-pattern>
         <url-pattern>/getfavoritefeedids</url-pattern>
         <url-pattern>/getmultipleresults</url-pattern>
         <url-pattern>/getuser</url-pattern>
+        <url-pattern>/log</url-pattern>
         <url-pattern>/login</url-pattern>
         <url-pattern>/logout</url-pattern>
         <url-pattern>/newcomment</url-pattern>
@@ -174,6 +181,7 @@
         <url-pattern>/syncbookmarks</url-pattern>
         <url-pattern>/syncfavorites</url-pattern>
         <url-pattern>/updatereadcomments</url-pattern>
+        <url-pattern>/valueexists</url-pattern>
     </servlet-mapping>
     <welcome-file-list>
         <welcome-file>feeds.jsp</welcome-file>

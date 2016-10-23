@@ -7,7 +7,7 @@
 <%@taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
 <%@taglib uri="/WEB-INF/tlds/idisc" prefix="idisc"%>
 
-<idisc:page_without_slider   
+<idisc:page_with_slider   
     pageTitle="Rio 2016 Medals Table - ${appName}" 
     pageKeywords="rio2016,medals table" 
     pageDescription="Rio 2016 Medals Table">
@@ -1342,4 +1342,4 @@
 		</table>            </div>
         </small>
     </jsp:attribute> 
-</idisc:page_without_slider>
+</idisc:page_with_slider>
