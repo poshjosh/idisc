@@ -20,8 +20,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.ref.WeakReference;
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -44,8 +42,6 @@ public class WebApp implements AppContext, ThreadPoolData {
   
   private final long appSessionTimeoutMillis;
   
-  private final long memoryAtStartup;
-  
   private List<Site> sites;
   
   private ThreadPoolExecutor threadPoolExecutor;
@@ -60,11 +56,11 @@ public class WebApp implements AppContext, ThreadPoolData {
   
   private final SharedContext sharedContext;
   
+  private final MemoryManager memoryManager;
+  
   public WebApp(ServletContext context, Configuration config, IdiscApp idiscApp, boolean productionMode) {
       
-    this.memoryAtStartup = Runtime.getRuntime().freeMemory();
-XLogger.getInstance().log(Level.INFO, "Memory at startup: {0}, available processors: {1}", 
-        this.getClass(), this.memoryAtStartup, Runtime.getRuntime().availableProcessors());
+    this.memoryManager = new MemoryManagerImpl();
 
     this.context = context;
     this.config = config;
@@ -221,18 +217,6 @@ XLogger.getInstance().log(Level.INFO, "Async processing enabled: {0}", this.getC
   }
 
   @Override
-  public BigDecimal getMemoryLevel() {
-    BigDecimal freeMemoryObj = new BigDecimal(Runtime.getRuntime().freeMemory());
-    BigDecimal memoryAtStartupObj = new BigDecimal(this.memoryAtStartup);
-    return freeMemoryObj.divide(memoryAtStartupObj, 2, RoundingMode.HALF_UP);
-  }
-
-  @Override
-  public long getMemoryAtStartup() {
-    return this.memoryAtStartup;
-  }
-
-  @Override
   public Map getAppProperties() {
     final String name = "AppProperties";
     Map appProps;
@@ -355,6 +339,11 @@ XLogger.getInstance().log(Level.INFO, "Async processing enabled: {0}", this.getC
   @Override
   public ThreadPoolData getGlobalExecutorServiceThreadPoolData() {
     return this.threadPoolExecutor == null ? null : this;
+  }
+
+  @Override
+  public MemoryManager getMemoryManager() {
+    return this.memoryManager;
   }
   
 //////////////////////////Begin ThreadPoolData methods ///////////////////////

@@ -13,7 +13,9 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.logging.Level;
+import javax.persistence.EntityManager;
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import org.apache.commons.configuration.Configuration;
@@ -26,9 +28,18 @@ public class FeedsResponseContext<E extends Feed> extends SuccessHandlerContext<
 
   private final Installation installation;
   
-  public FeedsResponseContext(HttpServletRequest request, Installation installation) { 
+  private final List<Integer> hotnewsFeedids;
+
+  public FeedsResponseContext(
+          HttpServletRequest request, Installation installation) { 
+      this(request, installation, Collections.EMPTY_LIST);
+  }
+  
+  public FeedsResponseContext(
+          HttpServletRequest request, Installation installation, List<Integer> hotnewsFeedids) { 
     super(request);
     this.installation = installation;
+    this.hotnewsFeedids = Objects.requireNonNull(hotnewsFeedids);
   }
 
   @Override
@@ -36,21 +47,22 @@ public class FeedsResponseContext<E extends Feed> extends SuccessHandlerContext<
       
     final int feedCount = feeds == null ? 0 : feeds.size();
     
-    Collection<Feed> notifications = getNotices(feeds, null);
+    final Collection<Feed> notifications = getNotices(feeds, Collections.EMPTY_LIST);
 
 XLogger.getInstance().log(Level.FINER, "Installation: {0}, number of notifications: {1}", 
-        this.getClass(), installation, notifications==null?null:notifications.size());
+        this.getClass(), installation, notifications.size());
     
-    final int noticeCount = notifications == null ? 0 : notifications.size();
+    final Map commentNotices = installation == null ? Collections.EMPTY_MAP : getCommentNotices(installation, feeds);
     
-    Map commentNotices = installation == null ? null : getCommentNotices(installation, feeds);
+XLogger.getInstance().log(Level.FINER, "Number of commentNotices: {0}", 
+        this.getClass(), installation, commentNotices.size());
     
-XLogger.getInstance().log(Level.FINER, "Installation: {0}, number of commentNotices: {1}", 
-        this.getClass(), installation, commentNotices==null?null:commentNotices.size());
+XLogger.getInstance().log(Level.FINER, "Hot news feedids: {0}", 
+        this.getClass(), installation, hotnewsFeedids);
+
+    final List<Feed> hotnews = this.fetchHotnews(feeds, hotnewsFeedids);
     
-    final int commentNoticeCount = commentNotices == null ? 0 : 1;
-    
-    final int extraCount = noticeCount + commentNoticeCount;
+    final int extraCount = notifications.size() + commentNotices.size() + hotnewsFeedids.size() + hotnews.size();
     
     final List compositeOutput;
     
@@ -70,12 +82,20 @@ XLogger.getInstance().log(Level.FINER, "Installation: {0}, number of commentNoti
           compositeOutput.addAll(feeds);
         }
         
-        if ((notifications != null) && (!notifications.isEmpty())) {
+        if (!notifications.isEmpty()) {
           compositeOutput.addAll(notifications);
         }
 
-        if ((commentNotices != null) && (!commentNotices.isEmpty())) {
+        if (!commentNotices.isEmpty()) {
           compositeOutput.add(commentNotices);
+        }
+        
+        if(!hotnewsFeedids.isEmpty()) {
+          compositeOutput.add(Collections.singletonMap("newsminute-hotnews", hotnewsFeedids));
+        }
+        
+        if(!hotnews.isEmpty()) {
+          compositeOutput.addAll(hotnews);
         }
     }
     
@@ -154,6 +174,38 @@ XLogger.getInstance().log(Level.FINER, "Installation: {0}, number of feeds: {1}"
     }
     
     return noticesCache;
+  }
+  
+  public List<Feed> fetchHotnews(List<E> feeds, List<Integer> hotnewsFeedids) {
+    if(hotnewsFeedids.isEmpty()) {
+      return Collections.EMPTY_LIST;      
+    }else{
+      final int limit = this.getAppContext().getMemoryManager().limit(hotnewsFeedids.size(), 1);
+      if(limit < hotnewsFeedids.size()) {
+          hotnewsFeedids = hotnewsFeedids.subList(0, limit);
+      }
+      final List<Feed> hotnews = new ArrayList<>(hotnewsFeedids.size());
+      EntityManager em = this.getAppContext().getIdiscApp().getJpaContext().getEntityManager(Feed.class);
+      for(Integer feedid : hotnewsFeedids) {
+        if(this.contains(feeds, feedid)) {
+          continue;    
+        }
+        Feed feed = em.find(Feed.class, feedid); 
+        if(feed != null) {
+          hotnews.add(feed);
+        }
+      }
+      return hotnews;
+    }
+  }
+  
+  private boolean contains(List<E> feeds, Integer feedid) {
+    for(E feed : feeds) {
+      if(feedid.equals(feed.getFeedid())) {
+        return true;
+      }     
+    }
+    return false;
   }
 
   public final Installation getInstallation() {

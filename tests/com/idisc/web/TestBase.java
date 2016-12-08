@@ -314,7 +314,7 @@ public class TestBase extends WebappSetup {
         
         HttpServletResponseImpl response = new HttpServletResponseImpl();
 
-        RequestHandler rh = provider.getRequestHandler((HttpServletRequest)request);
+        RequestHandler rh = provider.getRequestHandler((HttpServletRequest)request, null);
         
         final String name = provider.getRequestHandlerNames(request)[0];
 

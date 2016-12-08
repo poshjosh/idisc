@@ -31,7 +31,9 @@ import org.apache.commons.configuration.Configuration;
 public class DefaultFeedService extends FeedService {
 
   private final boolean debugTimeAndMemory;
-    
+  
+  private final MemoryManager memoryManager;
+  
   public DefaultFeedService(AppContext appContext) {
     this(appContext.getIdiscApp().getJpaContext(),
             appContext.getConfiguration().getBoolean(ConfigNames.DEBUG_TIME_AND_MEMORY, false)
@@ -47,19 +49,20 @@ public class DefaultFeedService extends FeedService {
   public DefaultFeedService(JpaContext jpaContext, boolean debugTimeAndMemory) {
     super(jpaContext);
     this.debugTimeAndMemory = debugTimeAndMemory;
+    this.memoryManager = new MemoryManagerImpl();
   }
 
   @Override
   public List<Feed> selectFeeds(int offset, int limit) {
       
 long tb4 = System.currentTimeMillis();
-long mb4 = Runtime.getRuntime().freeMemory();
+long mb4 = memoryManager.getAvailableMemory();
 
     List<Feed> loadedFeeds = super.selectFeeds(offset, limit);
             
 XLogger.getInstance().log(debugTimeAndMemory ? Level.INFO : Level.FINE, 
 "Selected {0} feeds. Consumed time: {1}, memory: {2}", this.getClass(), 
-sizeOf(loadedFeeds), (System.currentTimeMillis()-tb4), (mb4-Runtime.getRuntime().freeMemory()));
+sizeOf(loadedFeeds), (System.currentTimeMillis()-tb4), (mb4-memoryManager.getAvailableMemory()));
     return loadedFeeds;
   }
   
@@ -67,13 +70,13 @@ sizeOf(loadedFeeds), (System.currentTimeMillis()-tb4), (mb4-Runtime.getRuntime()
   public List<Feed> spreadOutput(List<Feed> feeds, int outputSize) {
 
 long tb4 = System.currentTimeMillis();
-long mb4 = Runtime.getRuntime().freeMemory();
+long mb4 = memoryManager.getAvailableMemory();
       
     List<Feed> output =  super.spreadOutput(feeds, outputSize);
     
 XLogger.getInstance().log(debugTimeAndMemory ? Level.INFO : Level.FINE, 
 "After spreading output. Consumed time: {0}, memory: {1}", this.getClass(), 
-(System.currentTimeMillis()-tb4), (mb4-Runtime.getRuntime().freeMemory()));
+(System.currentTimeMillis()-tb4), (mb4-memoryManager.getAvailableMemory()));
     
     return output;
   }

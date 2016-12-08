@@ -3,6 +3,7 @@ package com.idisc.web.servlets.handlers;
 import com.idisc.web.servlets.handlers.request.RequestHandler;
 import com.idisc.web.servlets.handlers.response.ResponseHandler;
 import javax.servlet.AsyncContext;
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.junit.After;
@@ -155,7 +156,7 @@ public class ServiceControllerImplTest {
      * Test of getFirstParameterName method, of class ServiceControllerImpl.
      */
     @Test
-    public void testGetFirstParameterName() {
+    public void testGetFirstParameterName() throws ServletException {
         System.out.println("getFirstParameterName");
         HttpServletRequest request = null;
         ServiceControllerImpl instance = new ServiceControllerImpl();
@@ -170,12 +171,12 @@ public class ServiceControllerImplTest {
      * Test of getRequestHandler method, of class ServiceControllerImpl.
      */
     @Test
-    public void testGetRequestHandler() {
+    public void testGetRequestHandler() throws ServletException {
         System.out.println("getRequestHandler");
         HttpServletRequest request = null;
         ServiceControllerImpl instance = new ServiceControllerImpl();
         RequestHandler expResult = null;
-        RequestHandler result = instance.getRequestHandler(request);
+        RequestHandler result = instance.getRequestHandler(request, null);
         assertEquals(expResult, result);
         // TODO review the generated test code and remove the default call to fail.
         fail("The test case is a prototype.");

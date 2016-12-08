@@ -7,6 +7,7 @@ import com.idisc.web.servlets.handlers.request.RequestHandlerProviderImpl;
 import com.idisc.web.servlets.handlers.response.ResponseContext;
 import com.idisc.web.servlets.handlers.response.ResponseHandler;
 import java.io.IOException;
+import java.util.Objects;
 import java.util.logging.Level;
 import javax.servlet.AsyncContext;
 import javax.servlet.ServletException;
@@ -25,18 +26,18 @@ public class ServiceControllerImpl extends RequestHandlerProviderImpl implements
     final HttpServletRequest request, final HttpServletResponse response, boolean sendResponse) 
       throws ServletException, IOException {
       
-    final RequestHandler requestHandler = this.getRequestHandler(request);
+    final RequestHandler requestHandler = this.getRequestHandler(request, null);
     
     if(requestHandler == null) {
         
-        throw new ServletException("Required parameter "+this.getRequestParamName(request)+" is missing");
+        throw new ServletException("Failed to create request handler for request.\n"+this.toString(request));
     }
     
     final String firstParamName = this.getFirstParameterName(request);
     
     if(firstParamName == null) {
         
-        throw new ServletException("Required parameter "+this.getRequestParamName(request)+" is missing");
+        throw new ServletException("Required parameter "+this.getRequestHandlerParamName()+" is missing");
     }
     
     process(requestHandler, request, response, firstParamName, sendResponse);
@@ -50,24 +51,18 @@ public class ServiceControllerImpl extends RequestHandlerProviderImpl implements
     final HttpServletRequest request = (HttpServletRequest)asyncContext.getRequest();
     final HttpServletResponse response = (HttpServletResponse)asyncContext.getResponse();
       
-    final RequestHandler requestHandler = this.getRequestHandler(request);
+    final RequestHandler requestHandler = this.getRequestHandler(request, null);
     
     if(requestHandler == null) {
         
-        throw new ServletException("Required parameter "+this.getRequestParamName(request)+" is missing");
+        throw new ServletException("Failed to create request handler for request.\n"+this.toString(request));
     }
     
     final String firstParamName = this.getFirstParameterName(request);
     
-    if(firstParamName == null) {
-        
-        throw new ServletException("Required parameter "+this.getRequestParamName(request)+" is missing");
-    }
-    
     processAsync(asyncContext, requestHandler, request, response, firstParamName, sendResponse);
   }
   
-  @Override
   public void process(
       final RequestHandler requestHandler,
       final HttpServletRequest request, 
@@ -99,7 +94,6 @@ public class ServiceControllerImpl extends RequestHandlerProviderImpl implements
       this.processResponse(responseHandler, request, response, paramName, output, sendResponse);
   }
  
-  @Override
   public void processAsync(
       final AsyncContext asyncContext,
       final RequestHandler requestHandler,
@@ -142,7 +136,13 @@ public class ServiceControllerImpl extends RequestHandlerProviderImpl implements
       
     XLogger.getInstance().log(Level.FINER, "Response handler: {0}", getClass(), responseHandler);
     
-    final Object output = responseHandler.processResponse(request, response, paramName, paramValue);
+    final Object output = Objects.requireNonNull(
+                                responseHandler.processResponse(
+                                    request, response, 
+                                    Objects.requireNonNull(paramName), 
+                                    Objects.requireNonNull(paramValue)
+                                )
+                            );
     
     if(sendResponse) {
         
@@ -163,9 +163,15 @@ public class ServiceControllerImpl extends RequestHandlerProviderImpl implements
       final boolean sendResponse) throws ServletException, IOException {
       
     XLogger.getInstance().log(Level.FINER, "Response handler: {0}", getClass(), responseHandler);
-
-    final Object output = responseHandler.processResponse(request, response, paramName, paramValue);
     
+    final Object output = Objects.requireNonNull(
+                                responseHandler.processResponse(
+                                    request, response, 
+                                    Objects.requireNonNull(paramName), 
+                                    Objects.requireNonNull(paramValue)
+                                )
+                            );
+   
     if(sendResponse) {
         
       if(this.prepareResponse(responseHandler, request, response, paramName, paramValue)) {
@@ -217,39 +223,37 @@ XLogger.getInstance().log(Level.FINER, "HTML response: {0}, URI: {1}", getClass(
 
         final String sessionId = String.valueOf(request.getSession() == null ? null : request.getSession().getId());
 
-XLogger.getInstance().log(Level.FINER, "Response already committed for session ID: {0}, requestURI: {1}", 
+XLogger.getInstance().log(Level.WARNING, "Response already committed for session. ID: {0}, requestURI: {1}", 
     this.getClass(), sessionId, request.getRequestURI());
 
         return false;
     }
   }
   
-  public String getFirstParameterName(final HttpServletRequest request) {
+  public String getFirstParameterName(final HttpServletRequest request) throws ServletException {
     
     String [] paramNames = this.getRequestHandlerNames(request);
     
-    return paramNames == null || paramNames.length == 0 ? null : paramNames[0];
+    return paramNames[0];
   }
   
   @Override
-  public RequestHandler getRequestHandler(final HttpServletRequest request) {
+  public RequestHandler getRequestHandler(final HttpServletRequest request, RequestHandler outputIfNone) throws ServletException {
       
-    String [] paramNames = this.getRequestHandlerNames(request);
+    super.getRequestHandler(request, outputIfNone);
+   
+    final String [] paramNames = this.getRequestHandlerNames(request);
+    
+    assert paramNames.length != 0;
 
     RequestHandler output;
-    if(paramNames == null || paramNames.length == 0) {
-      
-      output = null;
-      
-    }else{
-        
-      final String firstParamName = paramNames[0];
 
-      if (paramNames.length == 1){
-        output = this.getRequestHandler(firstParamName);
-      }else{
-        output = new Getmultipleresults(this);
-      }
+    if (paramNames.length == 1){
+      output = this.getRequestHandler(paramNames[0], outputIfNone);
+    }else if (paramNames.length > 1){
+      output = new Getmultipleresults(this);
+    }else{
+      throw new ServletException("Failed to resolve request handler names for request.\n"+this.toString(request));  
     }
         
 XLogger.getInstance().log(Level.FINER, "Request Handler: {0}", getClass(), output);

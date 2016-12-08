@@ -21,16 +21,16 @@ public class Getmultipleresults extends AbstractRequestHandler<Map> {
   }
   
   @Override
-  protected Map execute(HttpServletRequest request) {
+  protected Map execute(HttpServletRequest request) throws ServletException {
     
-    final String [] paramNames = provider.getRequestHandlerNames(request);
+    final String [] paramNames = provider.getRequestHandlerNames(request); 
     
     AppContext appContext = (AppContext)request.getServletContext().getAttribute(Attributes.APP_CONTEXT);
     
     final Level level = appContext.getConfiguration().getBoolean(ConfigNames.DEBUG, false) 
             ? Level.INFO : Level.FINE;
 
-XLogger.getInstance().log(level, "Parameter names: {0}", this.getClass(), paramNames==null?null:Arrays.toString(paramNames));
+XLogger.getInstance().log(level, "Parameter names: {0}", this.getClass(), Arrays.toString(paramNames));
 
     final Map combinedResults = new HashMap(paramNames.length, 1.0f);
     
@@ -38,8 +38,8 @@ XLogger.getInstance().log(level, "Parameter names: {0}", this.getClass(), paramN
           
       try{
           
-        RequestHandler handler = provider.getRequestHandler(paramName);
-
+        RequestHandler handler = provider.getRequestHandler(paramName, null);
+        
         Object result = handler.processRequest(request); 
 
         if(result != null) {
@@ -48,7 +48,7 @@ XLogger.getInstance().log(level, "Parameter names: {0}", this.getClass(), paramN
         }
       }catch(ServletException | IOException | RuntimeException e) {
           
-        XLogger.getInstance().log(Level.WARNING, "Error executing request", this.getClass(), e);
+        XLogger.getInstance().log(Level.WARNING, "Error executing request '"+paramName+'\'', this.getClass(), e);
       }
     }  
     

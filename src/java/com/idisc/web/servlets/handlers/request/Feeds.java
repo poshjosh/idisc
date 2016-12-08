@@ -33,14 +33,22 @@ public class Feeds extends Selectfeeds {
   @Override
   protected ResponseContext<List<Feed>> createSuccessResponseContext(HttpServletRequest request) {
       
-    Installation installation = this.getInstallation(request, true);
+    final Installation installation = this.getInstallation(request, true);
     
-    AppVersionCode versionCodeManager = this.getVersionCodeManager();
+    final AppVersionCode versionCodeManager = this.getVersionCodeManager();
+    
+    final int versionCode = versionCodeManager == null ? -1 : versionCodeManager.get(request, -1);
+    
+    final List<Integer> hotnewsFeedids = versionCode > 37 ? 
+            Addhotnewsfeedid.getHotnewsFeedids() : Collections.EMPTY_LIST;
     
     if(versionCodeManager != null && versionCodeManager.isLessThanLatest(request, false)) {
-      return new FeedsResponseContext_outdatedApps(request, installation);
+        
+      return new FeedsResponseContext_outdatedApps(request, installation, hotnewsFeedids);
+      
     }else{
-      return new FeedsResponseContext(request, installation);
+        
+      return new FeedsResponseContext(request, installation, hotnewsFeedids);
     }
   }
   
@@ -107,7 +115,7 @@ XLogger.getInstance().entering(this.getClass(), "#select(HttpServletRequest)", "
         Comparator<Feed> comparator = this.getComparator(appContext, reverseOrder);
 
 long tb4 = System.currentTimeMillis();
-long mb4 = Runtime.getRuntime().freeMemory();
+long mb4 = appContext.getMemoryManager().getAvailableMemory();
 
         try{
             Collections.sort(feeds, comparator);
@@ -126,7 +134,7 @@ long mb4 = Runtime.getRuntime().freeMemory();
 
 XLogger.getInstance().log(debugTimeAndMemory ? Level.INFO : Level.FINE, 
 "Comparator: {0}, sorted {1} feeds. Consumed time: {2}, memory: {3}", this.getClass(), 
-comparator.getClass().getName(), feeds.size(), (System.currentTimeMillis()-tb4), (mb4-Runtime.getRuntime().freeMemory()));
+comparator.getClass().getName(), feeds.size(), (System.currentTimeMillis()-tb4), (mb4-appContext.getMemoryManager().getAvailableMemory()));
     }
 
     return feeds == null ? Collections.EMPTY_LIST : feeds;

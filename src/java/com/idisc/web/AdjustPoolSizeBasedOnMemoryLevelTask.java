@@ -27,7 +27,7 @@ public class AdjustPoolSizeBasedOnMemoryLevelTask implements Runnable {
     @Override
     public void run() {
         try{
-            double d = this.appContext.getMemoryLevel().doubleValue() * originalPoolSize;
+            double d = this.appContext.getMemoryManager().getMemoryLevel().doubleValue() * originalPoolSize;
             if(d < 1) {
                 d = 1;
             }else if(d > this.threadPoolExecutor.getMaximumPoolSize()) {

@@ -192,48 +192,33 @@ this.getClass(), selected==null?null:selected.size());
       
     final int requestedLimit = getIntRequestParam(request, "limit", this.getDefaultLimit(request));
     
-    int limit = requestedLimit;
+    int outputLimit = requestedLimit;
 
     AppContext appContext = this.getAppContext(request);
     
     if(appContext.getConfiguration().getBoolean(ConfigNames.ADJUST_LIMIT_BASED_ON_MEMORY_LEVEL, Boolean.FALSE)) {
         
-      float memoryLevel = appContext.getMemoryLevel().floatValue();
-      
-      limit = this.formatLimitBasedOnAvailableMemory(memoryLevel, limit);  
+      outputLimit = appContext.getMemoryManager().limit(outputLimit, 1);
     }
     
     final int minLimit = this.getMinLimit(request);
     
-    if(limit < minLimit) {
+    if(outputLimit < minLimit) {
         
-        limit = minLimit;
+        outputLimit = minLimit;
     }
     
     final int maxLimit = this.getMaxLimit(request);
     
-    if(limit > maxLimit) {
+    if(outputLimit > maxLimit) {
         
-        limit = maxLimit;
+        outputLimit = maxLimit;
     }
     
 XLogger.getInstance().log(Level.FINER, "Requested limit: {0}, limit: {1}",
-        this.getClass(), requestedLimit, limit);
+        this.getClass(), requestedLimit, outputLimit);
         
-    return limit;
-  }
-  
-  protected int formatLimitBasedOnAvailableMemory(float memoryLevel, int limit) {
-    int result;
-    if(memoryLevel >= 1.0f) {
-      result = limit;
-    }else{
-      result = (int)(limit * memoryLevel);
-    }
-XLogger.getInstance().log(Level.FINER, 
-        "Based on memory level: {0}, formatted limit from {1} to {2} ", 
-        this.getClass(), memoryLevel, limit, result);
-    return result;
+    return outputLimit;
   }
   
   private int getIntRequestParam(HttpServletRequest request, String key, int defaultValue) {

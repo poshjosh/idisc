@@ -4,7 +4,6 @@ import com.authsvc.client.AuthSvcSession;
 import com.idisc.core.IdiscApp;
 import com.idisc.pu.entities.Site;
 import com.idisc.shared.SharedContext;
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -55,13 +54,8 @@ public interface AppContext {
     ExecutorService getGlobalExecutorService(boolean createIfNone);
 
     ThreadPoolData getGlobalExecutorServiceThreadPoolData();
-
-    long getMemoryAtStartup();
-
-    /**
-     * @return {@link java.lang.Runtime#getRuntime()#freeMemory()} divided by {@link #getMemoryAtStartup()}
-     */
-    BigDecimal getMemoryLevel();
+    
+    MemoryManager getMemoryManager();
 
     /**
      * @return The SearchResultsHandlerFactory or null if none had earlier been created

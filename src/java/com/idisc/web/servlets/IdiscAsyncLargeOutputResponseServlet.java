@@ -1,7 +1,10 @@
 package com.idisc.web.servlets;
 
+import com.bc.util.XLogger;
 import com.idisc.web.servlets.handlers.ServiceController;
 import com.idisc.web.servlets.handlers.request.RequestHandler;
+import java.util.logging.Level;
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 
 /**
@@ -17,8 +20,13 @@ public class IdiscAsyncLargeOutputResponseServlet extends IdiscSelectiveAsyncSer
 
     @Override
     public boolean isProcessRequestAsync(HttpServletRequest request, boolean defaultValue) {
-        RequestHandler rh = this.getServiceController().getRequestHandler(request);
-        return rh == null ? defaultValue : rh.isOutputLarge(request);
+        try{
+            RequestHandler rh = this.getServiceController().getRequestHandler(request, null);
+            return rh == null ? defaultValue : rh.isOutputLarge(request);
+        }catch(ServletException e) {
+            XLogger.getInstance().log(Level.WARNING, "Unexpected error", this.getClass(), e);
+            return defaultValue;
+        }
     }
 }
 

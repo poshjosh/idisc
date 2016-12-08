@@ -39,6 +39,10 @@ public class FeedsResponseContext_outdatedApps extends FeedsResponseContext {
         super(request, installation);
     }
 
+    public FeedsResponseContext_outdatedApps(HttpServletRequest request, Installation installation, List<Integer> hotnewsFeedids) {
+        super(request, installation, hotnewsFeedids);
+    }
+
     @Override
     public Collection<Feed> getNotices(List feeds, Collection defaultValue) {
         

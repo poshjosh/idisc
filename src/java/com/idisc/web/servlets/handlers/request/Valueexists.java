@@ -48,6 +48,6 @@ public class Valueexists extends AbstractRequestHandler<Boolean> {
         }
     }
     
-    return new DaoService(jpaContext).exists(entityType, logicalOptr, params);
+    return new DaoService(jpaContext).isExisting(entityType, logicalOptr, params);
   }
 }

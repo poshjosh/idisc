@@ -9,6 +9,7 @@ import com.idisc.web.ConfigNames;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.io.Writer;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -76,23 +77,24 @@ logger.entering(cls, "#sendResponse(HttpServletRequest, HttpServletRequest, Stri
 this.logOutputSizes(logger, Level.FINE, cls, output);
 
     try(PrintWriter pw = response.getWriter();
-            BufferedWriter bw = this.bufferSize < 1 ? 
-                    new BufferedWriter(pw) : new BufferedWriter(pw, this.bufferSize)) {
+            Writer appendTo = this.bufferSize < 1 ? pw : new BufferedWriter(pw, this.bufferSize)) {
         
 logger.log(Level.FINER, "==================== Printing Output =====================\n{0}", cls, output);
 
+final AppContext appContext = this.getAppContext(request);
+
 long tb4 = System.currentTimeMillis();
-long mb4 = Runtime.getRuntime().freeMemory();
+long mb4 = appContext.getMemoryManager().getAvailableMemory();
       
-      jsonBuilder.appendJSONString(output, bw);
+      jsonBuilder.appendJSONString(output, appendTo); 
 
 this.logJsonOutput(logger, Level.FINER, cls, jsonBuilder, output);
 
-      bw.flush();
+      appendTo.flush();
 
 XLogger.getInstance().log(this.isDebugTimeAndMemory(request) ? Level.INFO : Level.FINE, 
 "Written to output, json response name: {0}. Consumed time: {1}, memory: {2}", this.getClass(), 
-name, (System.currentTimeMillis()-tb4), (mb4-Runtime.getRuntime().freeMemory()));
+name, (System.currentTimeMillis()-tb4), (mb4-appContext.getMemoryManager().getAvailableMemory()));
       
     }
   }
