@@ -154,6 +154,7 @@
         <url-pattern>/addfavoritefeedids</url-pattern>
         <url-pattern>/addfeedhit</url-pattern>
         <url-pattern>/addfeedhits</url-pattern>
+        <url-pattern>/addhotnewsfeedid</url-pattern>
         <url-pattern>/aliasesforcategories</url-pattern>
         <url-pattern>/aliasesforcontent</url-pattern>
         <url-pattern>/appproperties</url-pattern>
