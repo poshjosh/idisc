@@ -35,12 +35,19 @@ public class FeedhitGenerator extends AbstractStoppableTask<Integer> {
     private final Installation installation;
     private final com.idisc.pu.entities.Feed feed;
     private final int count;
+    private final int pageSize = 100;
 
-    public FeedhitGenerator(JpaContext jpaContext, Installation installation, 
-            com.idisc.pu.entities.Feed feed, int count) {
+    public FeedhitGenerator(
+            JpaContext jpaContext, 
+            Installation installation, 
+            com.idisc.pu.entities.Feed feed, 
+            int count) {
         this.jpaContext = Objects.requireNonNull(jpaContext);
         this.installation = Objects.requireNonNull(installation);
         this.feed = Objects.requireNonNull(feed);
+        if(feed.getFeedid() == null) {
+            throw new IllegalArgumentException();
+        }
         if(count < 1) {
             throw new IllegalArgumentException();
         }
@@ -56,13 +63,13 @@ public class FeedhitGenerator extends AbstractStoppableTask<Integer> {
 
           while(generated < count) {
 
-              final int batchSize = count - generated > 100 ? 100 : count - generated;
+              final int thisPageSize = count - generated > pageSize ? pageSize : count - generated;
 
-              final int batch = this.generateFeedhitsBatch(jpaContext, installation, feed, batchSize);
+              final int thisGenerated = this.generateFeedhitsBatch(jpaContext, installation, feed, thisPageSize);
 
-              generated += batch;
+              generated += thisGenerated;
 
-              if(batch < 1) {
+              if(thisGenerated < 1) {
 
                   break;
               }
@@ -81,31 +88,31 @@ public class FeedhitGenerator extends AbstractStoppableTask<Integer> {
     
     private int generateFeedhitsBatch(
             JpaContext jpaContext, Installation installation, 
-            com.idisc.pu.entities.Feed feed, int batchSize) {
+            com.idisc.pu.entities.Feed feed, int thisPageSize) {
 
-        if(batchSize < 1) {
-            return batchSize;
+        if(thisPageSize < 1) {
+            return thisPageSize;
         }
 
         EntityManager em = jpaContext.getEntityManager(Feedhit.class);
         try{
 
-          EntityTransaction t = em.getTransaction();
-          try{
+            EntityTransaction t = em.getTransaction();
+            
+            try{
 
-              t.begin();
+                t.begin();
 
-              Date hittime = new Date();
+                Date hittime = new Date();
 
-
-              for(int i=0; i<batchSize; i++) {
+                for(int i=0; i<thisPageSize; i++) {
 
                     Feedhit feedhit = new Feedhit();  
                     feedhit.setFeedid(feed);
                     feedhit.setHittime(hittime);
                     feedhit.setInstallationid(installation);
 
-                    em.persist(feedhit);
+                    em.persist(feedhit); 
                 }
 
                 t.commit();
@@ -115,7 +122,9 @@ public class FeedhitGenerator extends AbstractStoppableTask<Integer> {
                     t.rollback();
                 }
             }
-            return batchSize;
+          
+            return thisPageSize;
+            
         }finally{
             em.close();
         }

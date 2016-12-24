@@ -18,7 +18,9 @@ import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.logging.Level;
+import javax.persistence.EntityManager;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -38,12 +40,13 @@ public class Newfeed extends NewEntityHandler<com.idisc.pu.entities.Feed> {
       
     final Class cls = this.getClass();
     final XLogger log = XLogger.getInstance();
+    final JpaContext jpaContext = this.getJpaContext(request);
     
     log.log(Level.FINER, "execute(HttpServletRequest)", cls);
 
     Installation installation = getInstallationOrException(request);
     
-    Map params = this.getParameterMap(request);
+    Map<String, Object> params = this.getParameterMap(request);
     log.log(Level.FINER, "Parameters: {0}", cls, params);
         
     final Date datecreated = new Date();
@@ -85,14 +88,7 @@ public class Newfeed extends NewEntityHandler<com.idisc.pu.entities.Feed> {
         params.put(feeddate_col, datecreated);
     }
     
-    EntityController<Site, Integer> siteEc = 
-            this.getJpaContext(request).getEntityController(Site.class, Integer.class);
-    
-    Site newsminute = siteEc.find(28); // News Minute has site id of 28
-    
-    if(newsminute == null) {
-        throw new NullPointerException();
-    }
+    final Site newsminute = this.getNewsminuteSiteEntity(jpaContext);
     
     params.put(Feed_.siteid.getName(), newsminute);
     
@@ -103,20 +99,29 @@ public class Newfeed extends NewEntityHandler<com.idisc.pu.entities.Feed> {
     try {
         
       com.idisc.pu.entities.Feed feed = new com.idisc.pu.entities.Feed();
-      final int numberOfParamsUpdated = ec.updateEntity(feed, params, false);
+      final int numberOfParamsUpdated = ec.update(feed, params, false);
       log.log(Level.FINER, "Number of parameters updated: {0}", cls, numberOfParamsUpdated);
       
       ec.create(feed);
       
-      this.updateUrl(ec, log, cls, request.getServletContext(), feed);
+      try{
+        final String URL = this.getUrl(log, cls, request.getServletContext(), feed);
+        feed.setUrl(URL);
         
-      String hitcountStr = (String)params.remove("hitcount");
-      final int hitcount = hitcountStr == null || hitcountStr.isEmpty() ? 0 : Integer.parseInt(hitcountStr);
-      log.log(Level.FINER, "Hit count: {0}", cls, hitcountStr);
+        ec.edit(feed);
         
-      final JpaContext jpaContext = this.getJpaContext(request);
-      Task<Integer> feedhitGenerationTask = new FeedhitGenerator(jpaContext, installation, feed, hitcount);
-      feedhitGenerationTask.call();
+        log.log(Level.FINE, "Updated URL from {0} to {1}", cls, feed.getUrl(), URL);
+      }catch(Exception e) {
+        log.log(Level.WARNING, "Unexpected exception", cls, e);
+      }
+      
+      final int HITCOUNT = this.getHitcount(params);
+      log.log(Level.FINER, "Hit count: {0}", cls, HITCOUNT);
+        
+      if(HITCOUNT > 0) {
+        Task<Integer> feedhitGenerationTask = new FeedhitGenerator(jpaContext, installation, feed, HITCOUNT);
+        feedhitGenerationTask.call();
+      }
       
       output = Boolean.TRUE;
       
@@ -129,14 +134,35 @@ public class Newfeed extends NewEntityHandler<com.idisc.pu.entities.Feed> {
     return output;
   }
   
-  private boolean updateUrl(EntityController<com.idisc.pu.entities.Feed, Integer> ec, final XLogger log, 
+  private Map<String, Object> getParameterMap(HttpServletRequest request) {
+    Map<String, Object> parameterMap = new HashMap<>(32, 0.75f);
+    Enumeration en = request.getParameterNames();
+    while(en.hasMoreElements()) {
+      String key = en.nextElement().toString();
+      String val = request.getParameter(key);
+      parameterMap.put(key, val);
+    }
+    return parameterMap;
+  }
+
+  private Site getNewsminuteSiteEntity(JpaContext jpaContext) {
+    Site newsminute;
+    EntityManager em = jpaContext.getEntityManager(Site.class);
+    try{
+        final Integer newsminuteSiteid = 28;
+        newsminute = em.find(Site.class, newsminuteSiteid);
+    }finally{
+        em.close();
+    }
+    return Objects.requireNonNull(newsminute);
+  }
+  
+  private String getUrl(final XLogger log, 
           final Class cls, ServletContext sc, com.idisc.pu.entities.Feed feed) {
       
-      Integer feedid = feed.getFeedid();
-      if(feedid == null) {
-          throw new NullPointerException();
-      }
-      StringBuilder builder = new StringBuilder(256);
+      final Integer feedid = Objects.requireNonNull(feed.getFeedid());
+      
+      StringBuilder builder = new StringBuilder(512);
       String baseURL = (String)sc.getAttribute("baseURL");
       log.log(Level.FINE, "Base URL: {0}", cls, baseURL);
       if(baseURL == null) {
@@ -156,32 +182,17 @@ public class Newfeed extends NewEntityHandler<com.idisc.pu.entities.Feed> {
       }
       builder.append(".jsp");
       
-      log.log(Level.FINE, "Updating URL from {0} to {1}", cls, feed.getUrl(), builder);
-
-      feed.setUrl(builder.toString());
+      final String url = builder.toString();
       
-      try{
-          
-        ec.edit(feed);
-        
-        return true;
-        
-      }catch(Exception e) {
-        log.log(Level.WARNING, "Unexpected exception", cls, e);
-        
-        return false;
-      }
+      log.log(Level.FINE, "Built URL {0} from {1}", cls, url, feed.getUrl());
+      
+      return url;
   }
   
-  private Map<String, String> getParameterMap(HttpServletRequest request) {
-      Map<String, String> map = new HashMap<>(32, 0.75f);
-      Enumeration en = request.getParameterNames();
-      while(en.hasMoreElements()) {
-          String key = en.nextElement().toString();
-          String val = request.getParameter(key);
-          map.put(key, val);
-      }
-      return map;
+  private int getHitcount(Map<String, Object> params) {
+    String hitcountStr = (String)params.remove("hitcount");
+    final int hitcount = hitcountStr == null || hitcountStr.isEmpty() ? 0 : Integer.parseInt(hitcountStr);
+    return hitcount;
   }
 }
 
