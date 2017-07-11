@@ -21,6 +21,24 @@
         <url-pattern>/*</url-pattern>
         <dispatcher>REQUEST</dispatcher>
     </filter-mapping>
+    <filter>
+        <description>Sets charset for post requests, charset for GET requests is set by adding URIEncoding=UTF-8 to connector in server.xml</description>
+        <filter-name>SetCharsetFilter</filter-name>
+        <filter-class>com.bc.web.core.filters.SetCharacterEncodingFilter</filter-class>
+        <async-supported>true</async-supported>
+        <init-param>
+            <param-name>encoding</param-name>
+            <param-value>UTF-8</param-value>
+        </init-param>
+    </filter>
+    <filter-mapping>
+        <filter-name>SetCharsetFilter</filter-name>
+        <url-pattern>/*</url-pattern>
+        <dispatcher>REQUEST</dispatcher>
+        <dispatcher>FORWARD</dispatcher>
+        <dispatcher>INCLUDE</dispatcher>
+        <dispatcher>ERROR</dispatcher>
+    </filter-mapping>
 -->
     <context-param>
         <param-name>productionMode</param-name>
@@ -43,16 +61,6 @@
         <param-value>mynewsminute</param-value>
     </context-param>
     <filter>
-        <description>Sets charset for post requests, charset for GET requests is set by adding URIEncoding=UTF-8 to connector in server.xml</description>
-        <filter-name>SetCharsetFilter</filter-name>
-        <filter-class>com.bc.web.core.filters.SetCharacterEncodingFilter</filter-class>
-        <async-supported>true</async-supported>
-        <init-param>
-            <param-name>encoding</param-name>
-            <param-value>UTF-8</param-value>
-        </init-param>
-    </filter>
-    <filter>
         <filter-name>BotFilter</filter-name>
         <filter-class>com.idisc.web.filters.BotFilter</filter-class>
         <async-supported>true</async-supported>
@@ -72,14 +80,6 @@
         <filter-class>com.idisc.web.filters.PageFilter</filter-class>
         <async-supported>true</async-supported>
     </filter>
-    <filter-mapping>
-        <filter-name>SetCharsetFilter</filter-name>
-        <url-pattern>/*</url-pattern>
-        <dispatcher>REQUEST</dispatcher>
-        <dispatcher>FORWARD</dispatcher>
-        <dispatcher>INCLUDE</dispatcher>
-        <dispatcher>ERROR</dispatcher>
-    </filter-mapping>
     <filter-mapping>
         <filter-name>BotFilter</filter-name>
         <url-pattern>/*</url-pattern>
@@ -147,7 +147,7 @@
     </servlet>
     <servlet-mapping>
         <servlet-name>Idisc</servlet-name>
-        <url-pattern/>
+        <!--url-pattern/-->
         <url-pattern>/activateuser</url-pattern>
         <url-pattern>/addbookmarkfeedids</url-pattern>
         <url-pattern>/addextractedemails</url-pattern>
@@ -185,6 +185,7 @@
         <url-pattern>/valueexists</url-pattern>
     </servlet-mapping>
     <welcome-file-list>
+        <welcome-file>home.jsp</welcome-file>
         <welcome-file>feeds.jsp</welcome-file>
     </welcome-file-list>
     <error-page>

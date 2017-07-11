@@ -17,6 +17,10 @@
 <%-- author, url, feeddate, content, title, description, keywords, categories, imageurl --%>
         <form id="feedFormId" method="post" action="${pageContext.servletContext.contextPath}/newfeed">
             <b>Mandatory Fields:</b>
+            <c:if test="${user == null}">
+                <p><label>&emsp;&nbsp;&nbsp;Email: <input size="50" type="text" name="emailaddress"/></label></p>
+                <p><label>Password: <input size="50" type="password" name="password"/></label></p>    
+            </c:if>
             <p><label>Author: <input size="50" type="text" name="author" value="Chinomso Ikwuagwu"/></label></p>
             <p><label>Link: <input size="50" type="text" name="url"/></label></p>
             <p><label>Feed date <span class="smallerLighter">(E.g: 2016 May 23 12:30:45)</span>: 

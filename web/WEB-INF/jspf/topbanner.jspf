@@ -11,6 +11,7 @@
     <span class="justified"><%@include file="/WEB-INF/jspf/socialbox.jspf"%></span>
 </span>
 <span style="float:right;">
+    <a href="${pageContext.servletContext.contextPath}/newfeed.jsp">Submit News</a>&nbsp;
     <c:choose>
         <c:when test="${user == null}">
             <a href="${pageContext.servletContext.contextPath}/login.jsp">Login</a>
