@@ -32,9 +32,9 @@ public abstract class AbstractIdiscServlet extends HttpServlet {
       throws ServletException, IOException;
 
   @Override
-  protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-    XLogger.getInstance().log(Level.FINE, "Query string {0}", this.getClass(), req.getQueryString());
-    process(req, resp);
+  protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    XLogger.getInstance().log(Level.FINE, "Query string {0}", this.getClass(), request.getQueryString());
+    process(request, response);
   }
 
   @Override

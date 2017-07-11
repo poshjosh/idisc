@@ -1,6 +1,8 @@
 package com.idisc.web.servlets.handlers.request;
 
 import com.bc.jpa.JpaContext;
+import com.bc.jpa.util.MapBuilderForEntity;
+import com.bc.util.MapBuilder;
 import com.bc.util.XLogger;
 import com.idisc.pu.entities.Applaunchlog;
 import com.idisc.pu.entities.Installation;
@@ -42,9 +44,14 @@ public class Log extends AbstractRequestHandler<Boolean> {
         throw new ServletException("You are not authorized to perform the requested operation");
     }
     
-    com.bc.jpa.util.EntityMapBuilder mapBuilder = new com.bc.jpa.util.EntityMapBuilderImpl(false, 1, 0, null, null);
-    
-    Map map = mapBuilder.build(Installation.class, installation);
+    Map map = new MapBuilderForEntity()
+            .methodFilter(MapBuilder.MethodFilter.ACCEPT_ALL)
+            .nullsAllowed(false)
+            .maxDepth(1)
+            .maxCollectionSize(10)
+            .sourceType(Installation.class)
+            .source(installation)
+            .build();
 
     XLogger.getInstance().log(Level.FINE, "x = x = x = " + getName(logTypeId) + " = x = x = x = on device with installation details::\n{0}", getClass(), map);
     

@@ -1,8 +1,9 @@
 package com.idisc.web.filters;
 
 import com.bc.util.XLogger;
-import com.bc.web.core.util.ServletUtil;
 import com.bc.web.core.filters.BaseFilter;
+import com.bc.web.core.util.ServletUtil;
+import com.bc.web.core.util.FileExtensions;
 import com.idisc.web.AppContext;
 import com.idisc.web.Attributes;
 import java.io.IOException;
@@ -66,19 +67,19 @@ XLogger.getInstance().log(Level.FINER, "Request is from or to web page: {0}, Ref
   }
 
   public boolean isStaticResource(String str) {
-      boolean output = str != null && ServletUtil.isStaticResource(str);
+      boolean output = str != null && FileExtensions.isStaticResource(str);
 //System.out.println(this.getClass().getName()+". Static resource: "+output+", value: "+str);      
       return output;
   }
   
   public boolean isStaticPage(String str) {
-      boolean output = str != null && ServletUtil.isStaticPage(str);
+      boolean output = str != null && FileExtensions.isStaticPage(str);
 //System.out.println(this.getClass().getName()+". Static page: "+output+", value: "+str);      
       return output;
   }
   
   public boolean isJspPage(String str) {
-      boolean output = str != null && ServletUtil.isJspPage(str);
+      boolean output = str != null && FileExtensions.isJspPage(str);
 //System.out.println(this.getClass().getName()+". Jsp page: "+output+", value: "+str);      
       return output;
   }

@@ -8,7 +8,7 @@ import com.bc.util.concurrent.DirectExecutorService;
 import com.bc.util.concurrent.NamedThreadFactory;
 import com.idisc.core.IdiscApp;
 import com.idisc.core.IdiscAuthSvcSession;
-import com.idisc.pu.FeedService;
+import com.idisc.pu.FeedSvc;
 import com.idisc.pu.SearchResultsHandlerFactoryImpl;
 import com.idisc.pu.entities.Site;
 import com.idisc.shared.SharedContext;
@@ -115,7 +115,7 @@ XLogger.getInstance().log(Level.INFO, "Async processing enabled: {0}", this.getC
       
       ScheduledExecutorService svc = WebApp.this.getGlobalScheduledExecutorService(true);
       
-      FeedService feedService = new DefaultFeedService(idiscApp, config);      
+      final FeedSvc feedService = new DefaultFeedService(this);      
 
       DefaultFeedUpdateTask task = new DefaultFeedUpdateTask(context, feedService);
       

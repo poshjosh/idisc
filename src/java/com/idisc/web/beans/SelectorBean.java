@@ -42,22 +42,20 @@ public class SelectorBean<E> implements Serializable {
         
         jpaContext = appCtx.getIdiscApp().getJpaContext();
 
+        params = new HashMap();
+            
         if(this.isAddParametersFromRequest()) {
             
             Map map = new RequestParameters(request);
-            
-            final int size = map.isEmpty() ? 1 : map.size() + 1;
-            
-            params = new HashMap(size, 1.0f);
-            
+       
             if(!map.isEmpty()) {
                 params.putAll(map);
             }
-            if(columnName != null && columnValue != null) {
+            if(columnName != null) {
                 params.put(columnName, columnValue);
             }
         }else{
-            if(columnName != null && columnValue != null) {
+            if(columnName != null) {
                 params = Collections.singletonMap(columnName, columnValue);
             }
         }

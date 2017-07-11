@@ -1,8 +1,8 @@
 package com.idisc.web.servlets.handlers.request;
 
 import com.bc.jpa.search.SearchResults;
-import com.bc.jpa.util.EntityMapBuilder;
 import com.bc.util.JsonBuilder;
+import com.bc.util.MapBuilder;
 import com.idisc.web.servlets.handlers.response.HtmlResponseHandler;
 import com.idisc.web.servlets.handlers.response.ResponseHandler;
 import com.bc.util.XLogger;
@@ -113,7 +113,8 @@ XLogger.getInstance().log(Level.FINER, "Response handler type: {0}",
     final boolean plainTextOnly = this.isPlainTextOnly(request);
     final int bufferSize = this.getMaxTextLengthPerItem(request);
     
-    final EntityMapBuilder mapBuilder = new DefaultEntityMapBuilder();
+    final MapBuilder mapBuilder = new DefaultEntityMapBuilder();
+    mapBuilder.methodFilter(MapBuilder.MethodFilter.ACCEPT_ALL);
     final TransformerService transformerService;
     if(this.versionCodeManager != null && this.versionCodeManager.isLessOrEquals(request, 8, false)) {
       transformerService = new TransformerService_appVersionCode8orBelow(plainTextOnly, bufferSize);

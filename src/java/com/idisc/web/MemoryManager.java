@@ -23,7 +23,7 @@ import java.math.BigDecimal;
  */
 public interface MemoryManager {
 
-    long getMemoryAtStartup();
+    long getAvailableMemoryAtStartup();
 
     /**
      * @return currently available memory divided by the memory available at start up

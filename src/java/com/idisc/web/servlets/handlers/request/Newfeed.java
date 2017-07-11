@@ -9,6 +9,7 @@ import com.bc.util.XLogger;
 import com.idisc.pu.entities.Installation;
 import com.idisc.pu.entities.Site;
 import com.idisc.pu.entities.Feed_;
+import com.idisc.web.exceptions.LoginException;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
@@ -43,6 +44,16 @@ public class Newfeed extends NewEntityHandler<com.idisc.pu.entities.Feed> {
     final JpaContext jpaContext = this.getJpaContext(request);
     
     log.log(Level.FINER, "execute(HttpServletRequest)", cls);
+    
+    if(!this.isLoggedIn(request)) {
+        
+        this.tryLogin(request); 
+        
+        if(!this.isLoggedIn(request)) {
+        
+            throw new LoginException();
+        }
+    }
 
     Installation installation = getInstallationOrException(request);
     

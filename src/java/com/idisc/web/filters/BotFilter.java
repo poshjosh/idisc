@@ -87,13 +87,26 @@ public class BotFilter extends com.bc.web.core.filters.BotFilter {
                 
                 writer.flush();
             }
+            Level level = debug ? Level.INFO : Level.FINER;
+XLogger.getInstance().log(level, "-----------------------For {0} saving {1} values", 
+        this.getClass(), file.getName(), toSave.size());
         }
         @Override
-        protected boolean add(int botType, String value) {
+        protected boolean add(BotType botType, String value) {
             boolean added = super.add(botType, value);
             Level level = debug ? Level.INFO : Level.FINER;
-if(added) XLogger.getInstance().log(level, "Added {0} = {1}", this.getClass(), this.getBotTypeName(botType), value);
+if(added) XLogger.getInstance().log(level, "-----------------------After adding {0}, {1} = {2}", 
+        this.getClass(), value, botType, this.getBotCache(botType));
             return added;
+        }
+
+        @Override
+        protected Object remove(BotType botType, String value) {
+            final Object removed = super.remove(botType, value); 
+            Level level = debug ? Level.INFO : Level.FINER;
+if(removed != null) XLogger.getInstance().log(level, "-----------------------After removing {0}, {1} = {2}", 
+        this.getClass(), value, botType, this.getBotCache(botType));
+            return removed;
         }
         @Override
         public boolean acceptHostOrAddress(String value) {

@@ -18,12 +18,9 @@ public abstract interface ConfigNames {
   public static final String MULTITASK_REQUEST_DEFAULT_POOL_SIZE = "multiTaskRequestDefaultPoolSize";
   public static final String MULTITASK_REQUEST_TIMEOUT_SECONDS = "multiTaskRequestTimeoutSeconds";
   public static final String LOGGING_PROPERTIES_FILE = "logging.propertiesFile";
-  public static final String SCRAPPER_PROPERTIES_FILE = "scrapperPropertiesFile";
-  public static final String IDISCCORE_PROPERTIES_FILE = "idisccorePropertiesFile";
-
+  
   public static final String EMAILADDRESS = "emailaddress";
   public static final String PASSWORD = "password";
-  public static final String PERSISTENCE_FILE = "persistenceFile";
   public static final String COMMENTS_NOTIFICATIONS_MAXAGE_DAYS = "comments.notifications.maxAgeDays";
   public static final String COMMENTS_NOTIFICATIONS_MAX = "comments.notifications.max";
   public static final String COMMENTS_NOTIFICATIONS_DIRECTREPLIESONLY = "comments.notifications.directRepliesOnly";

@@ -2,7 +2,7 @@ package com.idisc.web.servlets.handlers.request;
 
 import com.authsvc.client.AuthSvcSession;
 import com.authsvc.client.parameters.Createuser;
-import com.bc.jpa.util.EntityMapBuilder;
+import com.bc.util.MapBuilder;
 import com.bc.util.XLogger;
 import com.idisc.core.util.DefaultEntityMapBuilder;
 import com.idisc.core.util.mapbuildertransformers.TransformerService;
@@ -113,18 +113,28 @@ XLogger.getInstance().log(Level.FINE, "Getuser parameters: {0}", this.getClass()
     output.putAll(authDetails);
     XLogger.getInstance().log(Level.FINER, "Authentication details: {0}", getClass(), authDetails);
     
-    EntityMapBuilder mapBuilder = new DefaultEntityMapBuilder();
-    TransformerService transformerService = new TransformerServiceImpl(false, 1000);
+    final MapBuilder mapBuilder = new DefaultEntityMapBuilder();
+    mapBuilder.methodFilter(MapBuilder.MethodFilter.ACCEPT_ALL);
+    final TransformerService transformerService = new TransformerServiceImpl(false, 1000);
     
-    Installation installation = this.getInstallation(request, false);
-    Map instDetails = mapBuilder.build(Installation.class, installation, transformerService.get(Installation.class));
+    final Installation installation = this.getInstallation(request, false);
+    Map instDetails = mapBuilder
+            .sourceType(Installation.class)
+            .source(installation)
+            .transformer(transformerService.get(Installation.class))
+            .build();
+    
     if(instDetails != null) {
       output.putAll(instDetails);
     }
     XLogger.getInstance().log(Level.FINER, "Installation details: {0}", getClass(), instDetails);
     
-    Feeduser feeduser = user.getDelegate();
-    Map userDetails = mapBuilder.build(Feeduser.class, feeduser, transformerService.get(Feeduser.class));
+    final Feeduser feeduser = user.getDelegate();
+    final Map userDetails = mapBuilder
+            .sourceType(Feeduser.class)
+            .source(feeduser)
+            .transformer(transformerService.get(Feeduser.class))
+            .build();
     output.putAll(userDetails);
     XLogger.getInstance().log(Level.FINER, "Feeduser details: {0}", getClass(), userDetails);
     

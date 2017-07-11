@@ -58,22 +58,27 @@ public class Feeds extends Selectfeeds {
       
 XLogger.getInstance().entering(this.getClass(), "#select(HttpServletRequest)", "");
 
-    List<Feed> feeds;
+    List<Feed> output;
     
-    if(this.isHtmlResponse(request)) {
-     
-      feeds = super.select(request);
+    final ServletContext context = request.getServletContext();
+      
+    final List<Feed> cached = (List<Feed>)context.getAttribute(Attributes.FEEDS);
+    
+    if(cached == null || cached.isEmpty()) {
+        
+        output = super.select(request);
         
     }else{
-     
-      feeds = selectFeedsForJsonResponse(request);
-      
-      AppContext appContext = this.getAppContext(request);
-      
-      feeds = this.sort(appContext, feeds);
+        
+        output = new ArrayList(cached);
+    }
+    
+    if(!this.isHtmlResponse(request)) {
+        
+        output = this.formatFeedsForJsonResponse(request, output);
     }
 
-    return feeds;
+    return output;
   }
   
   @Override
@@ -81,41 +86,29 @@ XLogger.getInstance().entering(this.getClass(), "#select(HttpServletRequest)", "
     return this.isHtmlResponse(request) ? super.getLimit(request) : getMaxLimit(request);
   }
   
-  private List<Feed> selectFeedsForJsonResponse(HttpServletRequest request) 
-      throws ServletException {
+  private List<Feed> formatFeedsForJsonResponse(HttpServletRequest request, List<Feed> feeds) 
+        throws ValidationException {
       
-    ServletContext context = request.getServletContext();
-      
-    List<Feed> feeds = (List<Feed>)context.getAttribute(Attributes.FEEDS);
-    
-    if(feeds == null || feeds.isEmpty()) {
-        
-      feeds = super.select(request);
-      
-    }else{
-      
-      feeds = new ArrayList(feeds);
-    }
-    
     final int limitFromSuper = super.getLimit(request);
       
-    feeds = new SpreadBySite().spread(feeds, limitFromSuper);      
+    feeds = new SpreadBySite().spread(feeds, limitFromSuper); 
     
-    return feeds == null ? Collections.EMPTY_LIST : feeds;
+    final AppContext appContext = this.getAppContext(request);
+    
+    return this.sort(appContext, feeds);
   }
 
   private List<Feed> sort(AppContext appContext, List<Feed> feeds) {
     
     if(feeds != null && !feeds.isEmpty()) {
+final long tb4 = System.currentTimeMillis();
+final long mb4 = appContext.getMemoryManager().getAvailableMemory();
         
         feeds = new ArrayList(feeds);
         
         final boolean reverseOrder = true;
 
         Comparator<Feed> comparator = this.getComparator(appContext, reverseOrder);
-
-long tb4 = System.currentTimeMillis();
-long mb4 = appContext.getMemoryManager().getAvailableMemory();
 
         try{
             Collections.sort(feeds, comparator);

@@ -42,7 +42,11 @@ public class SessionUserHandlerImpl extends BaseHandler implements SessionUserHa
     installation = this.getInstallation(request, true);
       
     if(installation == null) {
-      
+        
+XLogger.getInstance().log(Level.FINE, "getInstallationOrException(HttpServletRequest)\nCOULD NOT FIND INSTALLATION FOR REQUEST\n{0}\n{1}", 
+        this.getClass(), ServletUtil.getDetails(request.getSession(), "\n", Level.FINEST),
+        ServletUtil.getDetails(request, "\n", Level.FINEST)); 
+
       throw new ServletException("You are not authorized to perform the requested operation");
     }
       
@@ -124,7 +128,7 @@ XLogger.getInstance().log(Level.FINE, "Installation. id: {0}, country: {1}, scre
       
     }else{
         
-      if(XLogger.getInstance().isLoggable(Level.FINEST, this.getClass())) {
+      if(XLogger.getInstance().isLoggable(Level.FINER, this.getClass())) {
           
         StringBuilder builder = new StringBuilder();
         if(createIfNone) {
@@ -165,7 +169,8 @@ XLogger.getInstance().log(Level.FINE, "Installation. id: {0}, country: {1}, scre
       
       login.processRequest(request);
       
-      user = SessionUserHandlerImpl.this.getUser(request);
+      user = this.getUser(request);
+      
     } catch (ServletException | IOException | RuntimeException e) {
       user = null;
     }

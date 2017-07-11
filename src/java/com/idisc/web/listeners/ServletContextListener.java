@@ -6,8 +6,9 @@ import com.idisc.core.IdiscApp;
 import com.idisc.web.Attributes;
 import com.idisc.web.ConfigurationLoader;
 import com.idisc.web.ConfigurationLoaderDevMode;
+import com.idisc.web.IdiscAppDevmode;
 import com.idisc.web.WebApp;
-import com.idisc.web.IdiscAppImpl;
+import com.idisc.web.IdiscAppProductionmode;
 import com.idisc.web.servlets.handlers.CloseAutoCloseable;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
@@ -43,7 +44,7 @@ XLogger.getInstance().log(Level.INFO, "Production mode: {0}", this.getClass(), s
       
       Configuration config = configLoader.load();
       
-      IdiscApp idiscApp = new IdiscAppImpl(sc, config, productionMode);
+      IdiscApp idiscApp = productionMode ? new IdiscAppProductionmode() : new IdiscAppDevmode();
 
       WebApp webApp = new WebApp(sc, config, idiscApp, productionMode);
       

@@ -194,7 +194,7 @@ this.getClass(), selected==null?null:selected.size());
     
     int outputLimit = requestedLimit;
 
-    AppContext appContext = this.getAppContext(request);
+    final AppContext appContext = this.getAppContext(request);
     
     if(appContext.getConfiguration().getBoolean(ConfigNames.ADJUST_LIMIT_BASED_ON_MEMORY_LEVEL, Boolean.FALSE)) {
         
@@ -215,7 +215,10 @@ this.getClass(), selected==null?null:selected.size());
         outputLimit = maxLimit;
     }
     
-XLogger.getInstance().log(Level.FINER, "Requested limit: {0}, limit: {1}",
+    final boolean debug = 
+        appContext.getConfiguration().getBoolean(ConfigNames.DEBUG, false);
+
+XLogger.getInstance().log(debug ? Level.INFO : Level.FINE, "Requested limit: {0}, limit: {1}",
         this.getClass(), requestedLimit, outputLimit);
         
     return outputLimit;

@@ -26,12 +26,14 @@ import java.util.logging.Level;
  */
 public class MemoryManagerImpl implements MemoryManager {
 
-  private final long memoryAtStartup;
+  public static final long AVAILABLE_MEMORY_AT_STARTUP;
+  static{
+    AVAILABLE_MEMORY_AT_STARTUP = availableMemory();
+  }
 
   public MemoryManagerImpl() {
-    this.memoryAtStartup = this.getAvailableMemory();
 XLogger.getInstance().log(Level.INFO, "Memory at startup: {0}, available processors: {1}", 
-        this.getClass(), this.memoryAtStartup, Runtime.getRuntime().availableProcessors());
+        this.getClass(), AVAILABLE_MEMORY_AT_STARTUP, Runtime.getRuntime().availableProcessors());
   }
 
     @Override
@@ -64,23 +66,27 @@ XLogger.getInstance().log(Level.FINER,
   @Override
   public BigDecimal getMemoryLevel() {
     BigDecimal freeMemoryObj = new BigDecimal(this.getAvailableMemory());
-    BigDecimal memoryAtStartupObj = new BigDecimal(this.memoryAtStartup);
+    BigDecimal memoryAtStartupObj = new BigDecimal(AVAILABLE_MEMORY_AT_STARTUP);
     return freeMemoryObj.divide(memoryAtStartupObj, 2, RoundingMode.HALF_UP);
   }
 
   @Override
-  public long getMemoryAtStartup() {
-    return this.memoryAtStartup;
+  public long getAvailableMemoryAtStartup() {
+    return AVAILABLE_MEMORY_AT_STARTUP;
   }
 
   @Override
   public long getAvailableMemory() {
-    Runtime runtime = Runtime.getRuntime();
-    long totalMemory = runtime.totalMemory(); // current heap allocated to the VM process
-    long freeMemory = runtime.freeMemory(); // out of the current heap, how much is free
-    long maxMemory = runtime.maxMemory(); // Max heap VM can use e.g. Xmx setting
-    long usedMemory = totalMemory - freeMemory; // how much of the current heap the VM is using
-    long availableMemory = maxMemory - usedMemory; // available memory i.e. Maximum heap size minus the current amount used
+    return availableMemory();
+  }  
+
+  public static long availableMemory() {
+    final Runtime runtime = Runtime.getRuntime();
+    final long totalMemory = runtime.totalMemory(); // current heap allocated to the VM process
+    final long freeMemory = runtime.freeMemory(); // out of the current heap, how much is free
+    final long maxMemory = runtime.maxMemory(); // Max heap VM can use e.g. Xmx setting
+    final long usedMemory = totalMemory - freeMemory; // how much of the current heap the VM is using
+    final long availableMemory = maxMemory - usedMemory; // available memory i.e. Maximum heap size minus the current amount used
     return availableMemory;
   }  
 }

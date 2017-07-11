@@ -18,38 +18,31 @@ package com.idisc.web;
 
 import com.bc.jpa.JpaContext;
 import com.bc.util.XLogger;
-import com.idisc.core.IdiscApp;
-import com.idisc.pu.FeedService;
+import com.idisc.pu.FeedSvc;
 import com.idisc.pu.entities.Feed;
 import java.util.List;
+import java.util.Objects;
 import java.util.logging.Level;
-import org.apache.commons.configuration.Configuration;
 
 /**
  * @author Chinomso Bassey Ikwuagwu on Aug 21, 2016 8:15:13 AM
  */
-public class DefaultFeedService extends FeedService {
+public class DefaultFeedService extends FeedSvc {
 
   private final boolean debugTimeAndMemory;
   
   private final MemoryManager memoryManager;
   
   public DefaultFeedService(AppContext appContext) {
-    this(appContext.getIdiscApp().getJpaContext(),
+    this(appContext.getIdiscApp().getJpaContext(), appContext.getMemoryManager(),
             appContext.getConfiguration().getBoolean(ConfigNames.DEBUG_TIME_AND_MEMORY, false)
     );
   }
     
-  public DefaultFeedService(IdiscApp idiscApp, Configuration config) {
-    this(idiscApp.getJpaContext(), 
-            config.getBoolean(ConfigNames.DEBUG_TIME_AND_MEMORY, false)
-    );
-  }
-
-  public DefaultFeedService(JpaContext jpaContext, boolean debugTimeAndMemory) {
+  public DefaultFeedService(JpaContext jpaContext, MemoryManager memoryManager, boolean debugTimeAndMemory) {
     super(jpaContext);
+    this.memoryManager = Objects.requireNonNull(memoryManager);
     this.debugTimeAndMemory = debugTimeAndMemory;
-    this.memoryManager = new MemoryManagerImpl();
   }
 
   @Override

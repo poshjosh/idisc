@@ -19,11 +19,12 @@ public class Login extends AbstractRequestHandler<Boolean> {
   @Override
   protected Boolean execute(HttpServletRequest request)
     throws ServletException, IOException {
+      
     if (isLoggedIn(request)) {
       return Boolean.TRUE;
     }
     
-    AppContext appCtx = (AppContext)request.getServletContext().getAttribute(Attributes.APP_CONTEXT);
+    final AppContext appCtx = this.getAppContext(request);
     
     AuthSvcSession authSession = appCtx.getAuthSvcSession();
     

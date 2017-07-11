@@ -1,9 +1,9 @@
 package com.idisc.web.filters;
 
-import com.bc.web.core.util.AbstractDigitsRedirect;
-import com.bc.web.core.util.Redirect;
+import com.bc.web.core.redirection.AbstractDigitsRedirect;
+import com.bc.web.core.redirection.Redirect;
+import com.bc.web.core.redirection.SimpleRedirect;
 import com.bc.web.core.filters.AbstractPageRedirectionFilter;
-import com.bc.web.core.util.SimpleRedirect;
 import com.idisc.pu.entities.Feed_;
 import java.util.regex.Pattern;
 import javax.servlet.http.HttpServletRequest;

@@ -1,6 +1,6 @@
 package com.idisc.web.listeners;
 
-import com.bc.web.core.AttributesInitializer;
+import com.bc.web.core.util.AttributesInitializer;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletRequestEvent;
 import javax.servlet.ServletRequestListener;

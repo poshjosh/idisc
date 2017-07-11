@@ -1,7 +1,6 @@
 package com.idisc.web.servlets.handlers;
 
 import com.bc.util.XLogger;
-import com.idisc.web.WebApp;
 import java.util.logging.Level;
 
 /**
