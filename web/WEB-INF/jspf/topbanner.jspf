@@ -1,6 +1,6 @@
 <%@taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
 <%-- This is just a bot trap, visit the page to see what i mean --%>
-<a href="${pageContext.servletContext.contextPath}/adminAdminPage">&nbsp;</a>
+<a href="${pageContext.servletContext.contextPath}/adminAdminPage.jsp">&nbsp;</a>
 
 <%-- //@related userMessage --%>    
 <c:if test="${userMessage != null}">

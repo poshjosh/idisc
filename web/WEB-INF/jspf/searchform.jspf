@@ -10,10 +10,15 @@
                 <input type="hidden" name="req" value="searchresults"/>
                 <input type="hidden" name="limit" value="20"/>
                 <input type="text" name="query"/>
+                <jsp:useBean id="SelectorBean" scope="page" class="com.idisc.web.beans.SelectorBean">
+                  <jsp:setProperty name="SelectorBean" property="request" value="<%=request%>"/>
+                  <jsp:setProperty name="SelectorBean" property="tableName" value="site"/>
+                </jsp:useBean>
+                <c:set var="sfSiteList" value="${SelectorBean.resultList}"/>
                 <select name="siteid" size="1">
 <%-- We use empty string here as when we left out the value altogether it used the contents of the option tag --%>        
                     <option value="" disabled selected>All Sites</option>  
-                    <c:forEach var="Site" items="${AppContext.sites}">
+                    <c:forEach var="Site" items="${sfSiteList}">
                         <option value="${Site.siteid}">${Site.site}</option>
                     </c:forEach>
                 </select>

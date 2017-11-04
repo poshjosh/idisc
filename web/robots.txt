@@ -3,6 +3,4 @@ Disallow: /META-INF
 Disallow: /WEB-INF
 Disallow: /adminAdminPage
 Disallow: /idisc/adminAdminPage
-Disallow: /adminAdminPage.jsp
-Disallow: /idisc/adminAdminPage.jsp
 

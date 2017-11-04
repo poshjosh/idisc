@@ -10,7 +10,6 @@
         <description>Prevents Cross-Site Request Forgery (CSRF)  by generating a nonce and storing it in the session. URLs are also encoded with the same nonce. When the next request is received the nonce in the request is compared to the nonce in the session and only if they are the same is the request allowed to continue.</description>
         <filter-name>CsrfPreventionFilter</filter-name>
         <filter-class>com.bc.web.core.filters.CsrfPreventionFilter</filter-class>
-        <async-supported>true</async-supported>
         <init-param>
             <param-name>entryPoints</param-name>
             <param-value>,/,/index.jsp,/home.jsp,/oop.jsp</param-value>
@@ -25,7 +24,6 @@
         <description>Sets charset for post requests, charset for GET requests is set by adding URIEncoding=UTF-8 to connector in server.xml</description>
         <filter-name>SetCharsetFilter</filter-name>
         <filter-class>com.bc.web.core.filters.SetCharacterEncodingFilter</filter-class>
-        <async-supported>true</async-supported>
         <init-param>
             <param-name>encoding</param-name>
             <param-value>UTF-8</param-value>
@@ -63,22 +61,18 @@
     <filter>
         <filter-name>BotFilter</filter-name>
         <filter-class>com.idisc.web.filters.BotFilter</filter-class>
-        <async-supported>true</async-supported>
     </filter>
     <filter>
         <filter-name>LoginFilter</filter-name>
         <filter-class>com.idisc.web.filters.LoginFilter</filter-class>
-        <async-supported>true</async-supported>
     </filter>
     <filter>
         <filter-name>AppFilter</filter-name>
         <filter-class>com.idisc.web.filters.AppFilter</filter-class>
-        <async-supported>true</async-supported>
     </filter>
     <filter>
         <filter-name>PageFilter</filter-name>
         <filter-class>com.idisc.web.filters.PageFilter</filter-class>
-        <async-supported>true</async-supported>
     </filter>
     <filter-mapping>
         <filter-name>BotFilter</filter-name>
@@ -141,9 +135,7 @@
     </listener>
     <servlet>
         <servlet-name>Idisc</servlet-name>
-        <!--servlet-class>com.idisc.web.servlets.IdiscAsyncNonHtmlResponseServlet</servlet-class-->
         <servlet-class>com.idisc.web.servlets.IdiscServlet</servlet-class>
-        <async-supported>true</async-supported>
     </servlet>
     <servlet-mapping>
         <servlet-name>Idisc</servlet-name>
