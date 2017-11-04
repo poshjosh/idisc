@@ -1,11 +1,9 @@
 package com.idisc.web.servlets.handlers.request;
 
-import com.bc.jpa.JpaContext;
-import com.bc.jpa.dao.BuilderForSelect;
+import com.bc.jpa.context.JpaContext;
 import com.bc.jpa.dao.Criteria;
 import com.bc.jpa.dao.SelectDao;
 import com.bc.jpa.search.SearchResults;
-import com.bc.sql.SQLUtils;
 import com.bc.util.XLogger;
 import com.idisc.pu.SearchDao;
 import com.idisc.pu.entities.Comment;
@@ -18,16 +16,16 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Collections;
 import java.util.Date;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
-import com.bc.jpa.JpaMetaData;
 import com.bc.webdatex.converter.DateTimeConverter;
 import com.idisc.core.util.TimeZones;
+import com.idisc.pu.functions.GetColumnNamesOfType;
 import java.text.DateFormat;
+import java.util.Arrays;
 import java.util.TimeZone;
 
 public class Select<T> extends AbstractRequestHandler<List<T>>{
@@ -50,7 +48,7 @@ XLogger.getInstance().entering(this.getClass(), "#execute(HttpServletRequest, Ht
   
   protected List<T> select(HttpServletRequest request) throws ServletException{
       
-    SelectDao<T> dao = this.createSelect(request);
+    com.bc.jpa.dao.SelectDao<T> dao = this.createSelect(request);
     
     List<T> selected;
     
@@ -75,29 +73,29 @@ this.getClass(), selected==null?null:selected.size());
     return searchResults;
   }
   
-  protected BuilderForSelect<T> createSelect(HttpServletRequest request) throws ValidationException {
+  protected com.bc.jpa.dao.Select<T> createSelect(HttpServletRequest request) throws ValidationException {
       
     JpaContext jpaContext = this.getJpaContext(request);
     
     final int offset = this.isPaginate(request) ? -1 : getOffset(request);
     final int limit = this.isPaginate(request) ? -1 : getLimit(request);
+    
+    final String [] queries = this.getSearchTerms(request);
     final String query = getSearchTerm(request);
 
-    final String dateColumn;
-    final String [] columnsToSearch;
-    if(this.entityClass == com.idisc.pu.entities.Feed.class) {
-      columnsToSearch = new String[]{"title", "keywords", "description", "author", "content"};
-      dateColumn = Feed_.feeddate.getName();
-    }else if(this.entityClass == Comment.class) {
-      columnsToSearch = new String[]{"commentSubject", "commentText"};
-      dateColumn = Comment_.datecreated.getName();
-    }else{
-      columnsToSearch = this.getColumnNamesOfType(jpaContext, String.class);
-      dateColumn = null;
-    }
+    final String dateColumn = this.getDateColumnName(null);
+    final String [] columnsToSearch = this.getColumnsToSearch(jpaContext);
 
-    final BuilderForSelect<T> select = new SearchDao(
+    final com.bc.jpa.dao.Select<T> select;
+    
+    if(queries != null && queries.length != 0) {
+        select = new SearchDao(
+            jpaContext, this.entityClass, offset, limit, Arrays.asList(queries), columnsToSearch);
+    }else{
+        select = new SearchDao(
             jpaContext, this.entityClass, offset, limit, query, columnsToSearch);
+    }
+            
     
     Date after = getAfter(request);
     
@@ -118,6 +116,32 @@ this.getClass(), selected==null?null:selected.size());
     return select;
   }
   
+  protected String [] getColumnsToSearch(JpaContext jpaContext) {
+    final String [] columnsToSearch;
+    if(this.entityClass == com.idisc.pu.entities.Feed.class) {
+//      columnsToSearch = new String[]{"title", "keywords", "description", "author", "content"};
+      columnsToSearch = new String[]{"author", "title", "keywords",  "categories", "description", "content"};
+    }else if(this.entityClass == Comment.class) {
+      columnsToSearch = new String[]{"commentSubject", "commentText"};
+    }else{
+      columnsToSearch = new GetColumnNamesOfType(jpaContext.getMetaData())
+              .apply(entityClass, String.class).toArray(new String[0]);
+    }
+    return columnsToSearch;
+  }
+  
+  protected String getDateColumnName(String outputIfNone) {
+    final String dateColumn;
+    if(this.entityClass == com.idisc.pu.entities.Feed.class) {
+      dateColumn = Feed_.feeddate.getName();
+    }else if(this.entityClass == Comment.class) {
+      dateColumn = Comment_.datecreated.getName();
+    }else{
+      dateColumn = outputIfNone;
+    }
+    return dateColumn;
+  }
+  
   protected boolean isPaginate(HttpServletRequest request) {
     return false;
   }
@@ -128,6 +152,17 @@ this.getClass(), selected==null?null:selected.size());
   
   protected Map<String, String> getOrderBy(HttpServletRequest request) throws ValidationException {
     return Collections.EMPTY_MAP;
+  }
+  
+  protected String [] getSearchTerms(HttpServletRequest request) throws ValidationException {
+    final int max = this.getSearchTermsMax(request);
+    final String [] queries =  request.getParameterValues("queries");
+    return queries == null || queries.length <= max ? queries : 
+            Arrays.asList(queries).subList(0, max).toArray(new String[0]);
+  }
+  
+  protected int getSearchTermsMax(HttpServletRequest request) throws ValidationException {
+    return 5;
   }
   
   protected String getSearchTerm(HttpServletRequest request) throws ValidationException {
@@ -215,10 +250,7 @@ this.getClass(), selected==null?null:selected.size());
         outputLimit = maxLimit;
     }
     
-    final boolean debug = 
-        appContext.getConfiguration().getBoolean(ConfigNames.DEBUG, false);
-
-XLogger.getInstance().log(debug ? Level.INFO : Level.FINE, "Requested limit: {0}, limit: {1}",
+XLogger.getInstance().log(Level.FINE, "Requested limit: {0}, limit: {1}",
         this.getClass(), requestedLimit, outputLimit);
         
     return outputLimit;
@@ -245,20 +277,6 @@ XLogger.getInstance().log(debug ? Level.INFO : Level.FINE, "Requested limit: {0}
     return getIntegerProperty(request, ConfigNames.MIN_LIMIT, 5);
   }
   
-  private String [] getColumnNamesOfType(JpaContext jpaContext, Class type) {
-    final JpaMetaData metaData = jpaContext.getMetaData();
-    final String [] columns = metaData.getColumnNames(entityClass);
-    final int [] types = metaData.getColumnDataTypes(entityClass);
-    List<String> output = new LinkedList<>();
-    int i = 0;
-    for(String column : columns) {
-        if(SQLUtils.getClass(types[i++]) == type) {
-            output.add(column);
-        }
-    }
-    return output.toArray(new String[0]);
-  }
-
   public final Class<T> getEntityClass() {
     return this.entityClass;
   }

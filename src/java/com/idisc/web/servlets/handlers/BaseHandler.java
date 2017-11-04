@@ -1,6 +1,6 @@
 package com.idisc.web.servlets.handlers;
 
-import com.bc.jpa.JpaContext;
+import com.bc.jpa.context.JpaContext;
 import com.idisc.web.AppContext;
 import com.idisc.web.Attributes;
 import javax.servlet.http.HttpServletRequest;

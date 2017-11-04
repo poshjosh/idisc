@@ -4,6 +4,7 @@ import com.bc.util.XLogger;
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.util.Collections;
@@ -15,11 +16,11 @@ import javax.servlet.http.HttpServletRequest;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
-public class ReadLocalJson extends AbstractRequestHandler<Map> {
+public class ReadJsonFromLocalMachine extends AbstractRequestHandler<Map> {
     
   private final String filename;
   
-  public ReadLocalJson(String filename) {
+  public ReadJsonFromLocalMachine(String filename) {
     this.filename = filename;
   }
   
@@ -35,22 +36,36 @@ public class ReadLocalJson extends AbstractRequestHandler<Map> {
   @Override
   protected Map execute(HttpServletRequest request) throws ServletException, IOException {
       
-    Map output = load(request.getServletContext());
+    Map output = load(request);
     
     return output == null ? Collections.emptyMap() : output;
   }
   
 
+  public Map load(HttpServletRequest request) throws IOException {
+    return load(request.getServletContext());
+  }   
+    
   public Map load(ServletContext context) throws IOException {
     
 XLogger.getInstance().log(Level.FINE, "Filename: {0}", this.getClass(), filename);
 
     String realPath = context.getRealPath(filename);
     
-XLogger.getInstance().log(Level.FINE, "File path: {0}", this.getClass(), realPath);    
+    return load(realPath);
+  }   
+  
+  public Map load(String realPath) throws IOException {
+    
+XLogger.getInstance().log(Level.FINE, "File path: {0}", this.getClass(), realPath);
+    
+    return load(new FileInputStream(realPath), realPath);
+  }
 
+  public Map load(InputStream in, String name) throws IOException {
+    
     Map output;
-    try { Reader r = new BufferedReader(new InputStreamReader(new FileInputStream(realPath), "utf-8"));Throwable localThrowable2 = null;
+    try { Reader r = new BufferedReader(new InputStreamReader(in, "utf-8"));Throwable localThrowable2 = null;
       
       try {
           
@@ -73,7 +88,7 @@ XLogger.getInstance().log(Level.FINE, "File path: {0}", this.getClass(), realPat
       }
     } catch (ParseException e) { output = null;
       
-      XLogger.getInstance().log(Level.WARNING, "Error parsing: " + realPath, getClass(), e);
+      XLogger.getInstance().log(Level.WARNING, "Error parsing: " + name, getClass(), e);
     }
     
     return output == null ? Collections.emptyMap() : output;

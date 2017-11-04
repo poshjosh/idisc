@@ -1,6 +1,6 @@
 package com.idisc.web.servlets.handlers.request;
 
-import com.bc.jpa.EntityController;
+import com.bc.jpa.controller.EntityController;
 import com.bc.jpa.exceptions.PreexistingEntityException;
 import com.bc.util.XLogger;
 import com.idisc.pu.entities.Comment;

@@ -147,7 +147,7 @@ XLogger.getInstance().log(Level.FINER, "Installation: {0}, number of feeds: {1}"
           
         XLogger.getInstance().log(Level.FINER, "Adding {0} notices to output", getClass(), notices.size());
         
-        com.idisc.pu.FeedSvc feedService = new DefaultFeedService(this.getAppContext());
+        com.idisc.pu.FeedService feedService = new DefaultFeedService(this.getAppContext());
 //                new com.idisc.pu.FeedService(this.getAppContext().getIdiscApp().getJpaContext());
                 
         Date date = feedService.getEarliestDate(feeds);

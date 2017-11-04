@@ -1,6 +1,6 @@
 package com.idisc.web.servlets.handlers.request;
 
-import com.bc.jpa.JpaContext;
+import com.bc.jpa.context.JpaContext;
 import com.bc.ui.treebuilder.MapTreeBuilder;
 import com.idisc.pu.entities.Installation;
 import com.idisc.web.AppContext;
@@ -48,7 +48,7 @@ public class FeedsTest extends LoginBase {
         JpaContext jpaContext = appContext.getIdiscApp().getJpaContext();
         
         List<Installation> resultList =        
-            jpaContext.getBuilderForSelect(Installation.class)
+            jpaContext.getDaoForSelect(Installation.class)
                 .from(Installation.class).getResultsAndClose(0, max);
         
         int i = 0;

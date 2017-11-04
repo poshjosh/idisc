@@ -30,8 +30,8 @@ public class IdiscAppProductionmode extends IdiscAppImpl {
             throws ConfigurationException, IOException, IllegalAccessException, 
             InterruptedException, InvocationTargetException {
         super(
-                "/home3/loosebox/public_html/idisc/META-INF/properties/idisccore.properties",
-                "/home3/loosebox/public_html/idisc/META-INF/properties/idisc_scrapper.properties",
+                "/home2/loosebox/public_html/idisc/META-INF/properties/idisccore.properties",
+                "/home2/loosebox/public_html/idisc/META-INF/properties/idisc_scrapper.properties",
                 null, // No need to specify if persistence file is default of META-INF/persistence.xml
                 true);
     }

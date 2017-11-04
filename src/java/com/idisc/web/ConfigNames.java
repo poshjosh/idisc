@@ -7,14 +7,14 @@ public abstract interface ConfigNames {
   public static final String APP_VERSIONCODE_LATEST = "app.versionCode.latest";
   public static final String CACHE_FEEDS = "cacheFeeds";
   public static final String START_FEED_UPDATE_SERVICE = "startFeedUpdateService";
-  public static final String PROCESS_REQUEST_ASYNC = "processRequestAsync";
   public static final String REQUEST_EXECUTOR_SERVICE_POOL_SIZE = "requestExecutorService.poolSize";
   public static final String REQUEST_EXECUTOR_SERVICE_QUEUE_CAPACITY = "requestExecutorService.queueCapacity";
   public static final String REQUEST_EXECUTOR_SERVICE_POOLSIZE_ADJUSTMENT_INTERVAL_MINUTES = "requestExecutorService.poolSizeAdjustmentIntervalMinutes";
+  
   public static final String BOTFILTER_ENABLED = "botfilter.enabled";
-  public static final String BOTFILTER_ENABLE_AT_MEMORY_BELOW = "botfilter.enableAtMemoryBelow";
-  public static final String BOTFILTER_DISABLE_AT_MEMORY_ABOVE = "botfilter.disableAtMemoryAbove";
-  public static final String BOTFILTER_CACHEDIR = "botfilter.cacheDir";   
+  public static final String BOTFILTER_TRAP_FILENAME = "botfilter.trapFilename";
+  public static final String BOTFILTER_CACHEDIR = "botfilter.cacheDir";  
+  
   public static final String MULTITASK_REQUEST_DEFAULT_POOL_SIZE = "multiTaskRequestDefaultPoolSize";
   public static final String MULTITASK_REQUEST_TIMEOUT_SECONDS = "multiTaskRequestTimeoutSeconds";
   public static final String LOGGING_PROPERTIES_FILE = "logging.propertiesFile";

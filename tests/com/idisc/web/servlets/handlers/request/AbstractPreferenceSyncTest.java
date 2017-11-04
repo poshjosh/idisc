@@ -15,7 +15,7 @@
  */
 package com.idisc.web.servlets.handlers.request;
 
-import com.bc.jpa.JpaContext;
+import com.bc.jpa.context.JpaContext;
 import com.idisc.pu.entities.Installation;
 import com.idisc.web.AppContext;
 import com.idisc.web.Attributes;

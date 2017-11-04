@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.logging.Level;
 import javax.persistence.EntityManager;
 import org.json.simple.JSONArray;
-import com.bc.jpa.JpaContext;
+import com.bc.jpa.context.JpaContext;
 import javax.servlet.http.HttpServletRequest;
 
 public class Addbookmarkfeedids extends UpdateUserPreferenceFeedids {
@@ -38,7 +38,7 @@ public class Addbookmarkfeedids extends UpdateUserPreferenceFeedids {
       List<Bookmarkfeed> valuesFromDatabase = installation.getBookmarkfeedList();
       
 //      EntityController<Feed, Integer> feedCtrl = factory.getEntityController(Feed.class, Integer.class);
-      com.bc.jpa.dao.BuilderForSelect<Feed> select = jpaContext.getBuilderForSelect(Feed.class);
+      com.bc.jpa.dao.Select<Feed> select = jpaContext.getDaoForSelect(Feed.class);
       
       outer:
       for (Object feedid : feedids) {

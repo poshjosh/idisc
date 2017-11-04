@@ -1,6 +1,5 @@
 package com.idisc.web.servlets.handlers.request;
 
-import com.bc.jpa.dao.BuilderForSelect;
 import com.bc.jpa.dao.Criteria;
 import com.bc.util.XLogger;
 import com.idisc.pu.entities.Feed;
@@ -11,6 +10,7 @@ import java.util.logging.Level;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import com.idisc.pu.entities.Feed_;
+import com.bc.jpa.dao.Select;
 
 public class Addfeedhit extends AbstractRequestHandler<Long> {
     
@@ -45,7 +45,7 @@ XLogger.getInstance().log(Level.FINE, "{0} = {1}", this.getClass(), feedid, hitc
   protected Long execute(HttpServletRequest request, Installation installation, Integer feedid, long hittime)
     throws ServletException {
       
-    final BuilderForSelect<Long> dao = this.getJpaContext(request).getBuilderForSelect(Feedhit.class, Long.class);
+    final Select<Long> dao = this.getJpaContext(request).getDaoForSelect(Feedhit.class, Long.class);
     
     Feed feed = dao.getEntityManager().find(Feed.class, feedid);
     

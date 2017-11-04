@@ -9,6 +9,7 @@ import com.idisc.web.servlets.handlers.response.ResponseHandler;
 import java.io.IOException;
 import java.util.Objects;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.servlet.AsyncContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -18,6 +19,8 @@ import javax.servlet.http.HttpServletResponse;
  * @author Josh
  */
 public class ServiceControllerImpl extends RequestHandlerProviderImpl implements ServiceController {
+
+  private static final Logger logger = Logger.getLogger(ServiceControllerImpl.class.getName());
 
   public ServiceControllerImpl() { }
   
@@ -134,7 +137,7 @@ public class ServiceControllerImpl extends RequestHandlerProviderImpl implements
       final Object paramValue,
       final boolean sendResponse) throws ServletException, IOException {
       
-    XLogger.getInstance().log(Level.FINER, "Response handler: {0}", getClass(), responseHandler);
+    logger.log(Level.FINER, "Response handler: {0}", responseHandler);
     
     final Object output = Objects.requireNonNull(
                                 responseHandler.processResponse(
@@ -162,7 +165,7 @@ public class ServiceControllerImpl extends RequestHandlerProviderImpl implements
       final Object paramValue,
       final boolean sendResponse) throws ServletException, IOException {
       
-    XLogger.getInstance().log(Level.FINER, "Response handler: {0}", getClass(), responseHandler);
+    logger.log(Level.FINER, "Response handler: {0}", responseHandler);
     
     final Object output = Objects.requireNonNull(
                                 responseHandler.processResponse(
@@ -180,7 +183,7 @@ public class ServiceControllerImpl extends RequestHandlerProviderImpl implements
           
         final boolean htmlResponse = responseHandler.getContentType().toLowerCase().contains("html"); 
         
-XLogger.getInstance().log(Level.FINER, "HTML response: {0}, URI: {1}", getClass(), htmlResponse, requestURI);
+        logger.finer(() -> "HTML response: "+htmlResponse+", URI: " + requestURI);
 
         if(htmlResponse) {
             
@@ -195,7 +198,7 @@ XLogger.getInstance().log(Level.FINER, "HTML response: {0}, URI: {1}", getClass(
           try{
             asyncContext.complete();
           }catch(IllegalStateException thrownIfAlreadyCompleted) {
-            XLogger.getInstance().log(Level.FINE, "{0}", this.getClass(), thrownIfAlreadyCompleted.toString());
+            logger.log(Level.FINE, "{0}", thrownIfAlreadyCompleted.toString());
           }
         }
       }
@@ -223,8 +226,8 @@ XLogger.getInstance().log(Level.FINER, "HTML response: {0}, URI: {1}", getClass(
 
         final String sessionId = String.valueOf(request.getSession() == null ? null : request.getSession().getId());
 
-XLogger.getInstance().log(Level.WARNING, "Response already committed for session. ID: {0}, requestURI: {1}", 
-    this.getClass(), sessionId, request.getRequestURI());
+        logger.warning(() -> "Response already committed for session. ID: " + sessionId +
+            ", requestURI: " + request.getRequestURI());
 
         return false;
     }
@@ -256,7 +259,7 @@ XLogger.getInstance().log(Level.WARNING, "Response already committed for session
       throw new ServletException("Failed to resolve request handler names for request.\n"+this.toString(request));  
     }
         
-XLogger.getInstance().log(Level.FINER, "Request Handler: {0}", getClass(), output);
+    logger.log(Level.FINER, "Request Handler: {0}", output);
     
     return output;
   }

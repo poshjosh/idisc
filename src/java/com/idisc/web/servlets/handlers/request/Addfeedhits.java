@@ -14,7 +14,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
-import com.bc.jpa.JpaContext;
+import com.bc.jpa.context.JpaContext;
 
 public class Addfeedhits extends AbstractRequestHandler<Map<Integer, Long>> {
   

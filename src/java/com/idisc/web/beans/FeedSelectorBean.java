@@ -15,7 +15,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import javax.servlet.http.HttpServletRequest;
-import com.bc.jpa.dao.BuilderForSelect;
+import com.bc.jpa.dao.Select;
 
 /**
  * @author Josh
@@ -87,7 +87,7 @@ XLogger.getInstance().log(Level.FINER, "Refreshing Topfeeds", this.getClass());
             taskSubmitted = true;
             
             if(async) {
-                ExecutorService es = appCtx.getGlobalExecutorService(false);
+                ExecutorService es = appCtx.getGlobalExecutorService(true);
                 if(es != null) {
                     es.submit(task);
                 }
@@ -107,7 +107,7 @@ XLogger.getInstance().log(Level.FINER, "Refreshing Topfeeds", this.getClass());
         public void run() {
             try{
                 
-                List<Feed> selected = feedDao.getResultList(Feed_.feeddate.getName(), BuilderForSelect.GT, maxAgeDays, 
+                List<Feed> selected = feedDao.getResultList(Feed_.feeddate.getName(), Select.GT, maxAgeDays, 
                         TimeUnit.DAYS, maxSpread, batchSize);
                 
                 if(selected != null && !selected.isEmpty()) {

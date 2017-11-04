@@ -1,6 +1,6 @@
 package com.idisc.web.servlets.handlers.request;
 
-import com.bc.jpa.JpaContext;
+import com.bc.jpa.context.JpaContext;
 import com.bc.jpa.util.MapBuilderForEntity;
 import com.bc.util.MapBuilder;
 import com.bc.util.XLogger;

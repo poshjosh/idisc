@@ -15,7 +15,8 @@ public class AdjustPoolSizeBasedOnMemoryLevelTask implements Runnable {
     
     private final int originalPoolSize;
     
-    public AdjustPoolSizeBasedOnMemoryLevelTask(AppContext appContext, ThreadPoolExecutor threadPoolExecutor) {
+    public AdjustPoolSizeBasedOnMemoryLevelTask(
+            AppContext appContext, ThreadPoolExecutor threadPoolExecutor) {
         if(appContext == null || threadPoolExecutor == null) {
             throw new NullPointerException();
         }

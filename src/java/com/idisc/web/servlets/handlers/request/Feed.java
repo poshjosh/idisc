@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.logging.Level;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
-import com.bc.jpa.JpaContext;
+import com.bc.jpa.context.JpaContext;
 import com.bc.jpa.search.SearchResults;
 import java.util.Collection;
 
@@ -77,7 +77,7 @@ public class Feed extends AbstractRequestHandler<com.idisc.pu.entities.Feed>{
       
     JpaContext jpaContext = this.getJpaContext(request);
     
-    return jpaContext.getBuilderForSelect(com.idisc.pu.entities.Feed.class).findAndClose(feedid);
+    return jpaContext.getDaoForSelect(com.idisc.pu.entities.Feed.class).findAndClose(feedid);
   }
   
   public Integer getId(HttpServletRequest request) throws ValidationException {

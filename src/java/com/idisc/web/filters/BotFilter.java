@@ -1,183 +1,177 @@
 package com.idisc.web.filters;
 
 import com.bc.util.JsonBuilder;
-import com.bc.util.XLogger;
 import com.bc.web.botchecker.BotChecker;
-import com.bc.web.botchecker.BotCheckerInMemoryCache;
+import com.bc.web.botchecker.BotCheckerDevMode;
+import com.bc.web.botchecker.BotCheckerImpl;
+import com.bc.web.botchecker.BotCheckerVoid;
+import com.bc.web.botchecker.BotDiscCacheJson;
+import com.bc.web.botchecker.BotDiscCacheJsonDevMode;
+import com.bc.web.botchecker.BotTrapperTrapFile;
+import com.bc.web.botchecker.BotTrapperVoid;
 import com.idisc.web.AppContext;
 import com.idisc.web.Attributes;
-import java.io.IOException;
-import java.util.logging.Level;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import org.apache.commons.configuration.Configuration;
 import com.idisc.web.ConfigNames;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.io.IOException;
+import java.io.Reader;
+import java.io.Writer;
+import java.util.ArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.servlet.http.HttpServletRequest;
+import org.apache.commons.configuration.Configuration;
 import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 
 /**
  * @author poshjosh
  */
 public class BotFilter extends com.bc.web.core.filters.BotFilter {
-    
-    private class BotCheckerImpl extends BotCheckerInMemoryCache {
-        private final boolean debug;
-        private final boolean productionMode;
-        public BotCheckerImpl(
-                String trapFilename, long memoryCeiling, 
-                long memoryFloor, String cacheDir, 
-                boolean productionMode, boolean debug) {
-            super(trapFilename, memoryCeiling, memoryFloor, cacheDir);
-            this.debug = debug;
-            this.productionMode = productionMode;
-        }
-        public BotCheckerImpl(
-                String trapFilename, boolean strict, 
-                long memoryCeiling, long memoryFloor, 
-                String cacheDir, int cacheSize,
-                boolean productionMode, boolean debug) {
-            super(trapFilename, strict, memoryCeiling, memoryFloor, cacheDir, cacheSize);
-            this.debug = debug;
-            this.productionMode = productionMode;
-        }
 
-        @Override
-        public String getFilename(String key) {
-            return this.getCacheDir()+'/'+key+".json";
-        }
-
-        @Override
-        public List<String> load(File file) throws IOException, ClassNotFoundException {
-            
-            try(BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(file), "utf-8"))){
-                
-                try{
-                    
-                    JSONParser parser = new JSONParser();
-                    
-                    Map output = (Map)parser.parse(reader);
-                    
-                    return (List<String>)output.get(file.getName());
-                    
-                }catch(org.json.simple.parser.ParseException e) {
-                 
-                    throw new IOException(e);
-                }
-            }
-        }
-
-        @Override
-        public void save(List<String> toSave, File file) throws IOException {
-            
-            Map output = Collections.singletonMap(file.getName(), toSave);
-            
-            try(BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file), "utf-8"))) {
-             
-                new JsonBuilder(true).appendJSONString(output, writer);
-                
-                writer.flush();
-            }
-            Level level = debug ? Level.INFO : Level.FINER;
-XLogger.getInstance().log(level, "-----------------------For {0} saving {1} values", 
-        this.getClass(), file.getName(), toSave.size());
-        }
-        @Override
-        protected boolean add(BotType botType, String value) {
-            boolean added = super.add(botType, value);
-            Level level = debug ? Level.INFO : Level.FINER;
-if(added) XLogger.getInstance().log(level, "-----------------------After adding {0}, {1} = {2}", 
-        this.getClass(), value, botType, this.getBotCache(botType));
-            return added;
-        }
-
-        @Override
-        protected Object remove(BotType botType, String value) {
-            final Object removed = super.remove(botType, value); 
-            Level level = debug ? Level.INFO : Level.FINER;
-if(removed != null) XLogger.getInstance().log(level, "-----------------------After removing {0}, {1} = {2}", 
-        this.getClass(), value, botType, this.getBotCache(botType));
-            return removed;
-        }
-        @Override
-        public boolean acceptHostOrAddress(String value) {
-            if(productionMode) {
-                return super.acceptHostOrAddress(value);
-            }else{
-                return this.acceptAllNonnullOrEmptyHostOrAddresses(value);
-            }
-        }
-        private boolean acceptAllNonnullOrEmptyHostOrAddresses(String value) {
-            // particularly suited for allowing localhost i.e 127.0.0.1
-            return value != null && value.length() > 0;
-        }
-    }
-    
-    public BotFilter() { }
-
-    @Override
-    protected boolean doBeforeProcessing(
-            HttpServletRequest request, HttpServletResponse response) 
-            throws IOException, ServletException {
-        
-        boolean proceed = super.doBeforeProcessing(request, response);
-        
-        final String userAgent = request.getHeader("User-Agent");
-        if(!proceed) {
-            if(userAgent != null && userAgent.toLowerCase().contains("google")) {
-                proceed = true;
-            }else{
-XLogger.getInstance().log(Level.FINER, "Denied: {0} to: {1}", 
-        this.getClass(), request.getRequestURI(), userAgent);
-            }
-        }else{
-            final String requestURI = request.getRequestURI();
-            if(requestURI.contains("/feed/") || requestURI.contains("/feeds")) {
-XLogger.getInstance().log(Level.FINER, "Allowed: {0} to: {1}", 
-        this.getClass(), requestURI, userAgent);
-            }
-        }
-        
-//        if(proceed) {
-//            if(request.getRequestURI().contains("/feeds")) {
-//XLogger.getInstance().log(
-//        Level.INFO, "Allowed: {0}, request URI: {1}, user-agent: {2}", 
-//        this.getClass(), proceed, request.getRequestURI(), request.getHeader("User-Agent"));
-//            }
-//        }
-
-        return proceed;
-    }
     @Override
     protected BotChecker createBotChecker(HttpServletRequest request) {
         
-        AppContext appContext = (AppContext)request.getServletContext().getAttribute(Attributes.APP_CONTEXT);
+        final BotChecker botChecker;
         
-        Configuration configuration = appContext.getConfiguration();
+        final AppContext appContext = (AppContext)request.getServletContext().getAttribute(Attributes.APP_CONTEXT);
         
-        final long memoryCeiling = configuration.getLong(ConfigNames.BOTFILTER_DISABLE_AT_MEMORY_ABOVE, -1L);
-        final long memoryFloor = configuration.getLong(ConfigNames.BOTFILTER_ENABLE_AT_MEMORY_BELOW, -1L);
+        final Configuration configuration = appContext.getConfiguration();
+        
         final String cacheDir = configuration.getString(ConfigNames.BOTFILTER_CACHEDIR, null);
-XLogger.getInstance().log(Level.INFO, "BotFilter, memory ceiling: {0}, floor: {1}, cache dir: {2}", 
-        this.getClass(), memoryCeiling, memoryFloor, cacheDir);
         
-        if(memoryCeiling < 0 && memoryFloor < 0) {
+        if(cacheDir == null || cacheDir.isEmpty()) {
             
-            return null;
-        }
+            botChecker = new BotCheckerVoid();
+            
+        }else{
         
-        final boolean debug = appContext.getConfiguration().getBoolean(ConfigNames.DEBUG, false);
-        return new BotCheckerImpl(
-                "/adminAdminPage", memoryCeiling, memoryFloor, cacheDir,
-                appContext.isProductionMode(), debug);
+            final BotCheckerImpl.BotTrapper botTrapper;
+            
+            final String trapFilename = configuration.getString(ConfigNames.BOTFILTER_TRAP_FILENAME, null);
+        
+            if(trapFilename == null || trapFilename.isEmpty()) {
+                
+                botTrapper = new BotTrapperVoid();
+                
+            }else{
+                
+                botTrapper = new BotTrapperTrapFile(trapFilename);
+            }
+        
+            final boolean debug = appContext.getConfiguration().getBoolean(ConfigNames.DEBUG, false);
+            
+            final JSONParser parser = new JSONParser();
+            final BotDiscCacheJson.Function<Reader, Object> readJson = new BotDiscCacheJson.Function<Reader, Object>() {
+                @Override
+                public Object apply(Reader reader) {
+                    try{
+                        return parser.parse(reader);
+                    }catch(IOException | ParseException e){
+                        Logger.getLogger(this.getClass().getName()).log(Level.WARNING, "Error reading json", e);
+                        return new ArrayList();
+                    }
+                }
+            };
+            
+            final JsonBuilder builder = new JsonBuilder(true);
+            final BotDiscCacheJson.BiConsumer<Writer, Object> writeJson = new BotDiscCacheJson.BiConsumer<Writer, Object>() {
+                @Override
+                public void accept(Writer writer, Object object) {
+                    try{
+                        builder.appendJSONString(object, writer);
+                    }catch(Exception e) {
+                        Logger.getLogger(this.getClass().getName()).log(Level.WARNING, "Error writing json", e);
+                    }
+                }
+            };
+
+            final BotCheckerImpl.BotCache botCache = debug ?
+                    new BotDiscCacheJsonDevMode(readJson, writeJson, cacheDir, 100) :
+                    new BotDiscCacheJson(readJson, writeJson, cacheDir, 100);
+
+            if(debug) {
+
+                botChecker = new BotCheckerDevMode(botTrapper, botCache);
+//                botChecker = new BotCheckerVoid();
+
+            }else{
+
+                botChecker = new BotCheckerImpl(botTrapper, botCache);
+//                botChecker = new BotCheckerVoid();
+            }
+        }
+            
+        return botChecker;
     }
 }
+/**
+ * 
+    @Override
+    protected BotChecker createBotChecker(HttpServletRequest request) {
+        
+        final BotChecker botChecker;
+        
+        final AppContext appContext = (AppContext)request.getServletContext().getAttribute(Attributes.APP_CONTEXT);
+        
+        final Configuration configuration = appContext.getConfiguration();
+        
+        final String cacheDir = configuration.getString(ConfigNames.BOTFILTER_CACHEDIR, null);
+        
+        if(cacheDir == null || cacheDir.isEmpty()) {
+            
+            botChecker = BotChecker.voidInstance();
+            
+        }else{
+        
+            final BotCheckerImpl.BotTrapper botTrapper;
+            
+            final String trapFilename = configuration.getString(ConfigNames.BOTFILTER_TRAP_FILENAME, null);
+        
+            if(trapFilename == null || trapFilename.isEmpty()) {
+                
+                botTrapper = BotTrapper.voidInstance();
+                
+            }else{
+                
+                botTrapper = new BotTrapperTrapFile(trapFilename);
+            }
+        
+            final boolean debug = appContext.getConfiguration().getBoolean(ConfigNames.DEBUG, false);
+            
+            final JSONParser parser = new JSONParser();
+            final Function<Reader, Object> readJson = (reader) -> {
+		try{
+                    return parser.parse(reader);
+		}catch(IOException | ParseException e){
+                    Logger.getLogger(this.getClass().getName()).log(Level.WARNING, "Error reading json", e);
+                    return new ArrayList();
+		}
+            };
+            
+            final JsonBuilder builder = new JsonBuilder(true);
+            final BiConsumer<Writer, Object> writeJson = (writer, object) -> {
+                try{
+                    builder.appendJSONString(object, writer);
+                }catch(Exception e) {
+                    Logger.getLogger(this.getClass().getName()).log(Level.WARNING, "Error writing json", e);
+                }
+            };
+
+            final BotCheckerImpl.BotCache botCache = debug ?
+                    new BotDiscCacheJsonDevMode(readJson, writeJson, cacheDir, 100) :
+                    new BotDiscCacheJson(readJson, writeJson, cacheDir, 100);
+
+            if(debug) {
+
+                botChecker = new BotCheckerDevMode(botTrapper, botCache);
+
+            }else{
+
+                botChecker = new BotCheckerImpl(botTrapper, botCache);
+            }
+        }
+            
+        return botChecker;
+    }
+ * 
+ */

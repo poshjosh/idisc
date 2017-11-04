@@ -8,7 +8,7 @@ import com.idisc.pu.entities.Installation;
 import java.util.Date;
 import java.util.logging.Level;
 import org.json.simple.JSONObject;
-import com.bc.jpa.JpaContext;
+import com.bc.jpa.context.JpaContext;
 import java.util.List;
 import javax.servlet.http.HttpServletRequest;
 
@@ -29,7 +29,7 @@ public class Addextractedemails extends AbstractUpdateValues {
     
     int created = 0;
     
-    try (com.bc.jpa.dao.BuilderForSelect<Extractedemail> select = jpaContext.getBuilderForSelect(Extractedemail.class)){
+    try (com.bc.jpa.dao.Select<Extractedemail> select = jpaContext.getDaoForSelect(Extractedemail.class)){
         
       XLogger.getInstance().log(Level.FINE, "Adding {0} contacts", getClass(), emailsAndUsernames.size());
       

@@ -16,9 +16,9 @@
 
 package com.idisc.web;
 
-import com.bc.jpa.JpaContext;
+import com.bc.jpa.context.JpaContext;
 import com.bc.util.XLogger;
-import com.idisc.pu.FeedSvc;
+import com.idisc.pu.FeedService;
 import com.idisc.pu.entities.Feed;
 import java.util.List;
 import java.util.Objects;
@@ -27,7 +27,7 @@ import java.util.logging.Level;
 /**
  * @author Chinomso Bassey Ikwuagwu on Aug 21, 2016 8:15:13 AM
  */
-public class DefaultFeedService extends FeedSvc {
+public class DefaultFeedService extends FeedService {
 
   private final boolean debugTimeAndMemory;
   

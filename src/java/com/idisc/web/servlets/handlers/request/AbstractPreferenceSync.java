@@ -1,6 +1,6 @@
 package com.idisc.web.servlets.handlers.request;
 
-import com.bc.jpa.JpaContext;
+import com.bc.jpa.context.JpaContext;
 import com.bc.util.XLogger;
 import com.idisc.pu.entities.Feed;
 import com.idisc.pu.entities.Feed_;
@@ -28,7 +28,7 @@ import javax.servlet.http.HttpServletRequest;
 import org.json.simple.JSONArray;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
-import com.bc.jpa.dao.BuilderForSelect;
+import com.bc.jpa.dao.Select;
 
 public abstract class AbstractPreferenceSync<E> 
         extends AbstractRequestHandler<Map<String, List>> {
@@ -310,7 +310,7 @@ XLogger.getInstance().log(Level.FINE, "To remove: {0}", this.getClass(), feedids
       
       List<E> prefs;
       
-      try(BuilderForSelect<E> qb = jpaContext.getBuilderForSelect(this.getEntityClass())) {
+      try(Select<E> qb = jpaContext.getDaoForSelect(this.getEntityClass())) {
        
           prefs = qb.from(this.getEntityClass())
                   .where(this.getInstallationColumnName(), installation)
@@ -324,7 +324,7 @@ XLogger.getInstance().log(Level.FINE, "To remove: {0}", this.getClass(), feedids
       
     List<Feed> feeds;
     
-    try(BuilderForSelect<Feed> qb = jpaContext.getBuilderForSelect(Feed.class)) {
+    try(Select<Feed> qb = jpaContext.getDaoForSelect(Feed.class)) {
         
         feeds = qb.from(Feed.class)
                 .where(Feed_.feedid.getName(), feedids.toArray())

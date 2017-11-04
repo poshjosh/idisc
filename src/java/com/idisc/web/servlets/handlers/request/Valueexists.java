@@ -4,7 +4,7 @@ import com.idisc.web.servlets.request.RequestParameters;
 import java.io.IOException;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
-import com.bc.jpa.JpaContext;
+import com.bc.jpa.context.JpaContext;
 import com.bc.jpa.dao.Criteria;
 import com.bc.util.XLogger;
 import com.idisc.pu.DaoService;

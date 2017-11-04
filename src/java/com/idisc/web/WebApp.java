@@ -1,5 +1,6 @@
 package com.idisc.web;
 
+import com.authsvc.client.AuthDetailsLocalDiscStore;
 import com.authsvc.client.AuthSvcSession;
 import com.authsvc.client.SessionLoader;
 import com.bc.util.XLogger;
@@ -7,10 +8,8 @@ import com.bc.util.concurrent.BoundedExecutorService;
 import com.bc.util.concurrent.DirectExecutorService;
 import com.bc.util.concurrent.NamedThreadFactory;
 import com.idisc.core.IdiscApp;
-import com.idisc.core.IdiscAuthSvcSession;
-import com.idisc.pu.FeedSvc;
+import com.idisc.pu.FeedService;
 import com.idisc.pu.SearchResultsHandlerFactoryImpl;
-import com.idisc.pu.entities.Site;
 import com.idisc.shared.SharedContext;
 import com.idisc.shared.SharedContextImpl;
 import com.idisc.shared.feedid.FeedidsImpl;
@@ -21,7 +20,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.ref.WeakReference;
 import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
@@ -38,11 +36,7 @@ public class WebApp implements AppContext, ThreadPoolData {
     
   private final boolean productionMode;
   
-  private final boolean asyncProcessingEnabled;
-  
   private final long appSessionTimeoutMillis;
-  
-  private List<Site> sites;
   
   private ThreadPoolExecutor threadPoolExecutor;
   
@@ -74,27 +68,33 @@ public class WebApp implements AppContext, ThreadPoolData {
 XLogger.getInstance().log(Level.INFO, "Session timeout for apps: {0} seconds", 
         this.getClass(), appSessionTimeoutMillis);
     
-    asyncProcessingEnabled = config.getBoolean(ConfigNames.PROCESS_REQUEST_ASYNC, true);
-XLogger.getInstance().log(Level.INFO, "Async processing enabled: {0}", this.getClass(), asyncProcessingEnabled);
+    final String authsvc_url = this.config.getString("authsvc.url");
+    final String app_name = WebApp.this.getAppName();
+    final String app_email = this.config.getString("authsvc.emailaddress");
+    final String app_pass = this.config.getString("authsvc.password");
     
-    String authsvc_url = this.config.getString("authsvc.url");
-    String app_name = WebApp.this.getAppName();
-    String app_email = this.config.getString("authsvc.emailaddress");
-    String app_pass = this.config.getString("authsvc.password");
+    final AuthDetailsLocalDiscStore.PathContext pathContext = new AuthDetailsLocalDiscStore.PathContext() {
+        @Override
+        public String getPath(String filename) {
+            return IdiscApp.getInstance().getAbsolutePath(filename);
+        }
+    };
     
-    SessionLoader sessLoader = new SessionLoader(){
+    final SessionLoader sessLoader = new SessionLoader(){
       @Override
       public void onLoad(AuthSvcSession session) {
         WebApp.this.authSvcSession = session;
       }
       @Override
-      protected AuthSvcSession getNewSession(String target, int maxRetrials, long retrialIntervals) {
-        return new IdiscAuthSvcSession(target, maxRetrials, retrialIntervals);
+      protected AuthSvcSession getNewSession() {
+        return new AuthSvcSession(
+                new AuthDetailsLocalDiscStore(
+                        pathContext, "com.idiscweb.authsvc.app.token", "com.idiscweb.authsvc.app.details"
+                ),
+                authsvc_url, 1, 30000
+        );
       }
     };
-
-    sessLoader.setMaxRetrials(1);
-    sessLoader.setRetrialInterval(30000);
 
     sessLoader.loadAfter(30L, TimeUnit.SECONDS, authsvc_url, app_name, app_email, app_pass);
 
@@ -115,7 +115,7 @@ XLogger.getInstance().log(Level.INFO, "Async processing enabled: {0}", this.getC
       
       ScheduledExecutorService svc = WebApp.this.getGlobalScheduledExecutorService(true);
       
-      final FeedSvc feedService = new DefaultFeedService(this);      
+      final FeedService feedService = new DefaultFeedService(this);      
 
       DefaultFeedUpdateTask task = new DefaultFeedUpdateTask(context, feedService);
       
@@ -169,15 +169,6 @@ XLogger.getInstance().log(Level.INFO, "Async processing enabled: {0}", this.getC
   }  
   
   @Override
-  public List<Site> getSites() {
-    if(sites == null) {
-      com.bc.jpa.dao.BuilderForSelect<Site> select = idiscApp.getJpaContext().getBuilderForSelect(Site.class);  
-      sites = select.from(Site.class).getResultsAndClose();
-    }
-    return sites;
-  }
-  
-  @Override
   public AuthSvcSession getAuthSvcSession() {
     return this.authSvcSession;
   }
@@ -206,11 +197,6 @@ XLogger.getInstance().log(Level.INFO, "Async processing enabled: {0}", this.getC
     return this.productionMode;
   }
   
-  @Override
-  public boolean isAsyncProcessingEnabled() {
-    return this.asyncProcessingEnabled;
-  }
-
   @Override
   public long getAppSessionTimeoutMillis() {
     return appSessionTimeoutMillis;

@@ -16,7 +16,7 @@
 
 package com.idisc.web.servlets.request;
 
-import com.bc.jpa.JpaContext;
+import com.bc.jpa.context.JpaContext;
 import com.bc.util.XLogger;
 import com.idisc.pu.entities.Feedhit;
 import com.idisc.pu.entities.Feedhit_;
@@ -31,7 +31,7 @@ import java.util.logging.Level;
 import javax.persistence.NoResultException;
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
-import com.bc.jpa.dao.BuilderForSelect;
+import com.bc.jpa.dao.Select;
 
 /**
  * @author Chinomso Bassey Ikwuagwu on Aug 12, 2016 2:43:13 PM
@@ -144,7 +144,7 @@ XLogger.getInstance().log(Level.FINE, "Less than or equals version {0}: {1}, ins
     Objects.requireNonNull(installation);
     JpaContext jpaContext = this.getAppContext().getIdiscApp().getJpaContext();
     Date mostRecent;
-    try(BuilderForSelect<Date> qb = jpaContext.getBuilderForSelect(Feedhit.class, Date.class)) {
+    try(Select<Date> qb = jpaContext.getDaoForSelect(Feedhit.class, Date.class)) {
       mostRecent = qb.select(Feedhit.class, Feedhit_.hittime.getName())
           .where(Feedhit_.installationid.getName(), installation)
           .descOrder(Feedhit_.hittime.getName())

@@ -1,6 +1,6 @@
 package com.idisc.web.beans;
 
-import com.bc.jpa.EntityController;
+import com.bc.jpa.controller.EntityController;
 import com.idisc.web.servlets.request.RequestParameters;
 import java.io.Serializable;
 import java.util.Collections;
@@ -8,7 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
-import com.bc.jpa.JpaContext;
+import com.bc.jpa.context.JpaContext;
 import com.idisc.web.AppContext;
 import com.idisc.web.Attributes;
 
@@ -62,11 +62,11 @@ public class SelectorBean<E> implements Serializable {
     }
     
     public E getSingleResult() {
-        return jpaContext.getBuilderForSelect(entityClass).where(entityClass, params).getSingleResultAndClose();
+        return jpaContext.getDaoForSelect(entityClass).where(entityClass, params).getSingleResultAndClose();
     }
     
     public List<E> getResultList() {
-        return jpaContext.getBuilderForSelect(entityClass).where(entityClass, params).getResultsAndClose(offset, limit);
+        return jpaContext.getDaoForSelect(entityClass).where(entityClass, params).getResultsAndClose(offset, limit);
     }
     
     public List<Map<String, ?>> getResultListMappings() {

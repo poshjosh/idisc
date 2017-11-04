@@ -5,12 +5,12 @@ import com.idisc.web.AppContext;
 import com.idisc.web.Attributes;
 import com.idisc.web.ConfigNames;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
-import org.apache.catalina.tribes.util.Arrays;
 
 public class Getmultipleresults extends AbstractRequestHandler<Map> {
     

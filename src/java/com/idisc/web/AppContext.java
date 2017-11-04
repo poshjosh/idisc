@@ -2,9 +2,7 @@ package com.idisc.web;
 
 import com.authsvc.client.AuthSvcSession;
 import com.idisc.core.IdiscApp;
-import com.idisc.pu.entities.Site;
 import com.idisc.shared.SharedContext;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
@@ -64,10 +62,6 @@ public interface AppContext {
     SearchResultsHandlerFactory getSearchHandlerFactory();
     
     SearchResultsHandlerFactory getSearchHandlerFactory(boolean createIfNone);
-    
-    List<Site> getSites();
-    
-    boolean isAsyncProcessingEnabled();
     
     boolean isProductionMode();
 }

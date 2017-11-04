@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.logging.Level;
 import javax.persistence.EntityManager;
 import org.json.simple.JSONArray;
-import com.bc.jpa.JpaContext;
+import com.bc.jpa.context.JpaContext;
 import javax.servlet.http.HttpServletRequest;
 
 public class Addfavoritefeedids extends UpdateUserPreferenceFeedids {

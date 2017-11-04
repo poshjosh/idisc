@@ -2,11 +2,11 @@ package com.idisc.web.servlets.request;
 
 import com.bc.util.XLogger;
 import com.idisc.pu.entities.Feeduser_;
+import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.logging.Level;
 import javax.servlet.http.HttpServletRequest;
-import org.apache.catalina.tribes.util.Arrays;
 
 /**
  * <p><b>This class is a wrapper for a specified requests parameter.</b></p>

@@ -2,7 +2,7 @@ package com.idisc.web;
 
 import com.bc.util.XLogger;
 import com.idisc.core.FeedUpdateTask;
-import com.idisc.pu.FeedSvc;
+import com.idisc.pu.FeedService;
 import com.idisc.pu.entities.Feed;
 import java.util.List;
 import java.util.Objects;
@@ -14,10 +14,10 @@ public class DefaultFeedUpdateTask extends FeedUpdateTask {
 
   private final ServletContext context;
   
-  private final FeedSvc feedService;
+  private final FeedService feedService;
   
   public DefaultFeedUpdateTask(
-          ServletContext context, FeedSvc feedService) {
+          ServletContext context, FeedService feedService) {
     this.context = Objects.requireNonNull(context);
     this.feedService = feedService;
   }

@@ -1,6 +1,6 @@
 package com.idisc.web.servlets.handlers.request;
 
-import com.bc.jpa.JpaContext;
+import com.bc.jpa.context.JpaContext;
 import com.bc.jpa.paging.ListPager;
 import com.idisc.pu.entities.Commentreplynotice;
 import com.idisc.pu.entities.Commentreplynotice_;
@@ -11,10 +11,10 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
-import com.bc.jpa.dao.BuilderForSelect;
 import com.bc.util.XLogger;
 import com.idisc.core.util.TimeZones;
 import java.util.logging.Level;
+import com.bc.jpa.dao.Select;
 
 /**
  * @author Chinomso Bassey Ikwuagwu on Aug 6, 2016 5:50:23 PM
@@ -93,7 +93,7 @@ public class Updatereadcomments extends AbstractRequestHandler<Boolean> {
       
     int updateCount = 0;
     
-    try(BuilderForSelect<Commentreplynotice> qb = jpaContext.getBuilderForSelect(Commentreplynotice.class)) {
+    try(Select<Commentreplynotice> qb = jpaContext.getDaoForSelect(Commentreplynotice.class)) {
 
       qb.where(Commentreplynotice.class, Commentreplynotice_.commentid.getName(), commentids);  
         

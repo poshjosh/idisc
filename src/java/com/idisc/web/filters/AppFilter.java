@@ -119,7 +119,6 @@ XLogger.getInstance().log(Level.FINER, "Request is from or to web page: {0}, Ref
             builder.append("\n===============================     METRICS     ==============================");
             builder.append("\nAfter ").append(total).append(
             " requests, memory level: ").append(appContext.getMemoryManager().getMemoryLevel());
-            builder.append(", async enabled: ").append(appContext.isAsyncProcessingEnabled());
             ThreadPoolData tpd = appContext.getGlobalExecutorServiceThreadPoolData();
             if(tpd != null) {
                 builder.append("\n----------------------------- Thread Pool Data ----------------------------");

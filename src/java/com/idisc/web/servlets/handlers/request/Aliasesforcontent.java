@@ -1,6 +1,6 @@
 package com.idisc.web.servlets.handlers.request;
 
-public class Aliasesforcontent extends ReadLocalJson {
+public class Aliasesforcontent extends ReadJsonFromLocalMachine {
     
   public Aliasesforcontent() {
       

@@ -15,7 +15,7 @@
  */
 package com.idisc.web.servlets.handlers.request;
 
-import com.bc.jpa.JpaContext;
+import com.bc.jpa.context.JpaContext;
 import com.bc.task.AbstractStoppableTask;
 import com.bc.util.XLogger;
 import com.idisc.pu.entities.Feedhit;

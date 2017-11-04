@@ -69,6 +69,10 @@ public abstract class AbstractRequestHandler<V>
   @Override
   public final V processRequest(HttpServletRequest request) 
       throws ServletException, IOException {
+
+      if((this.getAppContext(request)) == null) {
+          throw new ServletException("Application failed to initialize");
+      }
       
 //      if (isProtected() && !isLoggedIn(request)) {
 //        tryLogin(request);

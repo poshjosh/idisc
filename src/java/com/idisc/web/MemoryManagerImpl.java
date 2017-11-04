@@ -16,6 +16,7 @@
 
 package com.idisc.web;
 
+import com.bc.util.Util;
 import com.bc.util.XLogger;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -81,12 +82,6 @@ XLogger.getInstance().log(Level.FINER,
   }  
 
   public static long availableMemory() {
-    final Runtime runtime = Runtime.getRuntime();
-    final long totalMemory = runtime.totalMemory(); // current heap allocated to the VM process
-    final long freeMemory = runtime.freeMemory(); // out of the current heap, how much is free
-    final long maxMemory = runtime.maxMemory(); // Max heap VM can use e.g. Xmx setting
-    final long usedMemory = totalMemory - freeMemory; // how much of the current heap the VM is using
-    final long availableMemory = maxMemory - usedMemory; // available memory i.e. Maximum heap size minus the current amount used
-    return availableMemory;
+    return Util.availableMemory();
   }  
 }

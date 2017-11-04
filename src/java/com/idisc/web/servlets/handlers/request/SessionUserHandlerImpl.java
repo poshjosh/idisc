@@ -1,7 +1,7 @@
 package com.idisc.web.servlets.handlers.request;
 
-import com.bc.jpa.EntityController;
-import com.bc.jpa.JpaContext;
+import com.bc.jpa.controller.EntityController;
+import com.bc.jpa.context.JpaContext;
 import com.bc.jpa.exceptions.PreexistingEntityException;
 import com.bc.util.XLogger;
 import com.bc.web.core.util.ServletUtil;
@@ -12,7 +12,6 @@ import com.idisc.pu.entities.Feeduser;
 import com.idisc.pu.entities.Installation;
 import com.idisc.pu.entities.Installation_;
 import com.idisc.web.AppContext;
-import com.idisc.web.ConfigNames;
 import com.idisc.web.exceptions.ValidationException;
 import com.idisc.web.servlets.handlers.BaseHandler;
 import com.idisc.web.servlets.request.AppVersionCode;
@@ -114,7 +113,7 @@ XLogger.getInstance().log(Level.FINER, "getInstallation(HttpServletRequest, User
       
     }catch (ServletException e) {
       installation = null;
-      XLogger.getInstance().log(Level.FINE, "{0}", this.getClass(), e);
+      XLogger.getInstance().log(Level.FINE, "{0}", this.getClass(), e.toString());
     }
     
     if(installation != null) {
@@ -200,16 +199,9 @@ XLogger.getInstance().log(Level.FINER, "findUser(HttpServletRequest, HttpServlet
       user = this.tryLogin(request);
     }
     
-    final Level logLevel = user != null && this.isDebug(request) ? Level.INFO : Level.FINE;
-    
-XLogger.getInstance().log(logLevel, "Found user: {0}", User.class, user);
+XLogger.getInstance().log(Level.FINE, "Found user: {0}", User.class, user);
 
     return user;
-  }
-  
-  private boolean isDebug(HttpServletRequest request) {
-      
-    return this.getBooleanProperty(request, ConfigNames.DEBUG, Boolean.FALSE);
   }
   
   @Override

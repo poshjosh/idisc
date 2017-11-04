@@ -13,12 +13,12 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
 import javax.servlet.ServletContext;
-import org.apache.catalina.tribes.util.Arrays;
 
 public class FileFeedBuilder extends BaseFeedCreator implements FilenameFilter {
     
