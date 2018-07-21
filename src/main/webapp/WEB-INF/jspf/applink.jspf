@@ -1,0 +1,15 @@
+<%@taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
+<p>
+    <a href="${appUrl}" class="button button_prompt">Get the App</a>
+</p>
+<p>
+    <a href="${pageContext.servletContext.contextPath}/whynewsminute.jsp" class="button">No Thanks</a>
+</p>
+<c:if test="${appDownloadUrl != null}">
+    <p>
+        <b>or</b><br/>
+        <a href="${pageContext.servletContext.contextPath}${appDownloadUrl}">
+            <small>download it directly</small>
+        </a>  
+    </p>        
+</c:if>         

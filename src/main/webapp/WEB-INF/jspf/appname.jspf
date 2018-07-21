@@ -1,0 +1,11 @@
+<%@taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
+<c:if test="${tbToggleBool == null}"><c:set scope="session" var="tbToggleBool" value="false"/></c:if>
+<c:set scope="session" var="tbToggleBool" value="${!tbToggleBool}"/>
+<c:choose>
+    <c:when test="${tbToggleBool}">
+        <a class="font_cursive app_color" href="${pageContext.servletContext.contextPath}/home.jsp">${appName}</a>
+    </c:when>
+    <c:otherwise>
+        <a class="button_prompt fontSizeSmall_2" href="${appUrl}">Try the App</a>    
+    </c:otherwise>
+</c:choose>

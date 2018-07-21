@@ -1,0 +1,20 @@
+<table style="width:100%">
+    <tr style="width:100%">
+        <td style="width:33%"></td>
+        <td style="width:33%; text-align:center;">
+            <div id="getAppDialog">
+
+                <div id="closeGetAppDialog" style="width:100%; float:right; text-align:right">
+
+                  <input type="button" value=" x " 
+                         style="text-align:center; background-color:white; color:red; border-width:0 0 0.05em 0.05em; border-style:solid; border-color:black" 
+                         onclick="looseboxes.setDisplay('getAppDialog', 'none')"/>
+                </div>
+                <br/>
+                <%@include file="/WEB-INF/jspf/applink.jspf"%>
+
+            </div>  
+        </td>
+        <td style="width:33%"></td>
+    </tr>
+</table>

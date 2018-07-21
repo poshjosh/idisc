@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<root>
+    <bot-agent name="Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 5.2)"/>
+    <bot-agent name="Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 5.2)"/>
+    <bot-agent name="Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 5.2)"/>
+    <bot-agent name="Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 6.0; Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; SV1) ; Media Center PC 5.0)"/>
+    <bot-agent name="Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 6.0; Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; SV1) ; Media Center PC 5.0)"/>
+    <bot-agent name="Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 6.0; Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; SV1) ; Media Center PC 5.0)"/>
+    <bot-agent name="Mozilla/5.0 (compatible; Baiduspider/2.0; +http://www.baidu.com/search/spider.html)"/>
+    <bot-agent name="Mozilla/5.0 (compatible; Baiduspider/2.0; +http://www.baidu.com/search/spider.html)"/>
+    <bot-agent name="Mozilla/5.0 (compatible; Baiduspider/2.0; +http://www.baidu.com/search/spider.html)"/>
+    <bot-agent name="panscient.com"/>
+    <bot-agent name="panscient.com"/>
+    <bot-agent name="panscient.com"/>
+    <bot-agent name="Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 5.2)"/>
+    <bot-agent name="Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 5.2)"/>
+    <bot-agent name="Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 5.2)"/>
+    <bot-agent name="Mozilla/5.0 (compatible)"/>
+    <bot-agent name="Mozilla/5.0 (compatible)"/>
+    <bot-agent name="Mozilla/5.0 (Windows; U; Windows NT 6.1; en-us; rv:1.9.2.3) Gecko/20100401 YFF35 Firefox/3.6.3"/>
+    <bot-agent name="Mozilla/5.0 (Windows; U; Windows NT 6.1; en-us; rv:1.9.2.3) Gecko/20100401 YFF35 Firefox/3.6.3"/>
+    <bot-agent name="Mozilla/5.0 (Windows; U; Windows NT 6.1; en-us; rv:1.9.2.3) Gecko/20100401 YFF35 Firefox/3.6.3"/>
+    <bot-agent name="Mozilla/5.0 (Windows; U; Windows NT 6.1; en-us; rv:1.9.2.3) Gecko/20100401 YFF35 Firefox/3.6.3"/>
+    <bot-agent name="Mozilla/5.0 (Windows; U; Windows NT 6.1; en-us; rv:1.9.2.3) Gecko/20100401 YFF35 Firefox/3.6.3"/>
+    <bot-agent name="Mozilla/5.0 (Windows; U; Windows NT 6.1; en-us; rv:1.9.2.3) Gecko/20100401 YFF35 Firefox/3.6.3"/>
+    <bot-agent name="Mozilla/5.0 (compatible; DCPbot/1.5; +http://domains.checkparams.com/)"/>
+    <bot-agent name="Mozilla/5.0 (compatible; DCPbot/1.5; +http://domains.checkparams.com/)"/>
+    <bot-agent name="Mozilla/5.0 (compatible; DCPbot/1.5; +http://domains.checkparams.com/)"/>
+    <bot-agent name="Mozilla/5.0 (Windows; U; Windows NT 5.1; zh-CN; rv:1.9.1.2) Firefox/3.5.2"/>
+    <bot-agent name="Mozilla/5.0 (Windows; U; Windows NT 5.1; zh-CN; rv:1.9.1.2) Firefox/3.5.2"/>
+    <bot-agent name="Mozilla/5.0 (Windows; U; Windows NT 5.1; zh-CN; rv:1.9.1.2) Firefox/3.5.2"/>
+    <bot-agent name="Mozilla/5.0 (Windows; U; Windows NT 5.1; zh-CN; rv:1.9.1.2) Firefox/3.5.2"/>
+    <bot-agent name="Mozilla/5.0 (Windows; U; Windows NT 5.1; zh-CN; rv:1.9.1.2) Firefox/3.5.2"/>
+    <bot-agent name="Mozilla/5.0 (Windows; U; Windows NT 5.1; zh-CN; rv:1.9.1.2) Firefox/3.5.2"/>
+    <bot-agent name="Mozilla/5.0 (compatible; Baiduspider/2.0; +http://www.baidu.com/search/spider.html)"/>
+    <bot-agent name="Mozilla/5.0 (compatible; Baiduspider/2.0; +http://www.baidu.com/search/spider.html)"/>
+    <bot-agent name="Mozilla/5.0 (compatible; Baiduspider/2.0; +http://www.baidu.com/search/spider.html)"/>
+    <bot-agent name="Opera/9.80 (X11; Linux i686; U; en) Presto/2.8.131 Version/11.11"/>
+    <bot-agent name="Mozilla/5.0 (Windows NT 5.1; rv:13.0) Gecko/20100101 Firefox/13.0.1"/>
+</root>

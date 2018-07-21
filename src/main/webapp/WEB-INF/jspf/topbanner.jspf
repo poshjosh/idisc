@@ -1,0 +1,58 @@
+<%@taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
+<%-- This is just a bot trap, visit the page to see what i mean --%>
+<a href="${pageContext.servletContext.contextPath}/adminAdminPage.jsp">&nbsp;</a>
+
+<%-- SiteSelector bean is use in page /WEB-INF/jspf/searchform.jspf --%>
+<jsp:useBean id="SiteSelector" scope="session" class="com.idisc.web.beans.SelectorBean">
+  <jsp:setProperty name="SiteSelector" property="request" value="<%=request%>"/>
+  <jsp:setProperty name="SiteSelector" property="tableName" value="site"/>
+</jsp:useBean>
+
+<%-- //@related userMessage --%>    
+<c:if test="${userMessage != null}">
+    <div class="content_sub">${userMessage}</div>  
+    <c:remove var="userMessage" scope="session"/>
+</c:if>
+    
+<%--@include file="/WEB-INF/jspf/download_app_prompt.jspf"--%>
+    
+<c:choose>
+    <c:when test="${!mobile}">
+        <table class="fullWidth alignTop background_medium">
+            <tr class="fullWidth">
+                <td class="alignTop">
+                    <%@include file="/WEB-INF/jspf/appicon.jspf"%>
+                </td>
+                <td class="alignTop">
+                    <div class="alignTop" style="margin-bottom:0.25em;">
+                        <span class="alignTop" style="float:left;"><%@include file="/WEB-INF/jspf/appname.jspf"%></span>
+                        <span class="alignTop" style="float:left;">&nbsp;<%@include file="/WEB-INF/jspf/socialbox.jspf"%></span>
+                        <span class="alignTop" style="float:right;">&nbsp;<%@include file="/WEB-INF/jspf/user_toplinks.jspf"%></span>
+                    </div>
+                    <div style="float:left; margin-top:0.25em;">
+                        <%@include file="/WEB-INF/jspf/searchform.jspf"%>
+                    </div>
+                </td>
+            </tr>
+        </table>    
+    </c:when>
+    <c:otherwise>
+        <table>
+            <tr>
+                <td>
+                    <%@include file="/WEB-INF/jspf/appicon.jspf"%>
+                </td>
+                <td style="text-align:left;">
+                    <%@include file="/WEB-INF/jspf/appname.jspf"%>
+                    <br/><%@include file="/WEB-INF/jspf/user_toplinks.jspf"%>
+                    <br/><%@include file="/WEB-INF/jspf/socialbox.jspf"%>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2">
+                    <%@include file="/WEB-INF/jspf/searchform.jspf"%>
+                </td>
+            </tr>
+        </table>
+    </c:otherwise>
+</c:choose>

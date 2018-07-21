@@ -1,0 +1,88 @@
+/* 
+    Created on : Jan 4, 2016, 4:02:10 PM
+    Author     : Josh
+*/
+/** 
+Mobile version of the styles contained in default.css 
+Any modification here must be reflected there
+margin:0 is synchronized with file /resources/normalize.css
+*/
+html { font-size: 100%; }/** IE 5/6 hack to enable use of em font sizes */
+body{ height:100%; font-size:16px; text-align:center; background-color:#d7d7d7; }
+#main_container{ 
+    height:100%; font-size:1.5em; width:100%; /** For non-mobile:: 27em at font-size 1.5em, 40em at font-size 1em */
+    margin:auto; border:0; padding:0;  
+    color:#333333; font-family:Verdana,Helvetica,sans-serif,Arial; 
+}
+img{max-width: 95%; width:auto; height: auto;} /** max-width here must not be greater than that of #main_container */
+.content{
+    padding:0.5em; text-align:left; background-color:#e8e8e8; 
+}
+.content_sub{
+    padding:0.25em; width:95%; text-align:left; background-color:#fafafa; 
+}
+a{ text-decoration:none; }
+.smallerLighter{ font-size:0.75em; color: #777777; }
+.faint{font-size: 0.5em; color:#0595b5; }
+.borderless{ margin:0; border:0; padding:0; }
+.fullWidth{ width:100%; }
+.background_medium{ background-color:#c8c8c8; }
+.alignTop { vertical-align:top; }
+.slider_dimension { width: 100%; height: 100%; }
+.icon_dimension { width: 2em; height: 2em; }
+.fontSizeSmall_1{ font-size:0.85em; }
+.fontSizeSmall_2{ font-size:0.65em; }
+input{ font-size:0.75em; }
+select{ font-size:0.75em; }
+ul li { margin-bottom: 1em; }
+/** http://stackoverflow.com/questions/2906582/how-to-create-an-html-button-that-acts-like-a-link */
+a.button {
+    -webkit-appearance: button;
+    -moz-appearance: button;
+    appearance: button;
+
+    text-decoration: none;
+}
+.button_prompt{
+    background-color:green; color: white; padding: 0.25em;
+}
+.button_prompt:hover{
+    background-color:lightgreen;
+}
+.button_prompt:active{
+    color:orange;
+}
+
+.icon_medium{
+    width: 3.5em; height: 3.5em;
+}
+
+.font_heavy{
+    font-size:1.25em; font-weight:900; margin:0; padding:0;
+}
+
+.app_color{ color:#F56600; }
+
+.app_color_bg { background-color:#F56600; }
+
+.allow_horizontalscrolls { overflow-x:auto; }
+
+.justified { text-align:justify; }
+
+.bottombanner {
+    font-size:0.75em;
+    width:100%;
+    text-align:center;
+    background-color:#F56600; 
+    color:white;
+}
+.bottombanner table{
+    width:100%;
+    text-align:center;
+}
+.bottombanner table tr td{
+    text-align:left;
+}
+.bottombanner table tr td a{
+    color:white;
+}

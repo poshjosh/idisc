@@ -1,0 +1,4 @@
+<a class="alignTop" href="${pageContext.servletContext.contextPath}/home.jsp">
+    <img src="${pageContext.servletContext.contextPath}/images/appicon.png" 
+         class="icon_dimension" alt="${appName} icon" title="${appName} icon"/>
+</a>

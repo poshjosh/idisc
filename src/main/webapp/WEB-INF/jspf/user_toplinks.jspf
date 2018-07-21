@@ -1,0 +1,21 @@
+<%@taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
+<span class="fontSizeSmall_2">
+    <a href="${pageContext.servletContext.contextPath}/newfeed.jsp">Submit News</a>
+    <c:choose>
+        <c:when test="${user == null}">
+            &nbsp;|&nbsp;<a href="${pageContext.servletContext.contextPath}/login.jsp">Login</a>
+        </c:when>
+        <c:otherwise>
+            &nbsp;|&nbsp;<a href="${pageContext.servletContext.contextPath}/logout">Logout</a>
+            <c:choose>
+                <c:when test="${user.username != null}">
+                    (<tt class="smallerLighter">${user.username}</tt>)
+                </c:when>
+                <c:when test="${installation.screenname != null}">
+                    (<tt class="smallerLighter">${installation.screenname}</tt>)
+                </c:when>
+                <c:otherwise></c:otherwise>
+            </c:choose>
+        </c:otherwise>
+    </c:choose>
+</span>

@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<taglib version="2.1" xmlns="http://java.sun.com/xml/ns/javaee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-jsptaglibrary_2_1.xsd">
+  <tlib-version>1.0</tlib-version>
+  <short-name>idisc</short-name>
+  <uri>/WEB-INF/tlds/idisc</uri>
+  <!-- A validator verifies that the tags are used correctly at JSP
+          translation time. Validator entries look like this: 
+       <validator>
+           <validator-class>com.mycompany.TagLibValidator</validator-class>
+           <init-param>
+              <param-name>parameter</param-name>
+              <param-value>value</param-value>
+           </init-param>
+       </validator>
+    -->
+  <!-- A tag library can register Servlet Context event listeners in
+         case it needs to react to such events. Listener entries look
+         like this: 
+      <listener>
+          <listener-class>com.mycompany.TagLibListener</listener-class> 
+      </listener>
+    -->
+  <tag-file>
+    <name>displayfeeds</name>
+    <path>/WEB-INF/tags/displayfeeds.tag</path>
+  </tag-file>
+  <tag-file>
+    <name>socialshare</name>
+    <path>/WEB-INF/tags/socialshare.tag</path>
+  </tag-file>
+  <tag-file>
+    <name>displaycomments</name>
+    <path>/WEB-INF/tags/displaycomments.tag</path>
+  </tag-file>
+  <tag-file>
+    <name>displayrows</name>
+    <path>/WEB-INF/tags/displayrows.tag</path>
+  </tag-file>
+  <tag-file>
+    <name>displaydate</name>
+    <path>/WEB-INF/tags/displaydate.tag</path>
+  </tag-file>
+  <tag-file>
+    <name>page_with_slider</name>
+    <path>/WEB-INF/tags/page_with_slider.tag</path>
+  </tag-file>
+  <tag-file>
+    <name>page_without_slider</name>
+    <path>/WEB-INF/tags/page_without_slider.tag</path>
+  </tag-file>
+  <tag-file>
+    <name>commentform</name>
+    <path>/WEB-INF/tags/forms/commentform.tag</path>
+  </tag-file>
+  <tag-file>
+    <name>page_redirect</name>
+    <path>/WEB-INF/tags/page_redirect.tag</path>
+  </tag-file>
+  <tag-file>
+    <name>displaypagenav</name>
+    <path>/WEB-INF/tags/displaypagenav.tag</path>
+  </tag-file>
+  <tag-file>
+    <name>displaypagelinks</name>
+    <path>/WEB-INF/tags/displaypagelinks.tag</path>
+  </tag-file>
+</taglib>

@@ -1,0 +1,6 @@
+User-agent: *
+Disallow: /META-INF
+Disallow: /WEB-INF
+Disallow: /adminAdminPage
+Disallow: /idisc/adminAdminPage
+
