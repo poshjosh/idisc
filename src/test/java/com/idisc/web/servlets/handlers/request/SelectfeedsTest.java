@@ -15,8 +15,12 @@ public class SelectfeedsTest extends LoginBase {
     
     @Test
     public void test() throws ServletException, IOException {
-        final String query = "tiwa+savage";
-        this.execute("/index.jsp", "?query="+query+"&installationid=2&installationkey=abdb33ee-a09e-4d7d-b861-311ee7061325&limit=20", "/selectfeeds");
+        final String from = "/index.jsp";
+        final String searchTerm = "tiwa+savage";
+        final String query = "?query="+searchTerm+"&installationid=2&installationkey=abdb33ee-a09e-4d7d-b861-311ee7061325&limit=20";
+//        final String to = "/selectfeeds";
+        final String to = "/searchresults";
+        this.execute(from, query, to);
     }
     
 //    @Test

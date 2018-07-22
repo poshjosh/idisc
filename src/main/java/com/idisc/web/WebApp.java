@@ -31,6 +31,7 @@ import javax.servlet.ServletContext;
 import org.apache.commons.configuration.Configuration;
 import java.text.ParseException;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.logging.Logger;
 
@@ -105,7 +106,7 @@ public class WebApp implements AppContext, ThreadPoolData {
     // We call this after initializing the IdiscApp so that its properties will
     // supercede any previously loaded logging configuration file
     //
-    this.initLogging2();
+    this.initLogging();
     
     this.idiscApp = idiscApp;
     
@@ -160,39 +161,33 @@ public class WebApp implements AppContext, ThreadPoolData {
   }
   
   private void initLogging() {
-    final String loggingPropertiesFile = this.config.getString(ConfigNames.LOGGING_PROPERTIES_FILE, null);
-    
-    try{
-      InputStream inputStream = new FileInputStream(loggingPropertiesFile);
-      LogManager.getLogManager().readConfiguration(inputStream);
-      LOG.info(() -> "Succesfully loaded "+ConfigNames.LOGGING_PROPERTIES_FILE+
-              " from: " + loggingPropertiesFile);
-    }catch (final IOException e) {
-      LOG.log(Level.WARNING, "Failed to load "+ConfigNames.LOGGING_PROPERTIES_FILE+
-              " from: "+loggingPropertiesFile, e);
-    }    
+    final String loggingCfgFile = this.config.getString(ConfigNames.LOGGING_PROPERTIES_FILE, null);
+    final InputStream in = loggingCfgFile == null ? null : this.getInputStream(loggingCfgFile).orElse(null);
+    if(in != null) {
+      try{
+        LogManager.getLogManager().readConfiguration(in);
+        LOG.info(() -> "Succesfully loaded "+ConfigNames.LOGGING_PROPERTIES_FILE+
+                " from: " + loggingCfgFile);
+      }catch (final IOException e) {
+        LOG.log(Level.WARNING, "Failed to load "+ConfigNames.LOGGING_PROPERTIES_FILE+
+                " from: "+loggingCfgFile, e);
+      }    
+    }
   }
   
-  private void initLogging2() {
-    String logLevelStr = this.config.getString("logLevel");
-    if(logLevelStr != null) {
-      try {
-        Level logLevel = Level.parse(logLevelStr);
-        final com.bc.util.Log logger = com.bc.util.Log.getInstance();
-        String packageLoggerName = com.idisc.web.WebApp.class.getPackage().getName();
-        if(!this.isProductionMode()) {
-            logger.transferConsoleHandler("", packageLoggerName, true);
-            // Most home grown libraries start with com.bc
-            // Only top level projects, that is projects which may not be used
-            // as libraries for others should do this
-            logger.setLogLevel("com.bc", logLevel);
-        }
-        com.bc.util.Log.getInstance().setLogLevel(packageLoggerName, logLevel);
-      } catch (Exception e) {
-        com.bc.util.Log.getInstance().log(Level.WARNING, "Error setting log level to: " + logLevelStr, getClass(), e);
+  private Optional<InputStream> getInputStream(String name) {
+    try{
+      InputStream in = Thread.currentThread().getContextClassLoader().getResourceAsStream(name);
+      if(in == null) {
+        in = new FileInputStream(name);
       }
-    }
-  }  
+      return Optional.ofNullable(in);
+    }catch (final IOException e) {
+      LOG.log(Level.WARNING, "Failed to load " + ConfigNames.LOGGING_PROPERTIES_FILE +
+              " from: "  +name, e);
+      return Optional.empty();
+    }    
+  }
   
   @Override
   public AppAuthenticationSession getAuthSvcSession() {

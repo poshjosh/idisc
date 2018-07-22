@@ -70,7 +70,7 @@ public abstract class AbstractRequestHandler<V>
         this.closeIfCloseable(output);
       }
       output = new BaseSearchResults(dao);
-      LOG.fine("Created SearchResults");
+      LOG.log(Level.FINE, "Created instance of: {0}", output.getClass().getName());
       request.getSession(true).setAttribute(this.getSearchResultsAttributeName(entityType), output);
     }
     LOG.log(Level.FINER, "SearchResults: {0}", output);

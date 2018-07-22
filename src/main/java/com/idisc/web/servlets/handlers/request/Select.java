@@ -57,7 +57,11 @@ public class Select<T> extends AbstractRequestHandler<List<T>>{
     
     List<T> selected;
     
-    if(this.isPaginate(request)) {
+    final boolean paginate = this.isPaginate(request);
+    
+    LOG.finer(() -> "Paginate: " + paginate);
+    
+    if(paginate) {
       final SearchResults<T> sr = this.getSearchResults(request, dao, true, SearchResults.EMPTY_INSTANCE);
       selected = sr.getPages();
     }else{
@@ -156,7 +160,10 @@ public class Select<T> extends AbstractRequestHandler<List<T>>{
   protected String [] getSearchTerms(HttpServletRequest request) throws ValidationException {
     final int max = this.getSearchTermsMax(request);
     final String [] queries =  request.getParameterValues("queries");
-    return queries == null ? new String[0] : queries.length <= max ? queries : Arrays.copyOf(queries, max);
+    final String [] output = queries == null ? new String[0] : 
+            queries.length <= max ? queries : Arrays.copyOf(queries, max);
+    LOG.finer(() -> "queries = " + Arrays.toString(output));
+    return output;
   }
 
   protected int getSearchTermsMax(HttpServletRequest request) {
@@ -165,6 +172,7 @@ public class Select<T> extends AbstractRequestHandler<List<T>>{
   
   protected String getSearchTerm(HttpServletRequest request) throws ValidationException {
     String query =  request.getParameter("query");
+    LOG.finer(() -> "query = " + query);
     return query;
   }
 
@@ -193,6 +201,7 @@ public class Select<T> extends AbstractRequestHandler<List<T>>{
         entity.setInstallationid(instl);
         entity.setSearchquery(query);
         entity.setSearchtime(date);
+        LOG.log(Level.FINER, "Persisting query: {0}", query);
         em.persist(entity);
       }
       commit.apply(em.getTransaction());
@@ -229,9 +238,13 @@ public class Select<T> extends AbstractRequestHandler<List<T>>{
         if(databaseTimeZone.getOffset(after.getTime()) != 0) {
             
           DateTimeConverter converter = new DateTimeConverter(
-                  TimeZone.getTimeZone(TimeZones.UTC_ZONEID), databaseTimeZone);  
+                  TimeZone.getTimeZone(TimeZones.UTC_ZONEID), databaseTimeZone);
+          
+          LOG.log(Level.FINER, "Before converting date to database timezone: {0}", after);
           
           after = converter.convert(after);
+
+          LOG.log(Level.FINER, " After converting date to database timezone: {0}", after);
         }
       
       } catch (NumberFormatException ignored) {
@@ -287,9 +300,10 @@ public class Select<T> extends AbstractRequestHandler<List<T>>{
         outputLimit = maxLimit;
     }
     
-if(LOG.isLoggable(Level.FINE)){
-LOG.log(Level.FINE, "Requested limit: {0}, limit: {1}", new Object[]{ requestedLimit,  outputLimit});
-}
+    if(LOG.isLoggable(Level.FINE)){
+        LOG.log(Level.FINE, "Requested limit: {0}, limit: {1}", 
+                new Object[]{ requestedLimit,  outputLimit});
+    }
         
     return outputLimit;
   }
